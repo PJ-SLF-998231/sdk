@@ -1,3 +1,4 @@
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
@@ -6,5 +7,11 @@ export default defineConfig({
   dts: true,
   clean: true,
   sourcemap: false,
-  external: ['react', 'react-dom'],
+  external: ['react', 'react-dom', 'react/jsx-runtime'],
+  // dist/styles.css = scoped tokens (scripts/sync-tokens.mjs output) + component styles.
+  onSuccess: async () => {
+    mkdirSync('dist', { recursive: true });
+    const css = ['src/styles/styles.css', 'src/styles/components.css'].map((f) => readFileSync(f, 'utf8')).join('\n');
+    writeFileSync('dist/styles.css', css);
+  },
 });
