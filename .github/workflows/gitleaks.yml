@@ -1,0 +1,50 @@
+name: Secrets
+
+# gitleaks over the full history, on every pull request and push to main.
+# Split from ci.yml so its docs-only paths-ignore never skips the secret
+# scan: a credential pasted into a README is exactly what this is for. The
+# same job, version and flags as release.yaml's; keep in step.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# One run per pull request (or ref); a newer push to a PR cancels the run it
+# supersedes, runs on main always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  gitleaks:
+    # The upstream MIT-licensed gitleaks CLI; the gitleaks-action wrapper
+    # needs a paid licence for org repos.
+    runs-on: nebula-k3s-slf
+    steps:
+      # The bare ARC runner image may lack git; without it checkout falls
+      # back to a REST download with no history for gitleaks to scan.
+      - name: Install git and curl
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=()
+          for t in git curl; do command -v "$t" >/dev/null || missing+=("$t"); done
+          if [ "${#missing[@]}" -gt 0 ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq --no-install-recommends ca-certificates "${missing[@]}"
+          fi
+          git --version
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: gitleaks
+        # bash, not the default `bash -e`: pipefail so a failed download
+        # fails the step instead of tar's exit status hiding it.
+        shell: bash
+        env:
+          GITLEAKS_VERSION: 8.21.2
+        run: |
+          set -euo pipefail
+          curl -fsSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | sudo tar -xz -C /usr/local/bin gitleaks
+          gitleaks detect --source . --redact --no-banner --exit-code 1
