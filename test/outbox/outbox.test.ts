@@ -41,9 +41,11 @@ describe('drain once', () => {
       await tick(2);
     }
     await vi.waitFor(async () => expect(await stored(kv)).toHaveLength(0), { timeout: 3000 });
-    await tick(30);
+    await a.idle();
+    await b.idle();
     online();
-    await tick(30);
+    await a.idle();
+    await b.idle();
     return { client, kv, a, b };
   }
 
@@ -297,7 +299,12 @@ describe('errors', () => {
     for (let i = 0; i < 5; i++) await ob.enqueue(upOp(`f${i}.pdf`));
     release();
     await vi.waitFor(() => expect(lost).toHaveBeenCalled());
-    await tick(40);
+    // Wait on the observable end state (purged from memory and storage), not on a clock.
+    await vi.waitFor(async () => {
+      expect(ob.list()).toHaveLength(0);
+      expect(await stored(kv)).toHaveLength(0);
+    });
+    await ob.idle();
     expect(lost).toHaveBeenCalledTimes(1);
     expect(lost.mock.calls[0]![0].discarded).toBe(5);
     expect(ob.list()).toHaveLength(0);
@@ -305,7 +312,7 @@ describe('errors', () => {
     const calls = client.upload.mock.calls.length;
     expect(calls).toBeLessThanOrEqual(3);
     online();
-    await tick(20);
+    await ob.idle();
     expect(client.upload.mock.calls.length).toBe(calls);
     await expect(ob.enqueue(upOp('late.pdf'))).rejects.toThrow(/authentication lost/);
   });

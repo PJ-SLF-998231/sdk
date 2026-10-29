@@ -263,13 +263,13 @@ Visual parity with 0.2.0: `harness/compare.mjs` compares the 21 evidence screens
 
 Gzipped, minified, `react` and `react-dom` external, measured by `scripts/size-budget.mjs` (initial = the entry and the chunks it imports statically; lazy chunks load when used). The budgets in `scripts/size-budget.json` are the measured size plus 5%.
 
-| | 0.2.0 | 0.3.0 | Budget |
-| --- | ---: | ---: | ---: |
-| Client (`@pj-slf-998231/sdk`), initial | 1.03 kB | 1.41 kB | 1.48 kB |
-| React (`@pj-slf-998231/sdk/react`), initial | 9.88 kB | 29.41 kB | 30.89 kB |
-| Lazy chunks (loaded on demand), total | none (all in the initial bundle) | 7.88 kB | 8.28 kB |
+| | 0.2.0 | 0.3.0 before the document page | 0.3.0 with the document page | Budget |
+| --- | ---: | ---: | ---: | ---: |
+| Client (`@pj-slf-998231/sdk`), initial | 1.03 kB | 1.41 kB | 1.47 kB | 1.54 kB |
+| React (`@pj-slf-998231/sdk/react`), initial | 9.88 kB | 29.41 kB | 30.00 kB | 31.50 kB |
+| Lazy chunks (loaded on demand), total | none (all in the initial bundle) | 7.88 kB | 10.29 kB | 10.80 kB |
 
-The lazy chunks are the outbox (4.99 kB, loaded only for `read_write` keys), the document page (1.29 kB), the folder tree (1.31 kB), the rename/move/delete dialogs (0.78 kB) and `clearCache` (0.31 kB).
+The lazy chunks are the outbox (4.99 kB, loaded only for `read_write` keys), the document page with the Text, Preview and Content tabs and the site renderer (3.63 kB), the folder tree (1.31 kB), the rename/move/delete dialogs (0.78 kB) and `clearCache` (0.31 kB). The document page grew the React initial bundle by about 0.6 kB (the route and the shared page chrome) and the lazy total by about 2.4 kB.
 
 The React entry grew by about 19.5 kB. About 10.4 kB of that is the virtual list engine (`@tanstack/react-virtual` and `@tanstack/virtual-core`), which is what keeps at most 50 cards in the DOM for 5000 documents; it is a real cost for a folder with a handful of documents. The remaining 9 kB or so is the cache, the stale-while-revalidate layer, the thumbnail loader and the virtual rows themselves. The 0.2.0 numbers include the document page and dialogs, which 0.3.0 moves to the lazy chunks.
 

@@ -161,6 +161,14 @@ describe('document page', () => {
     expect(siteCalls(api)).toEqual([]);
   });
 
+  it('(c) when the API does not send has_site (older deployment) the Content tab stays hidden and /site is never requested', async () => {
+    const api = fakeApi({ doc: detail(), siteBody: site() });
+    mount(api, { initialDocumentId: 'd1' });
+    await screen.findByText(/This pet application forms part/);
+    expect(tabNames()).toEqual(['Text', 'Preview']);
+    expect(siteCalls(api)).toEqual([]);
+  });
+
   it('(d) a read key sees Download only; a read_write key also gets the pencil, Move and Delete', async () => {
     const read = mount(fakeApi({ access: 'read' }), { initialDocumentId: 'd1' });
     await screen.findByText(/This pet application forms part/);
