@@ -16,9 +16,82 @@ const DOC = {
 };
 const send = (res, code, body, type = 'application/json') => { res.writeHead(code, { 'content-type': type }); res.end(typeof body === 'string' ? body : JSON.stringify(body)); };
 
+// ---- 5000-document mode under /api/shelf5k (perf harness). State is in memory; /__harness/* controls it. ----
+const N5K = 5000;
+const PNG1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+const idOf = (n) => `00000000-0000-4000-8000-${n.toString(16).padStart(12, '0')}`;
+let docs5k, stats5k, delay5k = 0;
+function reset5k() {
+  delay5k = 0;
+  stats5k = { patch: 0, post: 0, delete: 0, thumb: 0, files: 0, uploads: [] };
+  docs5k = Array.from({ length: N5K }, (_, i) => {
+    const img = i % 3 !== 2;
+    return {
+      id: idOf(i + 1), filename: `doc-${String(i + 1).padStart(4, '0')}.${img ? 'png' : 'txt'}`, content_type: img ? 'image/png' : 'text/plain',
+      size_bytes: 1000 + i, folder_id: ROOT, parse_status: 'ready', created_at: new Date(Date.UTC(2026, 9, 27) - i * 60000).toISOString(),
+      edited_at: null, parsed_at: new Date(Date.UTC(2026, 9, 27) - i * 60000 + 4000).toISOString(), preview_sizes: img ? ['small', 'medium'] : [],
+    };
+  });
+}
+reset5k();
+const readBody = (req) => new Promise((r) => { const c = []; req.on('data', (d) => c.push(d)); req.on('end', () => r(Buffer.concat(c))); });
+
+async function handle5k(req, res, p, u) {
+  if (delay5k) await new Promise((r) => setTimeout(r, delay5k));
+  const m = req.method;
+  if (p === '/' && m === 'GET') return send(res, 200, { id: 'k5', name: 'Perf key', access: 'read_write', expires_at: null, folder: { id: ROOT, name: 'Perf shelf' } });
+  if (p === '/folders') return send(res, 200, { folders: [{ id: ROOT, parent_id: null, name: 'Perf shelf', item_count: docs5k.length, total_item_count: docs5k.length }] });
+  if (p === '/files' && m === 'GET') {
+    stats5k.files++;
+    const limit = Math.min(Number(u.searchParams.get('limit')) || 50, 200);
+    const off = Number(u.searchParams.get('cursor') || 0);
+    const page = docs5k.slice(off, off + limit);
+    return send(res, 200, { files: page, next_cursor: off + limit < docs5k.length ? String(off + limit) : null });
+  }
+  if (p === '/files' && m === 'POST') {
+    stats5k.post++;
+    const body = (await readBody(req)).toString('latin1');
+    const ref = /name="client_ref"\r\n\r\n([^\r]+)/.exec(body)?.[1];
+    const name = /filename="([^"]+)"/.exec(body)?.[1] ?? 'upload.txt';
+    stats5k.uploads.push({ name, ref });
+    let d = ref && docs5k.find((x) => x.client_ref === ref);
+    if (!d) {
+      d = { id: idOf(N5K + 1 + stats5k.post), filename: name, content_type: 'text/plain', size_bytes: 5, folder_id: ROOT, parse_status: 'ready', created_at: new Date().toISOString(), edited_at: null, parsed_at: null, preview_sizes: [], client_ref: ref };
+      docs5k.unshift(d);
+    }
+    return send(res, 201, d);
+  }
+  const t = /^\/files\/([^/]+)\/thumbnail$/.exec(p);
+  if (t) {
+    stats5k.thumb++;
+    const tag = `"t-${t[1]}"`;
+    if (req.headers['if-none-match'] === tag) { res.writeHead(304, { ETag: tag }); return res.end(); }
+    res.writeHead(200, { 'content-type': 'image/png', ETag: tag, 'cache-control': 'private, max-age=0' });
+    return res.end(PNG1);
+  }
+  const f = /^\/files\/([^/]+)$/.exec(p);
+  if (f) {
+    const d = docs5k.find((x) => x.id === f[1]);
+    if (!d) return send(res, 404, { code: 'not_found', error: 'not found' });
+    if (m === 'GET') return send(res, 200, { ...d, parsed_text: 'perf', parsed_meta: {}, parse_result: null, parse_error: null, parser_name: 'text', download_url: '' });
+    if (m === 'PATCH') {
+      stats5k.patch++;
+      const patch = JSON.parse((await readBody(req)).toString() || '{}');
+      if (patch.filename) { d.filename = patch.filename; d.edited_at = new Date().toISOString(); }
+      return send(res, 200, d);
+    }
+    if (m === 'DELETE') { stats5k.delete++; docs5k.splice(docs5k.indexOf(d), 1); res.writeHead(204); return res.end(); }
+  }
+  return send(res, 404, { code: 'not_found', error: 'not found' });
+}
+
 /** Returns true when it handled the request. */
 export function handle(req, res) {
   const u = new URL(req.url, 'http://x');
+  if (u.pathname === '/__harness/delay') { delay5k = Number(u.searchParams.get('ms')) || 0; return send(res, 200, { delay: delay5k }), true; }
+  if (u.pathname === '/__harness/reset') { reset5k(); return send(res, 200, { ok: true }), true; }
+  if (u.pathname === '/__harness/stats') return send(res, 200, { ...stats5k, docs: docs5k.length }), true;
+  if (u.pathname.startsWith('/api/shelf5k')) { handle5k(req, res, u.pathname.slice('/api/shelf5k'.length) || '/', u).catch((e) => { res.headersSent || send(res, 500, { error: String(e) }); }); return true; }
   if (!u.pathname.startsWith('/api/shelf')) return false;
   const p = u.pathname.slice('/api/shelf'.length) || '/';
   if (p === '/' ) return send(res, 200, { id: 'k1', name: 'Aisle key', access: 'read_write', expires_at: null, folder: { id: ROOT, name: 'Aisle CMS' } }), true;

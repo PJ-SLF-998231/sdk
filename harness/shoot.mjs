@@ -27,7 +27,8 @@ try {
       const shots = {};
       const go = async (name) => { if (keep) await save(page, `${name}-${sfx}`); };
       // Hide the host heading chrome only for the isolation diff: compare the component element alone.
-      const comp = async (name) => { if (keep) return; const el = page.locator('.shelf-sdk').first(); const b = await el.screenshot(); shots[name + ':component'] = b; if (!keep) writeFileSync(here + `out/comp-${name}-${sfx}.png`, b); };
+      // The pointer is parked away from the cards first so a hover transition cannot be caught half-way (it made this diff flaky).
+      const comp = async (name) => { if (keep) return; await page.mouse.move(0, 0); await page.waitForTimeout(450); const el = page.locator('.shelf-sdk').first(); const b = await el.screenshot(); shots[name + ':component'] = b; if (!keep) writeFileSync(here + `out/comp-${name}-${sfx}.png`, b); };
       await go('root-gallery'); await comp('root-gallery');
       await page.getByRole('button', { name: 'List' }).click(); await go('root-list'); await comp('root-list');
       await page.getByRole('button', { name: 'Gallery' }).click();
