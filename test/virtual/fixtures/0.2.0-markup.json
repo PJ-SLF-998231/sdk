@@ -1,0 +1,46 @@
+{
+  "items": [
+    {
+      "id": "f2",
+      "filename": "notes.docx",
+      "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "size_bytes": 20480,
+      "folder_id": "root",
+      "parse_status": "parsed",
+      "created_at": "2026-01-02T00:00:00Z",
+      "edited_at": null,
+      "parsed_at": null,
+      "preview_sizes": []
+    },
+    {
+      "id": "f3",
+      "filename": "plain.txt",
+      "content_type": "text/plain",
+      "size_bytes": 2048,
+      "folder_id": "root",
+      "parse_status": "parsing",
+      "created_at": "2026-01-02T00:00:00Z",
+      "edited_at": null,
+      "parsed_at": null,
+      "preview_sizes": []
+    }
+  ],
+  "markup": {
+    "grid:read": [
+      "<article class=\"shelf-sdk__card shelf-sdk__file-card shelf-sdk__shelf-item\"><div class=\"shelf-sdk__file-card-thumb shelf-sdk__file-card-thumb--doc shelf-sdk__file-card-thumb--word\"><span class=\"shelf-sdk__file-card-type\" aria-hidden=\"true\">DOCX</span><span class=\"shelf-sdk__pill shelf-sdk__pill--ready\">Ready</span></div><div class=\"shelf-sdk__file-card-body\"><p class=\"shelf-sdk__card-meta\">20.0 KB · DOCX</p><h3 class=\"shelf-sdk__file-card-name\"><button type=\"button\" class=\"shelf-sdk__link-btn shelf-sdk__file-card-link\">notes.docx</button></h3></div></article>",
+      "<article class=\"shelf-sdk__card shelf-sdk__file-card shelf-sdk__shelf-item\" aria-busy=\"true\"><div class=\"shelf-sdk__file-card-thumb shelf-sdk__file-card-thumb--doc shelf-sdk__file-card-thumb--text\"><span class=\"shelf-sdk__file-card-type\" aria-hidden=\"true\">TXT</span><span class=\"shelf-sdk__pill shelf-sdk__pill--busy\">Reading…</span><span class=\"shelf-sdk__upload-bar shelf-sdk__upload-bar--parsing\" aria-hidden=\"true\"></span></div><div class=\"shelf-sdk__file-card-body\"><p class=\"shelf-sdk__card-meta\">2.0 KB · TXT</p><h3 class=\"shelf-sdk__file-card-name\"><button type=\"button\" class=\"shelf-sdk__link-btn shelf-sdk__file-card-link\">plain.txt</button></h3></div></article>"
+    ],
+    "list:read": [
+      "<tr class=\"shelf-sdk__item-row\"><td><button type=\"button\" class=\"shelf-sdk__link-btn shelf-sdk__item-name\"><span class=\"shelf-sdk__item-thumb shelf-sdk__item-thumb--word\">DOCX</span><span><span class=\"shelf-sdk__item-name-text\">notes.docx</span></span></button></td><td><span class=\"shelf-sdk__pill shelf-sdk__pill--ready\">Ready</span></td><td class=\"shelf-sdk__item-list-num shelf-sdk__item-list-muted\">20.0 KB</td><td class=\"shelf-sdk__item-list-muted\">02 Jan 2026</td><td class=\"shelf-sdk__item-list-actions\"></td></tr>",
+      "<tr class=\"shelf-sdk__item-row\"><td><button type=\"button\" class=\"shelf-sdk__link-btn shelf-sdk__item-name\"><span class=\"shelf-sdk__item-thumb shelf-sdk__item-thumb--text\">TXT</span><span><span class=\"shelf-sdk__item-name-text\">plain.txt</span></span></button></td><td><span class=\"shelf-sdk__pill shelf-sdk__pill--busy\">Reading…</span></td><td class=\"shelf-sdk__item-list-num shelf-sdk__item-list-muted\">2.0 KB</td><td class=\"shelf-sdk__item-list-muted\">02 Jan 2026</td><td class=\"shelf-sdk__item-list-actions\"></td></tr>"
+    ],
+    "grid:read_write": [
+      "<article class=\"shelf-sdk__card shelf-sdk__file-card shelf-sdk__shelf-item\"><div class=\"shelf-sdk__file-card-thumb shelf-sdk__file-card-thumb--doc shelf-sdk__file-card-thumb--word\"><span class=\"shelf-sdk__file-card-type\" aria-hidden=\"true\">DOCX</span><span class=\"shelf-sdk__pill shelf-sdk__pill--ready\">Ready</span></div><div class=\"shelf-sdk__file-card-body\"><p class=\"shelf-sdk__card-meta\">20.0 KB · DOCX</p><h3 class=\"shelf-sdk__file-card-name\"><button type=\"button\" class=\"shelf-sdk__link-btn shelf-sdk__file-card-link\">notes.docx</button></h3></div><div class=\"shelf-sdk__action-menu\"><button type=\"button\" class=\"shelf-sdk__action-menu-button\" aria-label=\"Actions for notes.docx\" aria-haspopup=\"menu\" aria-expanded=\"false\"><svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"currentColor\"><circle cx=\"3\" cy=\"8\" r=\"1.5\"></circle><circle cx=\"8\" cy=\"8\" r=\"1.5\"></circle><circle cx=\"13\" cy=\"8\" r=\"1.5\"></circle></svg></button></div></article>",
+      "<article class=\"shelf-sdk__card shelf-sdk__file-card shelf-sdk__shelf-item\" aria-busy=\"true\"><div class=\"shelf-sdk__file-card-thumb shelf-sdk__file-card-thumb--doc shelf-sdk__file-card-thumb--text\"><span class=\"shelf-sdk__file-card-type\" aria-hidden=\"true\">TXT</span><span class=\"shelf-sdk__pill shelf-sdk__pill--busy\">Reading…</span><span class=\"shelf-sdk__upload-bar shelf-sdk__upload-bar--parsing\" aria-hidden=\"true\"></span></div><div class=\"shelf-sdk__file-card-body\"><p class=\"shelf-sdk__card-meta\">2.0 KB · TXT</p><h3 class=\"shelf-sdk__file-card-name\"><button type=\"button\" class=\"shelf-sdk__link-btn shelf-sdk__file-card-link\">plain.txt</button></h3></div><div class=\"shelf-sdk__action-menu\"><button type=\"button\" class=\"shelf-sdk__action-menu-button\" aria-label=\"Actions for plain.txt\" aria-haspopup=\"menu\" aria-expanded=\"false\"><svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"currentColor\"><circle cx=\"3\" cy=\"8\" r=\"1.5\"></circle><circle cx=\"8\" cy=\"8\" r=\"1.5\"></circle><circle cx=\"13\" cy=\"8\" r=\"1.5\"></circle></svg></button></div></article>"
+    ],
+    "list:read_write": [
+      "<tr class=\"shelf-sdk__item-row\"><td><button type=\"button\" class=\"shelf-sdk__link-btn shelf-sdk__item-name\"><span class=\"shelf-sdk__item-thumb shelf-sdk__item-thumb--word\">DOCX</span><span><span class=\"shelf-sdk__item-name-text\">notes.docx</span></span></button></td><td><span class=\"shelf-sdk__pill shelf-sdk__pill--ready\">Ready</span></td><td class=\"shelf-sdk__item-list-num shelf-sdk__item-list-muted\">20.0 KB</td><td class=\"shelf-sdk__item-list-muted\">02 Jan 2026</td><td class=\"shelf-sdk__item-list-actions\"><div class=\"shelf-sdk__action-menu\"><button type=\"button\" class=\"shelf-sdk__action-menu-button\" aria-label=\"Actions for notes.docx\" aria-haspopup=\"menu\" aria-expanded=\"false\"><svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"currentColor\"><circle cx=\"3\" cy=\"8\" r=\"1.5\"></circle><circle cx=\"8\" cy=\"8\" r=\"1.5\"></circle><circle cx=\"13\" cy=\"8\" r=\"1.5\"></circle></svg></button></div></td></tr>",
+      "<tr class=\"shelf-sdk__item-row\"><td><button type=\"button\" class=\"shelf-sdk__link-btn shelf-sdk__item-name\"><span class=\"shelf-sdk__item-thumb shelf-sdk__item-thumb--text\">TXT</span><span><span class=\"shelf-sdk__item-name-text\">plain.txt</span></span></button></td><td><span class=\"shelf-sdk__pill shelf-sdk__pill--busy\">Reading…</span></td><td class=\"shelf-sdk__item-list-num shelf-sdk__item-list-muted\">2.0 KB</td><td class=\"shelf-sdk__item-list-muted\">02 Jan 2026</td><td class=\"shelf-sdk__item-list-actions\"><div class=\"shelf-sdk__action-menu\"><button type=\"button\" class=\"shelf-sdk__action-menu-button\" aria-label=\"Actions for plain.txt\" aria-haspopup=\"menu\" aria-expanded=\"false\"><svg viewBox=\"0 0 16 16\" aria-hidden=\"true\" fill=\"currentColor\"><circle cx=\"3\" cy=\"8\" r=\"1.5\"></circle><circle cx=\"8\" cy=\"8\" r=\"1.5\"></circle><circle cx=\"13\" cy=\"8\" r=\"1.5\"></circle></svg></button></div></td></tr>"
+    ]
+  }
+}
