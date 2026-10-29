@@ -1,0 +1,44 @@
+/*
+ * Fonts. Shelf web loads Geist, Geist Mono and Instrument Serif from Google Fonts
+ * (web/index.html). The SDK ships the same three (SIL Open Font License 1.1, see
+ * dist/fonts/*-LICENSE.txt) instead, so an embed needs no third-party request and no
+ * CSP exception. Latin subset, variable weight for Geist and Geist Mono.
+ * The families are named "Shelf ..." so they never collide with a copy the host loads;
+ * `url()` is relative to this file (dist/styles.css), which bundlers resolve.
+ */
+@font-face {
+  font-family: "Shelf Geist";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("./fonts/geist-latin-wght-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Shelf Geist Mono";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("./fonts/geist-mono-latin-wght-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Shelf Instrument Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/instrument-serif-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Shelf Instrument Serif";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/instrument-serif-latin-400-italic.woff2") format("woff2");
+}
+
+.shelf-sdk,
+.shelf-sdk[data-theme="light"],
+.shelf-sdk[data-theme="dark"] {
+  --font-sans: "Shelf Geist", "Geist", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-serif: "Shelf Instrument Serif", "Instrument Serif", "Times New Roman", Georgia, serif;
+  --font-mono: "Shelf Geist Mono", "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}

@@ -1,0 +1,25 @@
+/* SDK-only rules that follow the generated web CSS (view.css) and override it where the embed differs. */
+
+/* No bulk-select checkbox in the embed, so the status pill sits at the thumbnail's corner. */
+.shelf-sdk .shelf-sdk__shelf-item .shelf-sdk__file-card-thumb .shelf-sdk__pill {
+  left: 12px;
+}
+.shelf-sdk .shelf-sdk__file-card-link {
+  display: inline;
+  font: inherit;
+  text-align: left;
+}
+.shelf-sdk .shelf-sdk__more {
+  margin-top: 16px;
+}
+.shelf-sdk .shelf-sdk__doc-preview {
+  display: block;
+  max-width: 100%;
+  max-height: 70vh;
+  margin: 0 auto;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+}
+.shelf-sdk .shelf-sdk__shelf-main {
+  min-width: 0;
+}

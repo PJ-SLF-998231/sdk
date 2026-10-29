@@ -4,7 +4,7 @@ Client and React UI for the Shelf folder integration API (`/api/v1/integration`)
 Two parts, one package:
 
 - A framework-free TypeScript client (`createShelfClient`).
-- A Shelf-styled React component (`<ShelfFolder>`) to browse, open, upload, rename, move and delete the documents in one folder.
+- A React component (`<ShelfFolder>`) that renders Shelf web's own folder view, ported from its source: header with folder-tree toggle, breadcrumb and counts, Gallery/List toggle, folder cards, document cards or rows, drag-and-drop upload and the document page. It browses, opens, uploads, renames, moves and deletes the documents in one folder.
 
 The package is private, published to GitHub Packages under the `@pj-slf-998231` scope.
 
@@ -146,9 +146,59 @@ export function Files() {
 }
 ```
 
-Props: `baseUrl` or a ready `client`, `initialFolderId`, `theme` (`'light' | 'dark' | 'auto'`, default `auto` follows the OS), `className`. Upload, rename, move and delete controls appear only when the key is read_write. Delete moves the file to the Shelf trash (it is not permanent) and it can be restored in Shelf. A `503 not_configured` shows a "not configured" state.
+Props: `baseUrl` or a ready `client`, `initialFolderId`, `theme` (`'light' | 'dark' | 'auto'`, default `auto` follows the OS), `className`.
 
-Theming: styles are scoped under `.shelf-sdk` and use Shelf's design tokens as CSS custom properties (`--bg`, `--fg`, `--accent`, `--line`, ...), so they do not leak into the host page. Override a token on `.shelf-sdk` (or a parent via `className`) to adapt it, or set `theme` to force light or dark.
+### What it shows
+
+The markup, class structure, CSS, tokens and icons are ported from Shelf web (`src/pages/ShelfPage.tsx`, `src/components/shelf/*`, `src/styles/global.css`, `tokens.css`), so the embed looks like Shelf's own folder view:
+
+- Header row: a folder-icon button that opens the folder tree, the breadcrumb (ancestors muted, current folder bold), mono meta such as `1 ITEM · 5 FOLDERS`.
+- Toolbar: **Add documents** (read_write keys only) and the **Gallery | List** toggle.
+- A `FOLDERS` section of folder cards, a `DOCUMENTS` section of document cards (thumbnail, status pill, name, `SIZE · TYPE`), or in List mode a table of the same.
+- A drop hint, `Drop documents here to add them to <folder> · PDF, Word, ...`. Dropping files anywhere on the view uploads them (read_write only).
+- Click a document for the document page: type and size, filename, Text and Preview tabs, a Details panel, Download, and a Rename / Move to / Delete menu (read_write only). Delete moves the file to the Shelf trash; it can be restored in Shelf.
+- A `503 not_configured` shows a "Shelf isn't connected" state.
+
+The Gallery/List choice is remembered in `localStorage` (`shelf-sdk.layout`), and so is whether the folder tree is open (`shelf-sdk.folderTree`). If storage is unavailable (private windows, locked-down hosts) both still toggle, they are just not remembered.
+
+### What it does not show
+
+The folder view only offers what the integration API can do. It has no route to create, rename, move or delete folders, so the **New folder** button and the folder cards' and header's `...` menus are not rendered. Bulk select and the bulk bar are not rendered either. Documents get Rename, Move to and Delete.
+
+Folder cards and the header count documents by reading every document under the key's folder once (up to 1000). Over that, or if that read fails, the counts are left out rather than guessed. A document card shows `SIZE · TYPE`, plus pages or words when the API sends `parsed_meta` for the list (today only the single-document route does, so the Details panel shows them and the card does not).
+
+### Visual parity
+
+Rendered in Chromium (Playwright) from the built `dist/` against a fake API serving the real integration shapes, with a deliberately hostile host stylesheet (global `* { box-sizing: content-box !important }`, styled `h1`-`h3`, `button`, `a`, `li`, `svg`, a body font, `text-transform` and `letter-spacing`). With and without that stylesheet the component renders pixel-identical (at most 2 of about 2 million pixels differ), and the host's own elements compute to the same styles with and without the SDK loaded.
+
+| Root folder, Gallery | Root folder, List |
+| --- | --- |
+| ![Root folder, Gallery](docs/screenshots/root-gallery-1280.png) | ![Root folder, List](docs/screenshots/root-list-1280.png) |
+| Folder with a document, Gallery | Folder with a document, List |
+| ![Folder with a document, Gallery](docs/screenshots/contracts-gallery-1280.png) | ![Folder with a document, List](docs/screenshots/contracts-list-1280.png) |
+
+More in `docs/screenshots/`: the document page, a 900 px wide layout (`*-900.png`), the same views under hostile host CSS (`*-hostile.png`), and `target-equivalent-root-gallery.png`, the root view framed like the Shelf web screenshot it was compared with. The screenshots are not part of the npm package (`files` lists only `dist` and `README.md`).
+
+Known differences from Shelf web's folder view, all because the integration API has no matching route or datum:
+
+- The breadcrumb starts at the key's folder (`Aisle CMS`); web shows the shelf name before it (`Aisle CMS / Aisle CMS`), and the API does not give the shelf's name.
+- No **New folder** button, and no `...` menus on folder cards or in the header: there are no folder write routes.
+- Folder and header counts (`1 ITEM`, `1 ITEM · 5 FOLDERS`) are derived by reading the documents once; web reads them from the folder listing.
+- The page padding and scrollbar of Shelf web's app shell belong to the host page, not the component.
+
+Reproduce: `cd harness && npm install && npx playwright install chromium && npm run build && npm run shoot`. The harness is dev only and is not in the package.
+
+### Host CSS requirements
+
+None beyond importing `@pj-slf-998231/sdk/styles.css` once. Every rule sits under `.shelf-sdk` and every class is prefixed `shelf-sdk__`, so the host's element and class rules cannot match the embed and the embed never styles the host (no `:root`, `html`, `body` or bare element selectors; `npm run check:dist` fails the build if one appears). Host rules on bare elements (`h3 { font: ... }`, `li { margin: ... }`, `svg { fill: ... }`) do reach the embed's own elements, so `base.css` resets those that matter. Give it a container with a width: it fills its parent. It uses viewport media queries (720px and below stacks the layout), like Shelf web.
+
+Theming: tokens are CSS custom properties on `.shelf-sdk` (`--bg`, `--fg`, `--accent`, `--line`, ...). Override one on `.shelf-sdk` (or via `className`), or set `theme` to force light or dark.
+
+### Fonts
+
+Shelf web uses Geist, Geist Mono and Instrument Serif, loaded from Google Fonts. The SDK instead bundles the same three (Latin subset, `woff2`) in `dist/fonts/` and declares them in `styles.css` with relative `url()`s, which bundlers (Vite, webpack, Next) resolve and emit. No request leaves for a third party and no CSP exception is needed. The families are named `Shelf Geist`, `Shelf Geist Mono` and `Shelf Instrument Serif`, so they never replace a copy the host loads; if a font file cannot load, the stack falls back to `Geist`, `Geist Mono`, `Instrument Serif` if the host has them, then system fonts.
+
+Licences: all three are under the SIL Open Font License 1.1, which allows bundling and redistribution. The licence texts ship in `dist/fonts/` (`Geist-LICENSE.txt`, `Geist-Mono-LICENSE.txt`, `Instrument-Serif-LICENSE.txt`); the files come from the `@fontsource-variable/geist`, `@fontsource-variable/geist-mono` and `@fontsource/instrument-serif` packages (dev dependencies).
 
 ## Development
 
@@ -157,12 +207,16 @@ npm ci
 npm run typecheck && npm test && npm run build && npm run check:dist
 ```
 
-Refresh the design tokens from Shelf web:
+Refresh the design tokens and the folder view's CSS from Shelf web:
 
 ```sh
 npm run sync-tokens -- path/to/shelf/web/src/styles/tokens.css
 # default: $SHELF_WEB_TOKENS, then ../shelf/web/src/styles/tokens.css
+npm run sync-web-css -- path/to/shelf/web/src/styles/global.css
+# default: $SHELF_WEB_GLOBAL_CSS, then ../shelf/web/src/styles/global.css; set SHELF_WEB_COMMIT to record the commit
 ```
+
+`src/styles/styles.css` and `src/styles/view.css` are generated; edit `base.css`, `fonts.css` and `extras.css` by hand.
 
 ## Release
 

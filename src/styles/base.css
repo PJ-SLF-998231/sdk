@@ -1,0 +1,123 @@
+/*
+ * Base styles for the embed, written by hand: the part of Shelf web's global.css that
+ * resets elements (box-sizing, headings, links, buttons), applied to descendants of
+ * .shelf-sdk only. Nothing here selects a bare element, :root, html or body.
+ */
+.shelf-sdk {
+  position: relative;
+  min-width: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: normal;
+  box-sizing: border-box;
+}
+/* !important: a host that sets `* { box-sizing: ... !important }` would otherwise win over the lower-specificity reset. */
+.shelf-sdk *,
+.shelf-sdk *::before,
+.shelf-sdk *::after {
+  box-sizing: border-box !important;
+}
+.shelf-sdk h1,
+.shelf-sdk h2,
+.shelf-sdk h3,
+.shelf-sdk p {
+  margin: 0;
+}
+/* Host rules on bare elements (`h2 { border: ...; font-style: italic }`, `li { margin: ... }`, `svg { fill: ... }`)
+   hit the embed's elements directly, so inheritance from .shelf-sdk is not enough: neutralise them here. The
+   component's own class rules (two classes deep) still win over these. */
+.shelf-sdk h1,
+.shelf-sdk h2,
+.shelf-sdk h3 {
+  padding: 0;
+  border: 0;
+  font-style: normal;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.shelf-sdk h1,
+.shelf-sdk h2 {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--fg);
+}
+/* Web's own h3 rule (global.css), kept here so a host's `h3 { font: ... }` cannot reach the card names. */
+.shelf-sdk h3 {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--fg);
+}
+.shelf-sdk li {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.shelf-sdk div,
+.shelf-sdk span,
+.shelf-sdk label,
+.shelf-sdk li,
+.shelf-sdk td,
+.shelf-sdk th,
+.shelf-sdk time {
+  color: inherit;
+}
+.shelf-sdk svg[fill="none"] {
+  fill: none;
+}
+.shelf-sdk svg[fill="currentColor"] {
+  fill: currentColor;
+}
+.shelf-sdk svg[stroke="currentColor"] {
+  stroke: currentColor;
+}
+.shelf-sdk p {
+  color: var(--fg-soft);
+}
+.shelf-sdk a {
+  color: inherit;
+  text-decoration: none;
+}
+.shelf-sdk ol,
+.shelf-sdk ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.shelf-sdk button,
+.shelf-sdk input,
+.shelf-sdk select {
+  font: inherit;
+  color: inherit;
+}
+.shelf-sdk button {
+  cursor: pointer;
+}
+.shelf-sdk button:disabled {
+  cursor: not-allowed;
+}
+.shelf-sdk :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.shelf-sdk [hidden] {
+  display: none !important;
+}
+/* A button that stands in for a link (navigation inside the embed): no button chrome. */
+.shelf-sdk .shelf-sdk__link-btn {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+}
