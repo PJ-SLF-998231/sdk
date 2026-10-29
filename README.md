@@ -266,7 +266,7 @@ Gzipped, minified, `react` and `react-dom` external, measured by `scripts/size-b
 | | 0.2.0 | 0.3.0 | Budget |
 | --- | ---: | ---: | ---: |
 | Client (`@pj-slf-998231/sdk`), initial | 1.03 kB | 1.41 kB | 1.48 kB |
-| React (`@pj-slf-998231/sdk/react`), initial | 9.88 kB | 29.42 kB | 30.89 kB |
+| React (`@pj-slf-998231/sdk/react`), initial | 9.88 kB | 29.41 kB | 30.89 kB |
 | Lazy chunks (loaded on demand), total | none (all in the initial bundle) | 7.88 kB | 8.28 kB |
 
 The lazy chunks are the outbox (4.99 kB, loaded only for `read_write` keys), the document page (1.29 kB), the folder tree (1.31 kB), the rename/move/delete dialogs (0.78 kB) and `clearCache` (0.31 kB).
