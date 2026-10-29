@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createShelfClient, ShelfError } from '../src';
+import { createShelfClient, isAuthLost, isOfflineError, ShelfError } from '../src';
 
 const item = { id: 'f1', filename: 'a.pdf', content_type: 'application/pdf', size_bytes: 3, folder_id: 'd1', parse_status: 'done', created_at: 't', edited_at: null, parsed_at: null, preview_sizes: ['small'] };
 
@@ -132,5 +132,93 @@ describe('paging', () => {
     } while (cursor);
     expect(all.map((f) => f.id)).toEqual(['f1', 'f2']);
     expect(String(fetchMock.mock.calls[1]![0] as unknown)).toContain('cursor=c2');
+  });
+});
+
+describe('0.3 client additions', () => {
+  it('exposes baseUrl without trailing slash', () => {
+    const { client } = setup(() => json({}), { baseUrl: '/api/shelf///' });
+    expect(client.baseUrl).toBe('/api/shelf');
+  });
+
+  it('passes the signal to fetch and rejects with AbortError when aborted', async () => {
+    const fetchMock = vi.fn((_u: RequestInfo | URL, init?: RequestInit) =>
+      new Promise<Response>((_res, rej) => {
+        init?.signal?.addEventListener('abort', () => rej(new DOMException('aborted', 'AbortError')));
+      }),
+    );
+    const client = createShelfClient({ baseUrl: '/api/shelf', fetch: fetchMock as unknown as typeof fetch });
+    const calls: Array<(s: AbortSignal) => Promise<unknown>> = [
+      (signal) => client.info({ signal }),
+      (signal) => client.folders({ signal }),
+      (signal) => client.listFiles({}, { signal }),
+      (signal) => client.getFile('f1', { signal }),
+    ];
+    for (const call of calls) {
+      const ac = new AbortController();
+      const p = call(ac.signal);
+      ac.abort();
+      const err = (await p.catch((e) => e)) as Error;
+      expect(err.name).toBe('AbortError');
+      expect(isOfflineError(err)).toBe(false);
+      expect(isAuthLost(err)).toBe(false);
+      expect((fetchMock.mock.calls.at(-1)![1] as RequestInit).signal).toBe(ac.signal);
+    }
+  });
+
+  it('an already-aborted signal rejects immediately', async () => {
+    const fetchMock = vi.fn(async (_u: RequestInfo | URL, init?: RequestInit) => {
+      init?.signal?.throwIfAborted();
+      return json({});
+    });
+    const client = createShelfClient({ baseUrl: '/x', fetch: fetchMock as unknown as typeof fetch });
+    const err = await client.info({ signal: AbortSignal.abort() }).catch((e) => e);
+    expect(err.name).toBe('AbortError');
+  });
+
+  it('thumbnail 200 returns bytes, type and etag, and sends no If-None-Match without an etag', async () => {
+    const { client, call } = setup(() => new Response(new Uint8Array([1, 2, 3]), { status: 200, headers: { 'Content-Type': 'image/webp', ETag: '"abc"' } }));
+    const r = await client.thumbnail!('f1', 'small');
+    expect(r.status).toBe(200);
+    if (r.status !== 200) throw new Error('unreachable');
+    expect([...new Uint8Array(r.bytes)]).toEqual([1, 2, 3]);
+    expect(r.type).toBe('image/webp');
+    expect(r.etag).toBe('"abc"');
+    expect(call().url).toBe('https://x.test/api/v1/integration/files/f1/thumbnail?size=small');
+    expect(call().headers.has('If-None-Match')).toBe(false);
+  });
+
+  it('thumbnail with etag sends If-None-Match and maps 304', async () => {
+    const { client, call } = setup(() => new Response(null, { status: 304 }), { apiKey: 'k' });
+    const r = await client.thumbnail!('f1', 'medium', { etag: '"abc"' });
+    expect(r).toEqual({ status: 304 });
+    expect(call().headers.get('If-None-Match')).toBe('"abc"');
+    expect(call().headers.get('Authorization')).toBe('Bearer k');
+  });
+
+  it('thumbnail errors become ShelfError', async () => {
+    const { client } = setup(() => json({ code: 'not_found', message: 'nope' }, 404));
+    const err = (await client.thumbnail!('f1', 'small').catch((e) => e)) as ShelfError;
+    expect(err).toBeInstanceOf(ShelfError);
+    expect(err.status).toBe(404);
+  });
+
+  it('isAuthLost: 401 and 503 not_configured only', () => {
+    expect(isAuthLost(new ShelfError(401, 'unauthorized', 'x'))).toBe(true);
+    expect(isAuthLost(new ShelfError(503, 'not_configured', 'x'))).toBe(true);
+    expect(isAuthLost(new ShelfError(502, 'bad_gateway', 'x'))).toBe(false);
+    expect(isAuthLost(new ShelfError(503, 'unavailable', 'x'))).toBe(false);
+    expect(isAuthLost(new TypeError('Failed to fetch'))).toBe(false);
+    expect(isAuthLost(null)).toBe(false);
+  });
+
+  it('isOfflineError: network TypeError, 502, plain 503; never not_configured, 4xx or AbortError', () => {
+    expect(isOfflineError(new TypeError('Failed to fetch'))).toBe(true);
+    expect(isOfflineError(new ShelfError(502, 'bad_gateway', 'x'))).toBe(true);
+    expect(isOfflineError(new ShelfError(503, 'unavailable', 'x'))).toBe(true);
+    expect(isOfflineError(new ShelfError(503, 'not_configured', 'x'))).toBe(false);
+    expect(isOfflineError(new ShelfError(401, 'unauthorized', 'x'))).toBe(false);
+    expect(isOfflineError(new ShelfError(404, 'not_found', 'x'))).toBe(false);
+    expect(isOfflineError(new DOMException('a', 'AbortError'))).toBe(false);
   });
 });

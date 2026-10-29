@@ -1,11 +1,20 @@
 // Post-build guard: react stays external, and the stylesheet can neither restyle the host nor be restyled by it.
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 const fail = (m) => { console.error('check-dist: ' + m); process.exit(1); };
-for (const f of ['dist/react/index.js', 'dist/react/index.cjs']) {
+const walkJs = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+  const p = join(dir, e.name);
+  return e.isDirectory() ? (e.name === 'fonts' ? [] : walkJs(p)) : /\.(js|cjs)$/.test(e.name) ? [p] : [];
+});
+const jsFiles = walkJs('dist');
+if (jsFiles.length === 0) fail('no js files in dist');
+for (const f of jsFiles) {
   const s = readFileSync(f, 'utf8');
-  if (!/["']react\/jsx-runtime["']/.test(s)) fail(`${f} does not import react/jsx-runtime externally`);
   if (/__SECRET_INTERNALS|ReactCurrentDispatcher/.test(s)) fail(`${f} bundles react`);
+}
+for (const f of ['dist/react/index.js', 'dist/react/index.cjs']) {
+  if (!/["']react\/jsx-runtime["']/.test(readFileSync(f, 'utf8'))) fail(`${f} does not import react/jsx-runtime externally`);
 }
 
 const css = readFileSync('dist/styles.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
