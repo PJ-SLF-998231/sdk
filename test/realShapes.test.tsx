@@ -6,6 +6,16 @@ import { createShelfClient } from '../src';
 
 afterEach(cleanup);
 
+// Thumbnails are fetched with the client's credentials and shown from object URLs, so the fake API serves
+// image bytes, records which size was asked for, and jsdom (which has no object URLs) gets a stub.
+const thumbRequests: string[] = [];
+let blobs = 0;
+beforeEach(() => {
+  thumbRequests.length = 0;
+  (URL as unknown as { createObjectURL: () => string }).createObjectURL = () => `blob:thumb-${++blobs}`;
+  (URL as unknown as { revokeObjectURL: () => void }).revokeObjectURL = () => undefined;
+});
+
 // Response shapes copied from the Shelf api (internal/integrations/reach.go, docs/openapi.yaml):
 // GET /files -> {"files": [...], "next_cursor": string|null}; preview_sizes are names;
 // GET /folders -> {"folders": [{id, parent_id, name}]}, the key's folder first.
@@ -26,6 +36,10 @@ function fakeApi(all: unknown, foldersBody: unknown = { folders }, access = 'rea
     const url = new URL(String(input), 'http://x');
     const path = url.pathname.replace(/^\/api\/shelf/, '');
     let body: unknown;
+    if (/^\/files\/[^/]+\/thumbnail$/.test(path)) {
+      thumbRequests.push(path + url.search);
+      return new Response(new Uint8Array([1, 2, 3]), { status: 200, headers: { 'Content-Type': 'image/png' } });
+    }
     if (path === '/') body = { id: 'k', name: 'cms', access, expires_at: null, folder: { id: ROOT, name: 'Aisle CMS' } };
     else if (path === '/folders') body = foldersBody;
     else if (path === '/files') {
@@ -112,10 +126,12 @@ describe('real API shapes', () => {
       const { container } = mount(fakeApi(docs));
       await screen.findByText('notes.txt');
       expect(text(container.querySelector('.shelf-sdk__shelf-section-head h2'))).toBe('Documents');
-      const cards = Array.from(container.querySelectorAll('.shelf-sdk__file-grid > article.shelf-sdk__card.shelf-sdk__file-card'));
+      const cards = Array.from(container.querySelectorAll('.shelf-sdk__file-grid article.shelf-sdk__card.shelf-sdk__file-card'));
       expect(cards).toHaveLength(2);
       const [a, b] = cards as [Element, Element];
-      expect(a.querySelector('.shelf-sdk__file-card-thumb img')?.getAttribute('src')).toBe('/api/shelf/files/d1/thumbnail?size=medium');
+      // Thumbnails now arrive through the thumbnail loader, a moment after the card.
+      await waitFor(() => expect(a.querySelector('.shelf-sdk__file-card-thumb img')?.getAttribute('src')).toMatch(/^blob:thumb-/));
+      expect(thumbRequests).toContain('/files/d1/thumbnail?size=medium');
       expect(text(a.querySelector('.shelf-sdk__file-card-thumb .shelf-sdk__pill.shelf-sdk__pill--ready'))).toBe('Ready');
       expect(text(a.querySelector('.shelf-sdk__file-card-body .shelf-sdk__card-meta'))).toBe('88 B · TXT');
       expect(text(a.querySelector('h3.shelf-sdk__file-card-name button'))).toBe('notes.txt');
@@ -142,7 +158,8 @@ describe('real API shapes', () => {
       const notes = rows[4]!;
       expect(text(notes.querySelector('.shelf-sdk__pill--ready'))).toBe('Ready');
       expect(text(notes.querySelector('.shelf-sdk__item-list-num'))).toBe('88 B');
-      expect(notes.querySelector('.shelf-sdk__item-thumb img')?.getAttribute('src')).toBe('/api/shelf/files/d1/thumbnail?size=small');
+      await waitFor(() => expect(notes.querySelector('.shelf-sdk__item-thumb img')?.getAttribute('src')).toMatch(/^blob:thumb-/));
+      expect(thumbRequests).toContain('/files/d1/thumbnail?size=small');
       expect(notes.querySelector('.shelf-sdk__item-list-actions .shelf-sdk__action-menu-button')).toBeTruthy();
       expect(text(rows[5]!.querySelector('.shelf-sdk__item-thumb'))).toBe('PDF');
       expect(container.querySelector('.shelf-sdk__file-grid')).toBeNull();
@@ -152,7 +169,8 @@ describe('real API shapes', () => {
   it('lists files from {files: [...]} and uses a named preview size', async () => {
     const { container } = mount(fakeApi({ files: [fileRow(), fileRow({ id: 'f2', filename: 'n.docx', preview_sizes: [] })], next_cursor: null }));
     await screen.findByText('plan.pdf');
-    expect(container.querySelector('img[src="/api/shelf/files/f1/thumbnail?size=medium"]')).toBeTruthy();
+    await waitFor(() => expect(container.querySelector('.shelf-sdk__file-card-thumb img')).toBeTruthy());
+    expect(thumbRequests).toEqual(['/files/f1/thumbnail?size=medium']);
     expect(container.querySelectorAll('.shelf-sdk__file-card')).toHaveLength(2);
   });
 

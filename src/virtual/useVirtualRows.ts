@@ -63,9 +63,16 @@ export function useVirtualRows(opts: VirtualRowsOptions): VirtualRows {
     scrollToFn: useWindow ? (windowScroll as never) : (elementScroll as never),
   });
 
+  // A new row height must drop the sizes the virtualizer cached from the old estimate.
+  const measuredFor = useRef(rowHeight);
+  if (measuredFor.current !== rowHeight) {
+    measuredFor.current = rowHeight;
+    virt.measure();
+  }
+
   const items = virt.getVirtualItems();
   const rows = items.map((it) => ({ index: it.index, key: it.key as string | number, start: it.start - margin, size: it.size }));
-  const totalSize = scroller ? Math.max(0, virt.getTotalSize() - margin) : count * rowHeight;
+  const totalSize = scroller ? Math.max(0, virt.getTotalSize()) : count * rowHeight; // virtual-core's total already excludes scrollMargin
 
   // onNearEnd: once per `count`, when the viewport is within two viewport heights (or `prefetchRows` rows) of the end.
   const firedFor = useRef<number>(-1);
