@@ -22,12 +22,38 @@ export interface ShelfItem {
   preview_sizes: string[];
   /** Parser output (`word_count`, `page_count`, `sheet_names`). Only the single-document route sends it today. */
   parsed_meta?: Record<string, unknown> | null;
+  /** Word count straight from the list when the API sends it (null = not parsed yet / not applicable). */
+  word_count?: number | null;
 }
+
+/** Thumbnail size names the API serves. */
+export type PreviewSize = 'small' | 'medium' | 'large';
+
+/** The single-document route's shape: the list item plus the extracted text and a download link. */
+export type ShelfDocument = ShelfItem & { parsed_text?: string | null; download_url?: string };
+
+/** Per-request options accepted as the last argument of the client's methods. */
+export interface RequestOptions {
+  signal?: AbortSignal;
+}
+
+export interface ThumbnailRequestOptions extends RequestOptions {
+  /** Sent as `If-None-Match`; a matching ETag answers `{status: 304}`. */
+  etag?: string | null;
+}
+
+export type ThumbnailResult =
+  | { status: 200; bytes: ArrayBuffer; type: string; etag: string | null }
+  | { status: 304 };
 
 export interface ShelfFolder {
   id: string;
   name: string;
   parent_id?: string | null;
+  /** Live documents directly in this folder, when the API sends it. */
+  item_count?: number;
+  /** Live documents in this folder and everything below it, when the API sends it. */
+  total_item_count?: number;
   [key: string]: unknown;
 }
 

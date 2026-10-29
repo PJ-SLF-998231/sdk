@@ -5,6 +5,7 @@ export default defineConfig({
   entry: { index: 'src/index.ts', 'react/index': 'src/react/index.ts' },
   format: ['esm', 'cjs'],
   dts: true,
+  splitting: true, // ESM only: shared chunks keep lazy code (cache, outbox, virtual list) out of the client entry
   clean: true,
   sourcemap: false,
   external: ['react', 'react-dom', 'react/jsx-runtime'],
