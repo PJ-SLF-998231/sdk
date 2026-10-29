@@ -141,6 +141,7 @@ describe('ShelfFolder', () => {
     fireEvent.click(screen.getByText('notes.docx'));
     await screen.findByText('hello parsed text');
     fireEvent.click(screen.getByText('Delete'));
+    expect(screen.getByRole('alertdialog', { name: 'Confirm delete' }).textContent).toMatch(/^Move .+ to the Shelf trash\? You can restore it in Shelf\.Confirm delete/);
     expect(client.deleteFile).not.toHaveBeenCalled();
     fireEvent.click(screen.getByText('Confirm delete'));
     await waitFor(() => expect(client.deleteFile).toHaveBeenCalledWith('f2'));

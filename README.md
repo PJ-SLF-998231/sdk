@@ -146,7 +146,7 @@ export function Files() {
 }
 ```
 
-Props: `baseUrl` or a ready `client`, `initialFolderId`, `theme` (`'light' | 'dark' | 'auto'`, default `auto` follows the OS), `className`. Upload, rename, move and delete controls appear only when the key is read_write. A `503 not_configured` shows a "not configured" state.
+Props: `baseUrl` or a ready `client`, `initialFolderId`, `theme` (`'light' | 'dark' | 'auto'`, default `auto` follows the OS), `className`. Upload, rename, move and delete controls appear only when the key is read_write. Delete moves the file to the Shelf trash (it is not permanent) and it can be restored in Shelf. A `503 not_configured` shows a "not configured" state.
 
 Theming: styles are scoped under `.shelf-sdk` and use Shelf's design tokens as CSS custom properties (`--bg`, `--fg`, `--accent`, `--line`, ...), so they do not leak into the host page. Override a token on `.shelf-sdk` (or a parent via `className`) to adapt it, or set `theme` to force light or dark.
 

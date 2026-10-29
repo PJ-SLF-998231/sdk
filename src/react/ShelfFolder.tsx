@@ -449,7 +449,7 @@ function DocumentPanel({ client, doc, canWrite, folders, onClose, onFail, onRena
       )}
       {mode === 'delete' && (
         <div className="shelf-sdk__actions" role="alertdialog" aria-label="Confirm delete">
-          <span>Delete {doc.filename}? This cannot be undone.</span>
+          <span>Move {doc.filename} to the Shelf trash? You can restore it in Shelf.</span>
           <button
             type="button"
             className="shelf-sdk__btn shelf-sdk__btn--danger"
