@@ -31,7 +31,8 @@ export interface ShelfClient {
   upload(file: Blob, opts?: UploadOptions): Promise<ShelfItem>;
   updateFile(id: string, patch: UpdateFileInput): Promise<ShelfItem>;
   deleteFile(id: string): Promise<void>;
-  thumbnailUrl(id: string, size?: number): string;
+  /** `size` is a preview size name as listed in `preview_sizes`: small, medium or large. */
+  thumbnailUrl(id: string, size?: string | number): string;
   originalUrl(id: string, filename: string): string;
 }
 
@@ -56,9 +57,9 @@ export function createShelfClient(options: ShelfClientOptions): ShelfClient {
     info: () => request<ShelfInfo>('/'),
 
     async folders() {
-      const body = await request<ShelfFolder[] | { folders?: ShelfFolder[]; items?: ShelfFolder[] }>('/folders');
+      const body = await request<ShelfFolder[] | { folders?: ShelfFolder[] | null; items?: ShelfFolder[] | null } | null>('/folders');
       if (Array.isArray(body)) return body;
-      return body.folders ?? body.items ?? [];
+      return body?.folders ?? body?.items ?? [];
     },
 
     listFiles(params = {}) {
@@ -68,10 +69,10 @@ export function createShelfClient(options: ShelfClientOptions): ShelfClient {
       if (params.cursor) q.set('cursor', params.cursor);
       if (params.recursive !== undefined) q.set('recursive', String(params.recursive));
       const qs = q.toString();
-      return request<ListFilesResult>('/files' + (qs ? `?${qs}` : ''));
+      return request<unknown>('/files' + (qs ? `?${qs}` : '')).then(normaliseList);
     },
 
-    getFile: (id) => request<ShelfItem>(`/files/${enc(id)}`),
+    getFile: (id) => request<ShelfItem>(`/files/${enc(id)}`).then(normaliseItem),
 
     upload(file, opts = {}) {
       const form = new FormData();
@@ -81,7 +82,7 @@ export function createShelfClient(options: ShelfClientOptions): ShelfClient {
       if (opts.folder_id) form.append('folder_id', opts.folder_id);
       if (opts.client_ref) form.append('client_ref', opts.client_ref);
       if (opts.on_duplicate) form.append('on_duplicate', opts.on_duplicate);
-      return request<ShelfItem>('/files', { method: 'POST', body: form });
+      return request<ShelfItem>('/files', { method: 'POST', body: form }).then(normaliseItem);
     },
 
     updateFile: (id, patch) =>
@@ -89,7 +90,7 @@ export function createShelfClient(options: ShelfClientOptions): ShelfClient {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch),
-      }),
+      }).then(normaliseItem),
 
     async deleteFile(id) {
       await request<void>(`/files/${enc(id)}`, { method: 'DELETE' });
@@ -99,6 +100,17 @@ export function createShelfClient(options: ShelfClientOptions): ShelfClient {
 
     originalUrl: (id, filename) => `${base}/files/${enc(id)}/original/${enc(filename)}`,
   };
+}
+
+/** The API answers `{files: [...], next_cursor}`; any list may arrive as null or be missing. */
+function normaliseList(body: unknown): ListFilesResult {
+  const b = (body ?? {}) as { files?: ShelfItem[] | null; items?: ShelfItem[] | null; next_cursor?: string | null };
+  const rows = Array.isArray(b.files) ? b.files : Array.isArray(b.items) ? b.items : [];
+  return { items: rows.map(normaliseItem), next_cursor: b.next_cursor ?? null };
+}
+
+function normaliseItem(item: ShelfItem): ShelfItem {
+  return Array.isArray(item?.preview_sizes) ? item : { ...item, preview_sizes: [] };
 }
 
 async function toError(res: Response): Promise<ShelfError> {

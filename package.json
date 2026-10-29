@@ -1,6 +1,6 @@
 {
   "name": "@pj-slf-998231/sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Client and UI for the Shelf integration API",
   "type": "module",
   "license": "UNLICENSED",

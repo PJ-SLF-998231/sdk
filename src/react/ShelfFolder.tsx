@@ -19,6 +19,13 @@ export interface ShelfFolderProps {
 type Detail = ShelfItem & { parsed_text?: string | null };
 
 const PAGE = 50;
+const SIZE_ORDER = ['small', 'medium', 'large'];
+
+/** Preview size names, smallest first; unknown names last. Tolerates null/undefined. */
+function orderedSizes(sizes: ReadonlyArray<string | number> | null | undefined): string[] {
+  const rank = (s: string) => (SIZE_ORDER.includes(s) ? SIZE_ORDER.indexOf(s) : SIZE_ORDER.length);
+  return (Array.isArray(sizes) ? sizes.map(String) : []).sort((a, b) => rank(a) - rank(b));
+}
 
 function formatSize(n: number): string {
   if (n < 1024) return `${n} B`;
@@ -87,9 +94,10 @@ export function ShelfFolder({ client: given, baseUrl, initialFolderId, theme = '
         const [info, all] = await Promise.all([client.info(), client.folders()]);
         if (!live) return;
         setCanWrite(info.access === 'read_write');
-        setFolders(all);
-        const ids = new Set(all.map((f) => f.id));
-        const tops = all.filter((f) => !f.parent_id || !ids.has(f.parent_id));
+        const list = Array.isArray(all) ? all : [];
+        setFolders(list);
+        const ids = new Set(list.map((f) => f.id));
+        const tops = list.filter((f) => !f.parent_id || !ids.has(f.parent_id));
         const start = initialFolderId ?? (tops.length === 1 ? tops[0]!.id : null);
         setRootId(start);
         setCurrentId(start);
@@ -116,8 +124,9 @@ export function ShelfFolder({ client: given, baseUrl, initialFolderId, theme = '
           ...(after ? { cursor: after } : {}),
         });
         if (mine !== seq.current) return;
-        setFiles((prev) => (after ? [...prev, ...res.items] : res.items));
-        setCursor(res.next_cursor ?? null);
+        const rows = Array.isArray(res?.items) ? res.items : [];
+        setFiles((prev) => (after ? [...prev, ...rows] : rows));
+        setCursor(res?.next_cursor ?? null);
         setError(null);
       } catch (err) {
         if (mine === seq.current) fail(err, 'Could not load files');
@@ -285,12 +294,12 @@ export function ShelfFolder({ client: given, baseUrl, initialFolderId, theme = '
             row(
               `f-${f.id}`,
               <>
-                {f.preview_sizes?.length ? (
+                {orderedSizes(f.preview_sizes).length ? (
                   <img
                     className="shelf-sdk__thumb"
                     alt=""
                     loading="lazy"
-                    src={client.thumbnailUrl(f.id, Math.min(...f.preview_sizes))}
+                    src={client.thumbnailUrl(f.id, orderedSizes(f.preview_sizes)[0])}
                   />
                 ) : (
                   <span className="shelf-sdk__thumb" aria-hidden="true">{ext(f.filename)}</span>
@@ -353,8 +362,8 @@ function DocumentPanel({ client, doc, canWrite, folders, onClose, onFail, onRena
   const [mode, setMode] = useState<'view' | 'rename' | 'move' | 'delete'>('view');
   const [name, setName] = useState(doc.filename);
   const [target, setTarget] = useState(doc.folder_id ?? folders[0]?.id ?? '');
-  const sizes = [...(doc.preview_sizes ?? [])].sort((a, b) => a - b);
-  const medium = sizes.length ? sizes[Math.floor((sizes.length - 1) / 2)] : undefined;
+  const sizes = orderedSizes(doc.preview_sizes);
+  const medium = sizes.includes('medium') ? 'medium' : sizes[Math.floor((sizes.length - 1) / 2)];
 
   const run = async (fn: () => Promise<void>, action: string) => {
     try {

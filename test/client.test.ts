@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createShelfClient, ShelfError } from '../src';
 
-const item = { id: 'f1', filename: 'a.pdf', content_type: 'application/pdf', size_bytes: 3, folder_id: 'd1', parse_status: 'done', created_at: 't', edited_at: null, parsed_at: null, preview_sizes: [256] };
+const item = { id: 'f1', filename: 'a.pdf', content_type: 'application/pdf', size_bytes: 3, folder_id: 'd1', parse_status: 'done', created_at: 't', edited_at: null, parsed_at: null, preview_sizes: ['small'] };
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -29,7 +29,7 @@ describe('routes', () => {
     expect(call().url).toMatch(/\/folders$/);
   });
   it('listFiles builds the query', async () => {
-    const { client, call } = setup(() => json({ items: [item], next_cursor: null }));
+    const { client, call } = setup(() => json({ files: [item], next_cursor: null }));
     await client.listFiles({ folder_id: 'd1', limit: 10, cursor: 'c', recursive: true });
     const u = new URL(call().url);
     expect(u.pathname).toBe('/api/v1/integration/files');
@@ -37,7 +37,7 @@ describe('routes', () => {
   });
   it('getFile', async () => {
     const { client, call } = setup(() => json(item));
-    expect((await client.getFile('f1')).preview_sizes).toEqual([256]);
+    expect((await client.getFile('f1')).preview_sizes).toEqual(['small']);
     expect(call().url).toMatch(/\/files\/f1$/);
   });
   it('upload sends multipart fields', async () => {
@@ -69,14 +69,14 @@ describe('routes', () => {
   it('url builders', () => {
     const { client } = setup(() => json({}), { baseUrl: '/api/shelf/' });
     expect(client.thumbnailUrl('f1')).toBe('/api/shelf/files/f1/thumbnail');
-    expect(client.thumbnailUrl('f1', 256)).toBe('/api/shelf/files/f1/thumbnail?size=256');
+    expect(client.thumbnailUrl('f1', 'small')).toBe('/api/shelf/files/f1/thumbnail?size=small');
     expect(client.originalUrl('f1', 'my file.pdf')).toBe('/api/shelf/files/f1/original/my%20file.pdf');
   });
 });
 
 describe('baseUrl prefix and auth', () => {
   it('works with a relative prefix', async () => {
-    const { client, call } = setup(() => json({ items: [] }), { baseUrl: '/api/shelf' });
+    const { client, call } = setup(() => json({ files: [] }), { baseUrl: '/api/shelf' });
     await client.listFiles();
     expect(call().url).toBe('/api/shelf/files');
   });
@@ -119,7 +119,7 @@ describe('errors', () => {
 
 describe('paging', () => {
   it('follows next_cursor', async () => {
-    const pages = [{ items: [item], next_cursor: 'c2' }, { items: [{ ...item, id: 'f2' }], next_cursor: null }];
+    const pages = [{ files: [item], next_cursor: 'c2' }, { files: [{ ...item, id: 'f2' }], next_cursor: null }];
     let i = 0;
     const fetchMock = vi.fn(async (_u: RequestInfo | URL) => json(pages[i++]));
     const client = createShelfClient({ baseUrl: '/api/shelf', fetch: fetchMock as unknown as typeof fetch });
