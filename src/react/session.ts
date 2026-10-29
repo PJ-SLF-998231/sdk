@@ -6,8 +6,8 @@ import { createThumbLoader } from '../cache/thumbs';
 import { isAuthLost, ShelfError } from '../client';
 import type { ShelfClient } from '../client';
 import type { CacheStore, ThumbLoader } from '../internal/contracts';
-import { createOutbox } from '../outbox';
 import type { OutboxHandle } from '../outbox';
+import type { ApplyOutboxFn } from '../internal/contracts';
 import { namespaceFor, openKv } from '../storage/db';
 
 export interface SessionParts {
@@ -32,7 +32,13 @@ export interface Session {
   outbox: OutboxHandle | null;
   /** How many queued changes were thrown away when the session was lost. */
   discarded: number;
-  /** Creates the outbox once the store is open; null while it is not or after the session was lost. */
+  /** The overlay function; set together with `outbox` (both come from the lazily loaded outbox chunk). */
+  applyOutbox: ApplyOutboxFn | null;
+  /**
+   * Creates the outbox once the store is open; null while it is not, while the (lazy) outbox chunk is loading
+   * or after the session was lost. Read-only hosts never call it, so they never download the chunk.
+   * Listeners of `onReady` are told when the chunk has arrived.
+   */
   ensureOutbox(): OutboxHandle | null;
   onAuthLost(listener: (err: ShelfError) => void): () => void;
   onReady(listener: () => void): () => void;
@@ -52,6 +58,9 @@ class SessionImpl implements Session {
   authLost = false;
   disposed = false;
   outbox: OutboxHandle | null = null;
+  applyOutbox: ApplyOutboxFn | null = null;
+  private outboxMod: typeof import('../outbox') | null = null;
+  private outboxLoading = false;
   discarded = 0;
   private discardListeners = new Set<() => void>();
   readonly client: ShelfClient;
@@ -95,8 +104,24 @@ class SessionImpl implements Session {
   ensureOutbox(): OutboxHandle | null {
     if (this.outbox) return this.outbox;
     if (!this.parts || this.disposed || this.authLost) return null;
+    if (!this.outboxMod) {
+      if (!this.outboxLoading) {
+        this.outboxLoading = true;
+        import('../outbox').then(
+          (m) => {
+            this.outboxMod = m;
+            this.applyOutbox = m.applyOutbox;
+            if (!this.disposed) for (const l of [...this.readyListeners]) l();
+          },
+          () => {
+            this.outboxLoading = false; // a failed chunk load: the next render retries
+          },
+        );
+      }
+      return null;
+    }
     // Persistent exactly when the cache is (the host gave a cacheScope); otherwise the kv is memory-only.
-    const ob = createOutbox({ kv: this.parts.cache.kv, client: this.client }) as OutboxHandle;
+    const ob = this.outboxMod.createOutbox({ kv: this.parts.cache.kv, client: this.client }) as OutboxHandle;
     ob.on('authLost', ({ discarded }) => this.noteDiscarded(discarded));
     this.outbox = ob;
     return ob;

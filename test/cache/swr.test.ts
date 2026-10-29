@@ -222,6 +222,7 @@ describe('createSwr', () => {
     const onAuthLost = vi.fn();
     const swr = createSwr(cache, { now, onAuthLost });
     swr.handle({ key: 'k', fetcher: async () => Promise.reject(new ShelfError(401, 'unauthorized', 'no')) }).subscribe(() => undefined);
+    await vi.waitFor(() => expect(onAuthLost).toHaveBeenCalledTimes(1)); // not a fixed number of ticks: IDB speed varies under load
     await flush();
     expect(onAuthLost).toHaveBeenCalledTimes(1);
     swr.destroy();

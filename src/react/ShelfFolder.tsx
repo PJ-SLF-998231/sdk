@@ -6,7 +6,6 @@ import type { ShelfClient } from '../client';
 import { useFolderListing } from '../hooks/useFolderListing';
 import { useOnline } from '../hooks/useOnline';
 import { useOutbox } from '../hooks/useOutbox';
-import { applyOutbox } from '../outbox/overlay';
 import { useResource } from '../hooks/useResource';
 import type { ShelfFolder as FolderRecord, ShelfInfo, ShelfItem } from '../types';
 import { gridColumns, useElementWidth, useVirtualRows } from '../virtual';
@@ -423,7 +422,7 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
   );
   const folders = foldersRes.data ?? EMPTY_FOLDERS;
   const ready = infoRes.data !== undefined && foldersRes.data !== undefined;
-  const canWrite = infoRes.data?.access === 'read_write';
+  const writeKey = infoRes.data?.access === 'read_write';
 
   // The top of the breadcrumb is decided once, when the folders first arrive.
   const [rootId, setRootId] = useState<string | null | undefined>(undefined);
@@ -451,7 +450,9 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
 
   const online = useOnline();
   // The offline outbox exists for read_write keys only. It lives in IndexedDB when the host gave a cacheScope.
-  const outbox = canWrite && parts ? session.ensureOutbox() : null;
+  const outbox = writeKey && parts ? session.ensureOutbox() : null;
+  // Write controls appear once the (lazily loaded) outbox is there to take the change.
+  const canWrite = writeKey && !!outbox;
   const outboxView = useOutbox(outbox);
   useEffect(() => {
     outbox?.start();
@@ -468,9 +469,10 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
       const extra = landed.filter((x) => !have.has(x.id) && (x.folder_id ?? null) === currentId && !edits.removed.includes(x.id));
       if (extra.length > 0) base = [...extra, ...base];
     }
-    if (!outbox) return base;
-    return applyOutbox(base, outboxView.entries, currentId);
-  }, [listing.items, edits, landed, outbox, outboxView.entries, currentId]);
+    // Until the lazy outbox chunk has arrived the items render as they are.
+    if (!outbox || !session.applyOutbox) return base;
+    return session.applyOutbox(base, outboxView.entries, currentId) as Row[];
+  }, [listing.items, edits, landed, outbox, session, outboxView.entries, currentId]);
   const itemsRef = useRef(items);
   itemsRef.current = items;
 

@@ -57,11 +57,11 @@ afterEach(() => {
 });
 
 const file = (name: string) => new File([name], name, { type: 'application/pdf' });
-const pickFiles = (...names: string[]) => fireEvent.change(screen.getByLabelText('Upload files'), { target: { files: names.map(file) } });
+const pickFiles = async (...names: string[]) => fireEvent.change(await screen.findByLabelText('Upload files'), { target: { files: names.map(file) } });
 const banner = () => screen.queryByTestId('shelf-outbox-banner');
 
 async function rename(from: string, to: string) {
-  fireEvent.click(screen.getByLabelText(`Actions for ${from}`));
+  fireEvent.click(await screen.findByLabelText(`Actions for ${from}`));
   fireEvent.click(screen.getByRole('menuitem', { name: 'Rename' }));
   fireEvent.change(await screen.findByLabelText('New name'), { target: { value: to } });
   fireEvent.click(screen.getByText('Save name'));
@@ -105,7 +105,7 @@ describe('ShelfFolder write path through the outbox', () => {
     render(<ShelfFolder client={client} />);
     await screen.findByText('plan.pdf');
     await act(async () => setOnline(false));
-    pickFiles('a.pdf', 'b.pdf', 'c.pdf', 'd.pdf');
+    await pickFiles('a.pdf', 'b.pdf', 'c.pdf', 'd.pdf');
     await waitFor(() => expect(screen.getAllByText('Pending')).toHaveLength(4));
     for (const n of ['a.pdf', 'b.pdf', 'c.pdf', 'd.pdf']) expect(screen.getByText(n)).toBeTruthy();
     expect(banner()?.textContent).toMatch(/4 changes/);
@@ -127,7 +127,7 @@ describe('ShelfFolder write path through the outbox', () => {
     const client = mock('read_write', { upload: vi.fn(async () => { throw new ShelfError(415, 'unsupported', 'This file type is not supported'); }) });
     render(<ShelfFolder client={client} />);
     await screen.findByText('plan.pdf');
-    pickFiles('odd.exe');
+    await pickFiles('odd.exe');
     await screen.findByText('Failed');
     expect(screen.getByText('This file type is not supported')).toBeTruthy();
     expect(screen.getByText('Retry')).toBeTruthy();
@@ -146,8 +146,25 @@ describe('ShelfFolder write path through the outbox', () => {
     await screen.findByText('Conflict');
     expect(screen.getByText(/Renamed on the server to "theirs\.pdf"/)).toBeTruthy();
     expect(client.updateFile).not.toHaveBeenCalled();
-    expect(screen.getByText('Retry')).toBeTruthy();
+    expect(screen.queryByText('Retry')).toBeNull(); // a conflict is a choice, not a retry
     expect(screen.getByText('Discard')).toBeTruthy();
+    fireEvent.click(screen.getByText('Keep mine')); // forces the change over the server's value
+    await waitFor(() => expect(client.updateFile).toHaveBeenCalledTimes(1));
+    expect(client.updateFile).toHaveBeenCalledWith('f1', expect.objectContaining({ filename: 'mine.pdf' }), expect.anything());
+  });
+
+  it('Discard on a conflict keeps the server value and sends nothing', async () => {
+    const client = mock('read_write', {
+      getFile: vi.fn(async (id: string) => ({ ...item({ id, filename: 'theirs.pdf' }), parsed_text: 't' })),
+    });
+    render(<ShelfFolder client={client} />);
+    await screen.findByText('plan.pdf');
+    await rename('plan.pdf', 'mine.pdf');
+    await screen.findByText('Conflict');
+    fireEvent.click(screen.getByText('Discard'));
+    await waitFor(() => expect(screen.queryByText('Conflict')).toBeNull());
+    expect(client.updateFile).not.toHaveBeenCalled();
+    expect(screen.queryByText('mine.pdf')).toBeNull();
   });
 
   it('unmount and remount with the same scope keeps the upload listed, then drains it', async () => {
@@ -156,7 +173,7 @@ describe('ShelfFolder write path through the outbox', () => {
     const first = render(<ShelfFolder {...props} />);
     await screen.findByText('plan.pdf');
     await act(async () => setOnline(false));
-    pickFiles('keep.pdf');
+    await pickFiles('keep.pdf');
     await screen.findByText('keep.pdf');
     await waitFor(() => expect(screen.getByText('Pending')).toBeTruthy());
     first.unmount();
@@ -178,7 +195,7 @@ describe('ShelfFolder write path through the outbox', () => {
     const client = mock('read_write', { deleteFile: vi.fn(() => new Promise<void>((_, rej) => { reject = rej; })) });
     render(<ShelfFolder client={client} />);
     await screen.findByText('notes.pdf');
-    fireEvent.click(screen.getByLabelText('Actions for notes.pdf'));
+    fireEvent.click(await screen.findByLabelText('Actions for notes.pdf'));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
     expect(screen.getByRole('alertdialog', { name: 'Confirm delete' }).textContent).toMatch(/^Move notes\.pdf to the Shelf trash\? You can restore it in Shelf\./);
     fireEvent.click(screen.getByText('Confirm delete'));
@@ -209,7 +226,7 @@ describe('ShelfFolder write path through the outbox', () => {
     render(<ShelfFolder client={client} cacheScope="u" onAuthLost={onAuthLost} />);
     await screen.findByText('plan.pdf');
     await act(async () => setOnline(false));
-    pickFiles('a.pdf', 'b.pdf');
+    await pickFiles('a.pdf', 'b.pdf');
     await waitFor(() => expect(screen.getAllByText('Pending')).toHaveLength(2));
     vi.mocked(client.upload).mockImplementation(async () => { throw new ShelfError(401, 'unauthorized', 'signed out'); });
     await act(async () => setOnline(true));

@@ -287,11 +287,15 @@ describe('errors', () => {
 
   it('on auth loss calls authLost once, purges the outbox and stops draining', async () => {
     const kv = await openTestKv();
-    const client = fakeClient({ upload: async () => { await tick(5); throw err(401, 'unauthorized'); } });
+    // The 401 is held back until all five are queued: no timing race between enqueueing and the rejection.
+    let release!: () => void;
+    const gate = new Promise<void>((r) => { release = r; });
+    const client = fakeClient({ upload: async () => { await gate; throw err(401, 'unauthorized'); } });
     const ob = make(kv, client);
     const lost = vi.fn();
     ob.on('authLost', lost);
     for (let i = 0; i < 5; i++) await ob.enqueue(upOp(`f${i}.pdf`));
+    release();
     await vi.waitFor(() => expect(lost).toHaveBeenCalled());
     await tick(40);
     expect(lost).toHaveBeenCalledTimes(1);
