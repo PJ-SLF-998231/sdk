@@ -167,9 +167,30 @@ The folder view only offers what the integration API can do. It has no route to 
 
 Folder cards and the header count documents by reading every document under the key's folder once (up to 1000). Over that, or if that read fails, the counts are left out rather than guessed. A document card shows `SIZE · TYPE`, plus pages or words when the API sends `parsed_meta` for the list (today only the single-document route does, so the Details panel shows them and the card does not).
 
+### Visual parity
+
+Rendered in Chromium (Playwright) from the built `dist/` against a fake API serving the real integration shapes, with a deliberately hostile host stylesheet (global `* { box-sizing: content-box !important }`, styled `h1`-`h3`, `button`, `a`, `li`, `svg`, a body font, `text-transform` and `letter-spacing`). With and without that stylesheet the component renders pixel-identical (at most 2 of about 2 million pixels differ), and the host's own elements compute to the same styles with and without the SDK loaded.
+
+| Root folder, Gallery | Root folder, List |
+| --- | --- |
+| ![Root folder, Gallery](docs/screenshots/root-gallery-1280.png) | ![Root folder, List](docs/screenshots/root-list-1280.png) |
+| Folder with a document, Gallery | Folder with a document, List |
+| ![Folder with a document, Gallery](docs/screenshots/contracts-gallery-1280.png) | ![Folder with a document, List](docs/screenshots/contracts-list-1280.png) |
+
+More in `docs/screenshots/`: the document page, a 900 px wide layout (`*-900.png`), the same views under hostile host CSS (`*-hostile.png`), and `target-equivalent-root-gallery.png`, the root view framed like the Shelf web screenshot it was compared with. The screenshots are not part of the npm package (`files` lists only `dist` and `README.md`).
+
+Known differences from Shelf web's folder view, all because the integration API has no matching route or datum:
+
+- The breadcrumb starts at the key's folder (`Aisle CMS`); web shows the shelf name before it (`Aisle CMS / Aisle CMS`), and the API does not give the shelf's name.
+- No **New folder** button, and no `...` menus on folder cards or in the header: there are no folder write routes.
+- Folder and header counts (`1 ITEM`, `1 ITEM · 5 FOLDERS`) are derived by reading the documents once; web reads them from the folder listing.
+- The page padding and scrollbar of Shelf web's app shell belong to the host page, not the component.
+
+Reproduce: `cd harness && npm install && npx playwright install chromium && npm run build && npm run shoot`. The harness is dev only and is not in the package.
+
 ### Host CSS requirements
 
-None beyond importing `@pj-slf-998231/sdk/styles.css` once. Every rule sits under `.shelf-sdk` and every class is prefixed `shelf-sdk__`, so the host's element and class rules cannot match the embed and the embed never styles the host (no `:root`, `html`, `body` or bare element selectors; `npm run check:dist` fails the build if one appears). Give it a container with a width: it fills its parent. It uses viewport media queries (720px and below stacks the layout), like Shelf web.
+None beyond importing `@pj-slf-998231/sdk/styles.css` once. Every rule sits under `.shelf-sdk` and every class is prefixed `shelf-sdk__`, so the host's element and class rules cannot match the embed and the embed never styles the host (no `:root`, `html`, `body` or bare element selectors; `npm run check:dist` fails the build if one appears). Host rules on bare elements (`h3 { font: ... }`, `li { margin: ... }`, `svg { fill: ... }`) do reach the embed's own elements, so `base.css` resets those that matter. Give it a container with a width: it fills its parent. It uses viewport media queries (720px and below stacks the layout), like Shelf web.
 
 Theming: tokens are CSS custom properties on `.shelf-sdk` (`--bg`, `--fg`, `--accent`, `--line`, ...). Override one on `.shelf-sdk` (or via `className`), or set `theme` to force light or dark.
 

@@ -1,0 +1,11 @@
+/* Deliberately hostile host page styles: what an embedding site's global CSS can look like. */
+*, *::before, *::after { box-sizing: content-box !important; }
+body { font-family: "Comic Sans MS", cursive; font-size: 22px; color: #0a0; background: #fff; line-height: 2.4; letter-spacing: 3px; text-transform: uppercase; margin: 0; padding: 28px; }
+h1, h2, h3 { font: italic 900 40px/1 serif; color: #c0f; margin: 40px 0; border-bottom: 6px double red; }
+button { background: lime; border: 4px dashed purple; border-radius: 0; padding: 30px; font: 700 28px fantasy; color: #00f; text-transform: none; }
+a { color: orange; text-decoration: underline wavy; }
+input, select { border: 5px solid red; padding: 20px; font-size: 30px; }
+p, span, div { color: #a00; }
+ul, ol, li { list-style: square; margin: 12px; padding: 12px; }
+svg { width: 80px; height: 80px; fill: red; }
+img { border: 8px solid red; }
