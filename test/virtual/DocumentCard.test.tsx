@@ -11,9 +11,13 @@ import fixture from './fixtures/0.2.0-markup.json';
 
 // fixtures/0.2.0-markup.json was captured by rendering the 0.2.0 ShelfFolder (a thumbnail-less DOCX and a
 // parsing text file) in grid and list layout, with a read key (no menu) and a read_write key (menu).
+// The fixture was captured in en-ZA; pin the locale and zone so the parity test does not depend on the machine's.
+const pinnedDate = vi.hoisted(() => (iso: string | null | undefined) =>
+  iso ? new Intl.DateTimeFormat('en-ZA', { timeZone: 'Africa/Johannesburg', year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(iso)) : '');
+
 vi.mock('../../src/react/format', async (orig) => {
   const real = await orig<typeof import('../../src/react/format')>();
-  return { ...real, formatSize: vi.fn(real.formatSize), formatDate: vi.fn(real.formatDate) };
+  return { ...real, formatSize: vi.fn(real.formatSize), formatDate: vi.fn(pinnedDate) };
 });
 
 const items = fixture.items as ShelfItem[];
