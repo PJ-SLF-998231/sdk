@@ -20,6 +20,8 @@ export interface ShelfItem {
   parsed_at: string | null;
   /** Names of the thumbnails that exist: any of small, medium, large. Always an array. */
   preview_sizes: string[];
+  /** Parser output (`word_count`, `page_count`, `sheet_names`). Only the single-document route sends it today. */
+  parsed_meta?: Record<string, unknown> | null;
 }
 
 export interface ShelfFolder {
