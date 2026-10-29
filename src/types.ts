@@ -24,6 +24,8 @@ export interface ShelfItem {
   parsed_meta?: Record<string, unknown> | null;
   /** Word count straight from the list when the API sends it (null = not parsed yet / not applicable). */
   word_count?: number | null;
+  /** True when the document has a generated document site (the Content tab). Absent on older APIs: no site. */
+  has_site?: boolean;
 }
 
 /** Thumbnail size names the API serves. */
@@ -83,4 +85,26 @@ export interface UploadOptions {
 export interface UpdateFileInput {
   filename?: string;
   folder_id?: string;
+}
+
+/** Where a document's generated site stands. */
+export type SiteStatus = 'none' | 'building' | 'ready' | 'failed';
+
+/** GET /integration/files/{id}/site. `spec` is data (a version-1 document-site spec); render it, never inject it. */
+export interface ShelfSite {
+  file_id: string;
+  status: SiteStatus;
+  /** The spec was built from older text than the document has now. */
+  stale?: boolean;
+  error_code?: string | null;
+  error?: string | null;
+  requested_at?: string | null;
+  updated_at?: string | null;
+  spec?: unknown;
+}
+
+/** The original file as bytes (read with the client's credentials). */
+export interface OriginalResult {
+  bytes: ArrayBuffer;
+  type: string;
 }

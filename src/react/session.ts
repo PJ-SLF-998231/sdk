@@ -225,7 +225,7 @@ class SessionImpl implements Session {
 
 /** Wraps a client so a lost session reported by any call reaches `onLost` before the error propagates. */
 function guardClient(raw: ShelfClient, onLost: (err: unknown) => void): ShelfClient {
-  const wrap = <K extends 'info' | 'folders' | 'listFiles' | 'getFile' | 'upload' | 'updateFile' | 'deleteFile'>(name: K): ShelfClient[K] =>
+  const wrap = <K extends 'info' | 'folders' | 'listFiles' | 'getFile' | 'upload' | 'updateFile' | 'deleteFile' | 'getSite'>(name: K): ShelfClient[K] =>
     (async (...args: unknown[]) => {
       try {
         return await (raw[name] as (...a: unknown[]) => Promise<unknown>).apply(raw, args);
@@ -243,18 +243,23 @@ function guardClient(raw: ShelfClient, onLost: (err: unknown) => void): ShelfCli
     upload: wrap('upload'),
     updateFile: wrap('updateFile'),
     deleteFile: wrap('deleteFile'),
+    getSite: wrap('getSite'),
     thumbnailUrl: (id, size) => raw.thumbnailUrl(id, size),
     originalUrl: (id, name) => raw.originalUrl(id, name),
   };
-  if (typeof raw.thumbnail === 'function') {
-    guarded.thumbnail = async (...args) => {
-      try {
-        return await raw.thumbnail!.apply(raw, args);
-      } catch (err) {
-        if (isAuthLost(err)) onLost(err);
-        throw err;
-      }
-    };
+  // Optional methods are wrapped only when the client has them.
+  for (const name of ['thumbnail', 'original'] as const) {
+    const fn = raw[name] as ((...a: unknown[]) => Promise<unknown>) | undefined;
+    if (typeof fn === 'function') {
+      (guarded as unknown as Record<string, unknown>)[name] = async (...args: unknown[]) => {
+        try {
+          return await fn.apply(raw, args);
+        } catch (err) {
+          if (isAuthLost(err)) onLost(err);
+          throw err;
+        }
+      };
+    }
   }
   return guarded;
 }

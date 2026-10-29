@@ -1,11 +1,13 @@
 import type {
   ListFilesParams,
   ListFilesResult,
+  OriginalResult,
   RequestOptions,
   ShelfClientOptions,
   ShelfFolder,
   ShelfInfo,
   ShelfItem,
+  ShelfSite,
   ThumbnailRequestOptions,
   ThumbnailResult,
   UpdateFileInput,
@@ -44,6 +46,10 @@ export interface ShelfClient {
    */
   thumbnail?(id: string, size: string | number, opts?: ThumbnailRequestOptions): Promise<ThumbnailResult>;
   originalUrl(id: string, filename: string): string;
+  /** The original file's bytes, fetched with the client's credentials (for the document page's preview). */
+  original?(id: string, filename: string, opts?: RequestOptions): Promise<OriginalResult>;
+  /** The document's generated site (GET /files/{id}/site). 404 when the document has none or the API predates sites. */
+  getSite(id: string, opts?: RequestOptions): Promise<ShelfSite>;
 }
 
 /** The session is no longer authorised: a 401, or the proxy's 503 `not_configured` (key revoked/unset). */
@@ -143,6 +149,18 @@ export function createShelfClient(options: ShelfClientOptions): ShelfClient {
     },
 
     originalUrl: (id, filename) => `${base}/files/${enc(id)}/original/${enc(filename)}`,
+
+    async original(id, filename, opts = {}) {
+      const res = await doFetch(`${base}/files/${enc(id)}/original/${enc(filename)}`, {
+        headers: headersFor({}, '*/*'),
+        credentials: 'same-origin',
+        ...(opts.signal ? { signal: opts.signal } : {}),
+      });
+      if (!res.ok) throw await toError(res);
+      return { bytes: await res.arrayBuffer(), type: res.headers.get('Content-Type') ?? 'application/octet-stream' };
+    },
+
+    getSite: (id, o) => request<ShelfSite>(`/files/${enc(id)}/site`, {}, o),
   };
 }
 

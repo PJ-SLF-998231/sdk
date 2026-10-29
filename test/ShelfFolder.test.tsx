@@ -93,10 +93,16 @@ describe('ShelfFolder', () => {
     expect(within(panel).getByText('Location').nextElementSibling?.textContent).toBe('Aisle CMS');
     expect(within(panel).getByText('Status').nextElementSibling?.textContent).toBe('Ready');
     fireEvent.click(within(panel).getByRole('tab', { name: 'Preview' }));
-    expect(within(panel).getByAltText('Preview of plan.pdf').getAttribute('src')).toBe('/t/f1?size=medium');
-    const dl = within(panel).getByText('Download') as HTMLAnchorElement;
-    expect(dl.getAttribute('href')).toBe('/o/f1/plan.pdf');
-    expect(dl.hasAttribute('download')).toBe(true);
+    // A PDF is shown from its original route in the browser's viewer (this client has no original() to read bytes with).
+    expect(within(panel).getByTitle('plan.pdf').getAttribute('src')).toBe('/o/f1/plan.pdf#view=FitH&navpanes=0');
+    // Download sits in the menu, as on Shelf web, and saves the original under its name.
+    const saved: Array<{ href: string; download: string }> = [];
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      saved.push({ href: this.getAttribute('href') ?? '', download: this.download });
+    });
+    fireEvent.click(within(panel).getByLabelText('Actions for plan.pdf'));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Download' }));
+    await waitFor(() => expect(saved).toEqual([{ href: '/o/f1/plan.pdf', download: 'plan.pdf' }]));
     fireEvent.click(within(panel).getByText('Back to Aisle CMS'));
     await screen.findByText('notes.docx');
   });
@@ -110,9 +116,11 @@ describe('ShelfFolder', () => {
     expect(screen.queryByLabelText(/^Actions for/)).toBeNull();
     fireEvent.click(screen.getByText('plan.pdf'));
     await screen.findByText('hello parsed text');
-    expect(screen.queryByLabelText(/^Actions for/)).toBeNull();
+    // The document's menu holds Download only: no pencil, no Move, no Delete.
+    expect(screen.queryByLabelText('Edit name')).toBeNull();
+    fireEvent.click(screen.getByLabelText('Actions for plan.pdf'));
+    expect(screen.getAllByRole('menuitem').map((m) => m.textContent)).toEqual(['Download']);
     for (const label of ['Rename', 'Move to…', 'Delete']) expect(screen.queryByText(label)).toBeNull();
-    expect(screen.getByText('Download')).toBeTruthy();
   });
 
   it('offers no folder actions the integration API cannot do', async () => {
@@ -196,8 +204,8 @@ describe('ShelfFolder', () => {
     fireEvent.click(await screen.findByText('plan.pdf'));
     await screen.findByText('hello parsed text');
 
-    fireEvent.click(await screen.findByLabelText('Actions for plan.pdf'));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Rename' }));
+    // Rename is the pencil beside the menu, as on Shelf web.
+    fireEvent.click(await screen.findByLabelText('Edit name'));
     fireEvent.change(screen.getByLabelText('New name'), { target: { value: 'renamed.pdf' } });
     fireEvent.click(screen.getByText('Save name'));
     await waitFor(() => expect(client.updateFile).toHaveBeenCalledWith('f1', { filename: 'renamed.pdf' }, expect.anything()));

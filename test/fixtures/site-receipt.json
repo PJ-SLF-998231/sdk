@@ -1,0 +1,173 @@
+{
+ "version": 1,
+ "generated_at": "2026-10-08T09:00:04Z",
+ "source": {
+  "text_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "parser_id": null,
+  "parser_revision": null
+ },
+ "blocks": [
+  {
+   "type": "hero",
+   "props": {
+    "title": "Corner Cafe receipt",
+    "kind": "Receipt",
+    "issuer": "Corner Cafe",
+    "date": "2026-09-30"
+   }
+  },
+  {
+   "type": "key_facts",
+   "props": {
+    "items": [
+     {
+      "label": "Receipt number",
+      "value": "A-1042",
+      "source": {
+       "page": 1,
+       "line": 2
+      }
+     },
+     {
+      "label": "Paid with",
+      "value": "Visa ending 4242"
+     }
+    ]
+   }
+  },
+  {
+   "type": "amount",
+   "props": {
+    "label": "Total",
+    "value": "12.40",
+    "currency": "EUR",
+    "source": {
+     "page": 1,
+     "line": 9
+    },
+    "totals": [
+     {
+      "label": "Subtotal",
+      "value": "10.42",
+      "currency": "EUR"
+     },
+     {
+      "label": "VAT 19%",
+      "value": "1.98",
+      "currency": "EUR",
+      "source": {
+       "line": 8
+      }
+     }
+    ]
+   }
+  },
+  {
+   "type": "parties",
+   "props": {
+    "from": {
+     "name": "Corner Cafe",
+     "lines": [
+      "Main Street 1",
+      "10115 Berlin"
+     ],
+     "source": {
+      "page": 1,
+      "line": 1
+     }
+    }
+   }
+  },
+  {
+   "type": "summary",
+   "props": {
+    "text": "A cafe receipt for two coffees and a croissant, paid by card.",
+    "source": {
+     "page": 1
+    }
+   }
+  },
+  {
+   "type": "highlights",
+   "props": {
+    "items": [
+     {
+      "text": "Paid in full",
+      "tone": "positive"
+     },
+     {
+      "text": "No tip recorded"
+     }
+    ]
+   }
+  },
+  {
+   "type": "table",
+   "props": {
+    "columns": [
+     "Item",
+     "Qty",
+     "Price"
+    ],
+    "rows": [
+     [
+      "Cappuccino",
+      "2",
+      "7.00"
+     ],
+     [
+      "Croissant",
+      "1",
+      "3.42"
+     ],
+     [
+      "Note",
+      "",
+      ""
+     ]
+    ],
+    "source": {
+     "page": 1,
+     "line": 4
+    }
+   }
+  },
+  {
+   "type": "timeline",
+   "props": {
+    "items": [
+     {
+      "date": "2026-09-30",
+      "label": "Purchased"
+     },
+     {
+      "date": "2026-10",
+      "label": "Statement month"
+     }
+    ]
+   }
+  },
+  {
+   "type": "entities",
+   "props": {
+    "items": [
+     {
+      "kind": "organization",
+      "value": "Corner Cafe"
+     },
+     {
+      "kind": "place",
+      "value": "Berlin"
+     }
+    ]
+   }
+  },
+  {
+   "type": "source",
+   "props": {
+    "pages": 1,
+    "note": "Built from the receipt's text."
+   }
+  }
+ ]
+}

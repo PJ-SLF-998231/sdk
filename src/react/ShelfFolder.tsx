@@ -14,7 +14,7 @@ import type { MenuAction } from './ActionMenu';
 import { cx } from './cx';
 import { DocumentCard } from './DocumentCard';
 import { DocumentRow } from './DocumentRow';
-import type { Detail } from './DocumentView';
+import type { Detail } from './DocumentPage';
 import {
   describeContents,
   plural,
@@ -50,6 +50,20 @@ export interface ShelfFolderProps {
    * The cache has been purged by then and the view shows "Shelf isn't connected".
    */
   onAuthLost?: (error: ShelfError) => void;
+  /**
+   * The document to show, controlled: a document id opens that document's page, `null` shows the folder.
+   * Leave it out to let the component keep the state itself (see `initialDocumentId`). While it is set the host owns
+   * the open document: update it from `onNavigate`.
+   */
+  documentId?: string | null;
+  /** Document to open first when `documentId` is not controlled (a deep link). */
+  initialDocumentId?: string;
+  /**
+   * Called when the user navigates inside the embed: opening a folder or a document, going back from one. A host
+   * router can mirror it in the URL. `folderId` is the folder shown (or the document's folder); `documentId` is the open
+   * document, or null.
+   */
+  onNavigate?: (target: { folderId: string | null; documentId: string | null }) => void;
 }
 
 type Layout = 'grid' | 'list';
@@ -172,11 +186,11 @@ function lazyPart<P extends object>(load: Loader<P>) {
   return { Part, preload };
 }
 
-type DocumentViewProps = Parameters<typeof import('./DocumentView').DocumentView>[0];
+type DocumentPageProps = Parameters<typeof import('./DocumentPage').DocumentPage>[0];
 type FolderTreeProps = Parameters<typeof import('./FolderTree').FolderTree>[0];
 type ActionDialogProps = Parameters<typeof import('./ActionDialog').ActionDialog>[0];
 
-const DocumentViewPart = lazyPart<DocumentViewProps>(() => import('./DocumentView').then((m) => ({ default: m.DocumentView })));
+const DocumentPagePart = lazyPart<DocumentPageProps>(() => import('./DocumentPage').then((m) => ({ default: m.DocumentPage })));
 const FolderTreePart = lazyPart<FolderTreeProps>(() => import('./FolderTree').then((m) => ({ default: m.FolderTree })));
 const ActionDialogPart = lazyPart<ActionDialogProps>(() => import('./ActionDialog').then((m) => ({ default: m.ActionDialog })));
 
@@ -324,7 +338,7 @@ function VirtualTable({ items, folderRows, folderCount, loader, selectedId, canW
 
 /* ------------------------------------------------------------------ the component */
 
-export function ShelfFolder({ client: given, baseUrl, initialFolderId, theme = 'auto', className, cacheScope, onAuthLost }: ShelfFolderProps) {
+export function ShelfFolder({ client: given, baseUrl, initialFolderId, theme = 'auto', className, cacheScope, onAuthLost, documentId, initialDocumentId, onNavigate }: ShelfFolderProps) {
   const client = useMemo<ShelfClient | null>(
     () => given ?? (baseUrl ? createShelfClient({ baseUrl }) : null),
     [given, baseUrl],
@@ -382,6 +396,9 @@ export function ShelfFolder({ client: given, baseUrl, initialFolderId, theme = '
       key={`${initialFolderId ?? ''}`}
       session={session}
       initialFolderId={initialFolderId}
+      documentId={documentId}
+      initialDocumentId={initialDocumentId}
+      onNavigate={onNavigate}
       rootClass={rootClass}
       themeAttr={themeAttr}
     />
@@ -391,13 +408,16 @@ export function ShelfFolder({ client: given, baseUrl, initialFolderId, theme = '
 interface ViewProps {
   session: Session;
   initialFolderId?: string;
+  documentId?: string | null;
+  initialDocumentId?: string;
+  onNavigate?: ShelfFolderProps['onNavigate'];
   rootClass: string;
   themeAttr: string | undefined;
 }
 
 const mergeSame = <T,>(prev: T | undefined, next: T): T => (prev !== undefined && deepEqual(prev, next) ? prev : next);
 
-function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProps) {
+function FolderView({ session, initialFolderId, documentId, initialDocumentId, onNavigate, rootClass, themeAttr }: ViewProps) {
   const client = session.client;
   const parts = session.parts;
   const swr: SwrImpl | null = parts?.swr ?? null;
@@ -438,15 +458,27 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
   const [edits, setEdits] = useState<{ patched: Record<string, Partial<ShelfItem>>; removed: string[] }>(NO_EDITS);
   /** Server items for uploads that just landed, shown until the listing has caught up. */
   const [landed, setLanded] = useState<ShelfItem[]>(NO_LANDED);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // The open document: the host's when it passes `documentId`, else kept here (opened first from `initialDocumentId`).
+  const [innerDocId, setInnerDocId] = useState<string | null>(initialDocumentId ?? null);
+  const controlled = documentId !== undefined;
+  const selectedId = controlled ? documentId : innerDocId;
+  const controlledRef = useRef(controlled);
+  controlledRef.current = controlled;
+  const navigateRef = useRef(onNavigate);
+  navigateRef.current = onNavigate;
+  const setSelectedId = useCallback((id: string | null) => {
+    if (!controlledRef.current) setInnerDocId(id);
+  }, []);
+  const notify = useCallback((folderId: string | null, docId: string | null) => navigateRef.current?.({ folderId, documentId: docId }), []);
   const [pending, setPending] = useState<Pending | null>(null);
   const go = useCallback((id: string | null) => {
     setChosen(id);
     setSelectedId(null);
+    notify(id, null);
     setPending(null);
     setEdits(NO_EDITS);
     setLanded(NO_LANDED);
-  }, []);
+  }, [setSelectedId, notify]);
 
   const online = useOnline();
   // The offline outbox exists for read_write keys only. It lives in IndexedDB when the host gave a cacheScope.
@@ -492,6 +524,12 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
     const queued = row && row.sync ? { filename: row.filename, folder_id: row.folder_id, sync: row.sync } : {};
     return { ...base, ...(edits.patched[selectedId] ?? {}), ...queued };
   }, [selectedId, items, detailRes.data, edits]);
+
+  // A document opened by a deep link may live in another folder than the one showing: follow it, so the breadcrumb is right.
+  const detailFolder = selectedId && detailRes.data?.id === selectedId ? (detailRes.data.folder_id ?? null) : undefined;
+  useEffect(() => {
+    if (open2 && detailFolder !== undefined && detailFolder !== currentRef.current) setChosen(detailFolder);
+  }, [open2, detailFolder]);
 
   const [actionError, setActionError] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
@@ -633,7 +671,7 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
   useEffect(() => {
     if (!ready) return;
     const t = setTimeout(() => {
-      DocumentViewPart.preload();
+      DocumentPagePart.preload();
       ActionDialogPart.preload();
       if (hasFolders) FolderTreePart.preload();
     }, 0);
@@ -701,12 +739,18 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
     void enqueue({ kind: 'rename', fileId: item.id, filename, baseFilename: item.filename }, 'Could not rename');
 
   const moveItem = (item: ShelfItem, folderId: string) => {
-    setSelectedId(null);
+    if (selectedId) {
+      setSelectedId(null);
+      notify(currentRef.current, null);
+    }
     void enqueue({ kind: 'move', fileId: item.id, folderId, baseFolderId: item.folder_id ?? null }, 'Could not move');
   };
 
   const deleteItem = (item: ShelfItem) => {
-    setSelectedId(null);
+    if (selectedId) {
+      setSelectedId(null);
+      notify(currentRef.current, null);
+    }
     void enqueue({ kind: 'delete', fileId: item.id }, 'Could not delete');
   };
 
@@ -732,8 +776,10 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
 
   // Stable, so the memoised cards and rows skip re-rendering when something unrelated changes.
   const onOpen = useCallback((id: string) => {
-    if (!id.startsWith('local:')) setSelectedId(id); // an upload that has not landed has no document to open yet
-  }, []);
+    if (id.startsWith('local:')) return; // an upload that has not landed has no document to open yet
+    setSelectedId(id);
+    notify(currentRef.current, id);
+  }, [setSelectedId, notify]);
   const onAction = useCallback((action: ItemAction, id: string) => {
     const item = itemsRef.current.find((x) => x.id === id);
     if (item) setPending({ kind: action, item });
@@ -936,7 +982,10 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
                   currentFolderId={currentId}
                   currentFileId={selectedId}
                   onOpenFolder={go}
-                  onOpenFile={(f) => setSelectedId(f.id)}
+                  onOpenFile={(f) => {
+                    setSelectedId(f.id);
+                    notify(f.folder_id ?? null, f.id);
+                  }}
                 />
               )}
             </div>
@@ -975,17 +1024,22 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
 
           {selectedId ? (
             selected ? (
-              <DocumentViewPart.Part
+              <DocumentPagePart.Part
                 key={selected.id}
                 fallback={docFallback}
                 client={client}
+                swr={swr}
+                loader={loader}
                 doc={selected}
                 location={locationOf(selected)}
                 folderName={currentName}
-                actions={itemActions(selected)}
+                onRename={canWrite ? () => setPending({ kind: 'rename', item: selected }) : undefined}
+                onMove={canWrite ? () => setPending({ kind: 'move', item: selected }) : undefined}
+                onDelete={canWrite ? () => setPending({ kind: 'delete', item: selected }) : undefined}
                 onClose={() => {
                   setSelectedId(null);
                   setPending(null);
+                  notify(currentId, null);
                 }}
               />
             ) : (

@@ -363,7 +363,7 @@ export interface DocumentCardProps {
   onDragStart?: (id: string, e: DragEvent) => void;
 }
 
-/** The detail route's document, used by the lazily loaded DocumentView. */
+/** The detail route's document, used by the lazily loaded DocumentPage. */
 export type DocumentDetail = ShelfDocument;
 /** Params for a listing request as the cache keys it. */
 export type ListingKeyParams = Pick<ListFilesParams, 'folder_id' | 'recursive'>;
