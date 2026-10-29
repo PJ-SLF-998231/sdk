@@ -18,7 +18,8 @@ export interface ShelfItem {
   created_at: string;
   edited_at: string | null;
   parsed_at: string | null;
-  preview_sizes: number[];
+  /** Names of the thumbnails that exist: any of small, medium, large. Always an array. */
+  preview_sizes: string[];
 }
 
 export interface ShelfFolder {

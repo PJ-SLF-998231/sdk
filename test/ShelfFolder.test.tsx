@@ -10,7 +10,7 @@ afterEach(cleanup);
 
 const item = (o: Partial<ShelfItem> = {}): ShelfItem => ({
   id: 'f1', filename: 'plan.pdf', content_type: 'application/pdf', size_bytes: 2048, folder_id: 'root',
-  parse_status: 'done', created_at: '2026-01-02T00:00:00Z', edited_at: null, parsed_at: null, preview_sizes: [256, 512, 1024], ...o,
+  parse_status: 'done', created_at: '2026-01-02T00:00:00Z', edited_at: null, parsed_at: null, preview_sizes: ['small', 'medium', 'large'], ...o,
 });
 
 function mock(access: 'read' | 'read_write', over: Partial<Record<keyof ShelfClient, unknown>> = {}) {
@@ -28,7 +28,7 @@ function mock(access: 'read' | 'read_write', over: Partial<Record<keyof ShelfCli
     upload: vi.fn(async () => item()),
     updateFile: vi.fn(async (id: string, patch: object) => ({ ...item({ id }), ...patch })),
     deleteFile: vi.fn(async () => undefined),
-    thumbnailUrl: (id: string, size?: number) => `/t/${id}?size=${size}`,
+    thumbnailUrl: (id: string, size?: string) => `/t/${id}?size=${size}`,
     originalUrl: (id: string, name: string) => `/o/${id}/${name}`,
     ...over,
   };
@@ -42,7 +42,7 @@ describe('ShelfFolder', () => {
     await screen.findByText('plan.pdf');
     expect(screen.getByText('Contracts')).toBeTruthy();
     expect(client.listFiles).toHaveBeenCalledWith(expect.objectContaining({ folder_id: 'root', recursive: false }));
-    expect(container.querySelector('img[src="/t/f1?size=256"]')).toBeTruthy();
+    expect(container.querySelector('img[src="/t/f1?size=small"]')).toBeTruthy();
     expect(screen.getByText('docx')).toBeTruthy();
     expect(screen.getAllByText('2.0 KB').length).toBeTruthy();
   });
@@ -76,7 +76,7 @@ describe('ShelfFolder', () => {
     fireEvent.click(await screen.findByText('plan.pdf'));
     await screen.findByText('hello parsed text');
     const panel = screen.getByRole('region', { name: 'Document details' });
-    expect(within(panel).getByAltText('Preview of plan.pdf').getAttribute('src')).toBe('/t/f1?size=512');
+    expect(within(panel).getByAltText('Preview of plan.pdf').getAttribute('src')).toBe('/t/f1?size=medium');
     const dl = within(panel).getByText('Download') as HTMLAnchorElement;
     expect(dl.getAttribute('href')).toBe('/o/f1/plan.pdf');
     expect(dl.hasAttribute('download')).toBe(true);

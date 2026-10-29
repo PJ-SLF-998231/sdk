@@ -50,7 +50,7 @@ const shelf = createShelfClient({
   apiKey: process.env.SHELF_INTEGRATION_KEY, // sent as Authorization: Bearer
 });
 
-const { items, next_cursor } = await shelf.listFiles({ limit: 50 });
+const { items, next_cursor } = await shelf.listFiles({ limit: 50 }); // items is always an array
 const file = await shelf.upload(new Blob(['hello']), { filename: 'hello.txt' });
 ```
 
