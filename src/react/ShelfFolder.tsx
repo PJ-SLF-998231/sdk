@@ -4,6 +4,9 @@ import { deepEqual } from '../cache/reconcile';
 import { createShelfClient, isAuthLost, isOfflineError, ShelfError } from '../client';
 import type { ShelfClient } from '../client';
 import { useFolderListing } from '../hooks/useFolderListing';
+import { useOnline } from '../hooks/useOnline';
+import { useOutbox } from '../hooks/useOutbox';
+import { applyOutbox } from '../outbox/overlay';
 import { useResource } from '../hooks/useResource';
 import type { ShelfFolder as FolderRecord, ShelfInfo, ShelfItem } from '../types';
 import { gridColumns, useElementWidth, useVirtualRows } from '../virtual';
@@ -20,10 +23,11 @@ import {
   UPLOAD_LIMITS,
 } from './format';
 import { FolderIcon, GridIcon, ListIcon } from './icons';
+import { OfflineBanner } from './OfflineBanner';
 import { getSession } from './session';
 import type { Session } from './session';
 import type { ItemAction } from './syncUi';
-import type { ThumbLoader } from '../internal/contracts';
+import type { OutboxOp, OverlayItem, ThumbLoader } from '../internal/contracts';
 import type { SwrImpl } from '../cache/swr';
 
 export interface ShelfFolderProps {
@@ -190,7 +194,7 @@ const dialogFallback = <div className={cx('callout')} aria-busy="true" style={{ 
 
 /* ------------------------------------------------------------------ virtual gallery and list */
 
-type Row = ShelfItem;
+type Row = ShelfItem & Partial<Pick<OverlayItem, 'sync' | 'outboxId' | 'localOnly' | 'syncError'>>;
 
 interface ListProps {
   items: readonly Row[];
@@ -198,11 +202,13 @@ interface ListProps {
   selectedId: string | null;
   canWrite: boolean;
   onOpen: (id: string) => void;
+  onRetry?: (outboxId: string) => void;
+  onDiscard?: (outboxId: string) => void;
   onAction: (action: ItemAction, id: string) => void;
   onNearEnd: () => void;
 }
 
-function VirtualGallery({ items, loader, selectedId, canWrite, onOpen, onAction, onNearEnd }: ListProps) {
+function VirtualGallery({ items, loader, selectedId, canWrite, onOpen, onRetry, onDiscard, onAction, onNearEnd }: ListProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const width = useElementWidth(listRef);
   const cols = gridColumns(width, MIN_CARD, GAP);
@@ -265,7 +271,7 @@ function VirtualGallery({ items, loader, selectedId, canWrite, onOpen, onAction,
           }}
         >
           {items.slice(r.index * cols, r.index * cols + cols).map((f) => (
-            <DocumentCard key={f.id} item={f} loader={loader} selected={f.id === selectedId} canWrite={canWrite} onOpen={onOpen} onAction={onAction} />
+            <DocumentCard key={f.id} item={f} loader={loader} selected={f.id === selectedId} canWrite={canWrite} onOpen={onOpen} onRetry={onRetry} onDiscard={onDiscard} onAction={onAction} />
           ))}
         </div>
       ))}
@@ -273,7 +279,7 @@ function VirtualGallery({ items, loader, selectedId, canWrite, onOpen, onAction,
   );
 }
 
-function VirtualTable({ items, folderRows, folderCount, loader, selectedId, canWrite, onOpen, onAction, onNearEnd }: ListProps & { folderRows: ReactNode; folderCount: number }) {
+function VirtualTable({ items, folderRows, folderCount, loader, selectedId, canWrite, onOpen, onRetry, onDiscard, onAction, onNearEnd }: ListProps & { folderRows: ReactNode; folderCount: number }) {
   // The scroll sentinel sits just above the table (not inside its overflow wrapper, which would be mistaken
   // for the scroller) and is nudged down past the header and folder rows, so row offsets count from the first document.
   const anchor = useRef<HTMLDivElement>(null);
@@ -307,7 +313,7 @@ function VirtualTable({ items, folderRows, folderCount, loader, selectedId, canW
             {spacer(top, 'top')}
             {rows.map((r) => {
               const f = items[r.index];
-              return f ? <DocumentRow key={f.id} item={f} loader={loader} selected={f.id === selectedId} canWrite={canWrite} onOpen={onOpen} onAction={onAction} /> : null;
+              return f ? <DocumentRow key={f.id} item={f} loader={loader} selected={f.id === selectedId} canWrite={canWrite} onOpen={onOpen} onRetry={onRetry} onDiscard={onDiscard} onAction={onAction} /> : null;
             })}
             {spacer(bottom, 'bottom')}
           </tbody>
@@ -339,6 +345,7 @@ export function ShelfFolder({ client: given, baseUrl, initialFolderId, theme = '
     }
     session.retain();
     const offReady = session.onReady(rerender);
+    const offDiscarded = session.onDiscarded(rerender);
     const offLost = session.onAuthLost((err) => {
       setLostSession(session);
       onLost.current?.(err);
@@ -346,6 +353,7 @@ export function ShelfFolder({ client: given, baseUrl, initialFolderId, theme = '
     rerender(); // the store may have opened between render and this effect
     return () => {
       offReady();
+      offDiscarded();
       offLost();
       session.release();
     };
@@ -360,6 +368,11 @@ export function ShelfFolder({ client: given, baseUrl, initialFolderId, theme = '
         <div className={cx('callout', 'notice')} role="alert">
           <strong>Shelf isn&apos;t connected</strong>
           <p>The document store is not set up for this site yet.</p>
+          {session && session.discarded > 0 && (
+            <p data-testid="shelf-discarded">
+              {plural(session.discarded, 'pending change')} could not be sent and {session.discarded === 1 ? 'was' : 'were'} discarded.
+            </p>
+          )}
         </div>
       </div>
     );
@@ -424,6 +437,8 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
   const open2 = ready && rootId !== undefined;
 
   const [edits, setEdits] = useState<{ patched: Record<string, Partial<ShelfItem>>; removed: string[] }>(NO_EDITS);
+  /** Server items for uploads that just landed, shown until the listing has caught up. */
+  const [landed, setLanded] = useState<ShelfItem[]>(NO_LANDED);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [pending, setPending] = useState<Pending | null>(null);
   const go = useCallback((id: string | null) => {
@@ -431,13 +446,31 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
     setSelectedId(null);
     setPending(null);
     setEdits(NO_EDITS);
+    setLanded(NO_LANDED);
   }, []);
 
+  const online = useOnline();
+  // The offline outbox exists for read_write keys only. It lives in IndexedDB when the host gave a cacheScope.
+  const outbox = canWrite && parts ? session.ensureOutbox() : null;
+  const outboxView = useOutbox(outbox);
+  useEffect(() => {
+    outbox?.start();
+  }, [outbox]);
+
   const listing = useFolderListing(open2 ? swr : null, open2 ? client : null, { folderId: currentId, recursive: false, pageSize: PAGE });
-  const items = useMemo<ShelfItem[]>(() => {
-    if (edits === NO_EDITS) return listing.items;
-    return listing.items.filter((x) => !edits.removed.includes(x.id)).map((x) => (edits.patched[x.id] ? { ...x, ...edits.patched[x.id] } : x));
-  }, [listing.items, edits]);
+  const items = useMemo<Row[]>(() => {
+    let base: ShelfItem[] = listing.items;
+    if (edits !== NO_EDITS) {
+      base = base.filter((x) => !edits.removed.includes(x.id)).map((x) => (edits.patched[x.id] ? { ...x, ...edits.patched[x.id] } : x));
+    }
+    if (landed.length > 0) {
+      const have = new Set(base.map((x) => x.id));
+      const extra = landed.filter((x) => !have.has(x.id) && (x.folder_id ?? null) === currentId && !edits.removed.includes(x.id));
+      if (extra.length > 0) base = [...extra, ...base];
+    }
+    if (!outbox) return base;
+    return applyOutbox(base, outboxView.entries, currentId);
+  }, [listing.items, edits, landed, outbox, outboxView.entries, currentId]);
   const itemsRef = useRef(items);
   itemsRef.current = items;
 
@@ -453,14 +486,14 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
     const row = items.find((x) => x.id === selectedId);
     const base = detailRes.data ?? row;
     if (!base) return null;
-    return { ...base, ...(edits.patched[selectedId] ?? {}) };
+    // A queued rename shows at once; the detail keeps its text and preview.
+    const queued = row && row.sync ? { filename: row.filename, folder_id: row.folder_id, sync: row.sync } : {};
+    return { ...base, ...(edits.patched[selectedId] ?? {}), ...queued };
   }, [selectedId, items, detailRes.data, edits]);
 
-  const [notices, setNotices] = useState<string[]>([]);
   const [actionError, setActionError] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
   const [over, setOver] = useState(false);
-  const [adding, setAdding] = useState(0);
   const [layout, setLayoutState] = useState<Layout>(() => (readStore(LAYOUT_KEY) === 'list' ? 'list' : 'grid'));
   const [treeOpen, setTreeOpen] = useState<boolean>(() => readStore(TREE_KEY) === 'open');
   const picker = useRef<HTMLInputElement>(null);
@@ -482,6 +515,10 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
     },
     [session],
   );
+
+  const refreshRef = useRef<() => Promise<void>>(async () => undefined);
+  const currentRef = useRef(currentId);
+  currentRef.current = currentId;
 
   // Document counts. /folders sends them when the API is new enough; else count by listing everything (capped).
   const countsFromFolders = useMemo(() => totalsFromFolders(folders), [folders]);
@@ -606,30 +643,30 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
     await Promise.all([listing.refresh(), foldersRes.refresh()]);
   };
 
-  const upload = async (list: FileList | File[]) => {
-    const batch = Array.from(list);
-    const msgs: string[] = [];
-    setAdding((n) => n + batch.length);
-    for (const file of batch) {
-      try {
-        await client.upload(file, currentId ? { folder_id: currentId } : {});
-      } catch (err) {
-        if (isAuthLost(err) || (err instanceof ShelfError && err.code === 'not_configured')) {
-          if (!isAuthLost(err)) session.loseAuth(err);
-          return;
-        }
-        msgs.push(describe(err, `Could not upload ${file.name}`));
+  // A queued change reached the server: show the server's answer until the refreshed listing arrives.
+  useEffect(() => {
+    if (!outbox) return;
+    return outbox.on('applied', ({ entry, item }) => {
+      const op = entry.op;
+      if (op.kind === 'upload') {
+        if (item) setLanded((l) => [item, ...l.filter((x) => x.id !== item.id)]);
+      } else if (op.kind === 'rename') {
+        if (item) setEdits((e) => ({ ...e, patched: { ...e.patched, [op.fileId]: { ...(e.patched[op.fileId] ?? {}), ...item } } }));
+      } else if (op.kind === 'delete' || (op.kind === 'move' && op.folderId !== currentRef.current)) {
+        setEdits((e) => ({ ...e, removed: [...e.removed, op.fileId] }));
       }
-    }
-    setAdding((n) => Math.max(0, n - batch.length));
-    setNotices(msgs);
-    await refreshAll();
-  };
+      bumpCensus();
+      void foldersRes.refresh();
+      void refreshRef.current();
+    });
+  }, [outbox, foldersRes.refresh]);
+  refreshRef.current = listing.refresh;
 
-  const guarded = async (fn: () => Promise<void>, action: string) => {
+  const enqueue = async (op: OutboxOp, action: string) => {
+    if (!outbox) return;
     setWorking(true);
     try {
-      await fn();
+      await outbox.enqueue(op);
       setPending(null);
       setActionError(null);
     } catch (err) {
@@ -639,30 +676,46 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
     }
   };
 
+  const upload = async (list: FileList | File[]) => {
+    if (!outbox) return;
+    for (const file of Array.from(list)) {
+      try {
+        await outbox.enqueue({
+          kind: 'upload',
+          folderId: currentId,
+          filename: file.name,
+          contentType: file.type || 'application/octet-stream',
+          size: file.size,
+          bytes: await file.arrayBuffer(),
+          clientRef: '', // the outbox mints the UUID that makes a retried upload idempotent
+        });
+      } catch (err) {
+        fail(err, `Could not upload ${file.name}`);
+      }
+    }
+  };
+
   const renameItem = (item: ShelfItem, filename: string) =>
-    void guarded(async () => {
-      const updated = await client.updateFile(item.id, { filename });
-      setEdits((e) => ({ ...e, patched: { ...e.patched, [item.id]: { ...(e.patched[item.id] ?? {}), ...updated } } }));
-      void listing.refresh();
-    }, 'Could not rename');
+    void enqueue({ kind: 'rename', fileId: item.id, filename, baseFilename: item.filename }, 'Could not rename');
 
-  const moveItem = (item: ShelfItem, folderId: string) =>
-    void guarded(async () => {
-      await client.updateFile(item.id, { folder_id: folderId });
-      setSelectedId(null);
-      setEdits((e) => ({ ...e, removed: [...e.removed, item.id] }));
-      void foldersRes.refresh();
-      bumpCensus();
-    }, 'Could not move');
+  const moveItem = (item: ShelfItem, folderId: string) => {
+    setSelectedId(null);
+    void enqueue({ kind: 'move', fileId: item.id, folderId, baseFolderId: item.folder_id ?? null }, 'Could not move');
+  };
 
-  const deleteItem = (item: ShelfItem) =>
-    void guarded(async () => {
-      await client.deleteFile(item.id);
-      setSelectedId(null);
-      setEdits((e) => ({ ...e, removed: [...e.removed, item.id] }));
-      void foldersRes.refresh();
-      bumpCensus();
-    }, 'Could not delete');
+  const deleteItem = (item: ShelfItem) => {
+    setSelectedId(null);
+    void enqueue({ kind: 'delete', fileId: item.id }, 'Could not delete');
+  };
+
+  const onRetry = useCallback(
+    (id: string) => {
+      const entry = outbox?.list().find((e) => e.id === id);
+      void outbox?.retry(id, entry?.status === 'conflict' ? { force: true } : undefined);
+    },
+    [outbox],
+  );
+  const onDiscard = useCallback((id: string) => void outbox?.discard(id), [outbox]);
 
   // Only what the integration API can do: it renames, moves and deletes documents (read_write keys).
   // It cannot create, rename, move or delete folders, so no menu offers those.
@@ -676,7 +729,9 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
       : [];
 
   // Stable, so the memoised cards and rows skip re-rendering when something unrelated changes.
-  const onOpen = useCallback((id: string) => setSelectedId(id), []);
+  const onOpen = useCallback((id: string) => {
+    if (!id.startsWith('local:')) setSelectedId(id); // an upload that has not landed has no document to open yet
+  }, []);
   const onAction = useCallback((action: ItemAction, id: string) => {
     const item = itemsRef.current.find((x) => x.id === id);
     if (item) setPending({ kind: action, item });
@@ -714,6 +769,7 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
     );
   })();
   const error = actionError ?? loadError;
+  const addingCount = outboxView.entries.filter((e) => e.op.kind === 'upload' && (e.status === 'pending' || e.status === 'running')).length;
   const offline = infoRes.offline || foldersRes.offline || listing.offline || detailRes.offline;
 
   // Nothing is known about this folder's documents until the first page (or the cache) answers.
@@ -756,7 +812,7 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
   );
 
   const listProps: ListProps | null = loader
-    ? { items, loader, selectedId, canWrite, onOpen, onAction, onNearEnd }
+    ? { items, loader, selectedId, canWrite, onOpen, onRetry: outbox ? onRetry : undefined, onDiscard: outbox ? onDiscard : undefined, onAction, onNearEnd }
     : null;
   // Keyed so the list re-measures where it starts when the content above it (the folders) changes.
   const listKey = `${currentId ?? ''}:${subfolders.length}`;
@@ -838,16 +894,12 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
   return (
     <div className={rootClass} data-theme={themeAttr}>
       <div aria-live="polite">
-        {notices.map((n) => (
-          <p key={n} className={cx('callout', 'callout--danger')} role="alert">
-            {n}
-          </p>
-        ))}
         {error && (
           <p className={cx('callout', 'callout--danger')} role="alert">
             {error}
           </p>
         )}
+        {outbox && <OfflineBanner online={online} waiting={outboxView.pending} />}
         {offline && ready && (
           <p className={cx('status-note')} role="status" data-testid="shelf-offline">
             You&apos;re offline. Showing the last saved copy.
@@ -960,7 +1012,7 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
                   </>
                 )}
                 <p className={cx('drag-status')} aria-live="polite">
-                  {adding > 0 ? `Adding ${plural(adding, 'document')}…` : ''}
+                  {addingCount > 0 ? `Adding ${plural(addingCount, 'document')}…` : ''}
                 </p>
                 <div className={cx('layout-toggle')} role="group" aria-label="Layout">
                   <button type="button" className={cx('layout-toggle-btn')} aria-pressed={layout === 'grid'} onClick={() => setLayout('grid')}>
@@ -1003,3 +1055,4 @@ function FolderView({ session, initialFolderId, rootClass, themeAttr }: ViewProp
 
 const EMPTY_FOLDERS: FolderRecord[] = [];
 const NO_EDITS = { patched: {}, removed: [] as string[] };
+const NO_LANDED: ShelfItem[] = [];

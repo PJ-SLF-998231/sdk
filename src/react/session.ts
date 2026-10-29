@@ -6,6 +6,8 @@ import { createThumbLoader } from '../cache/thumbs';
 import { isAuthLost, ShelfError } from '../client';
 import type { ShelfClient } from '../client';
 import type { CacheStore, ThumbLoader } from '../internal/contracts';
+import { createOutbox } from '../outbox';
+import type { OutboxHandle } from '../outbox';
 import { namespaceFor, openKv } from '../storage/db';
 
 export interface SessionParts {
@@ -26,8 +28,16 @@ export interface Session {
   /** True once the session was lost; the entry is no longer shared. */
   authLost: boolean;
   disposed: boolean;
+  /** The offline outbox; null until `ensureOutbox()` has run (read_write keys only). */
+  outbox: OutboxHandle | null;
+  /** How many queued changes were thrown away when the session was lost. */
+  discarded: number;
+  /** Creates the outbox once the store is open; null while it is not or after the session was lost. */
+  ensureOutbox(): OutboxHandle | null;
   onAuthLost(listener: (err: ShelfError) => void): () => void;
   onReady(listener: () => void): () => void;
+  /** `discarded` changed. */
+  onDiscarded(listener: () => void): () => void;
   /** Reports a lost session (idempotent): purges the cache and tells listeners. */
   loseAuth(err: unknown): void;
   retain(): void;
@@ -41,6 +51,9 @@ class SessionImpl implements Session {
   parts: SessionParts | null = null;
   authLost = false;
   disposed = false;
+  outbox: OutboxHandle | null = null;
+  discarded = 0;
+  private discardListeners = new Set<() => void>();
   readonly client: ShelfClient;
   private refs = 0;
   private timer: ReturnType<typeof setTimeout> | null = null;
@@ -79,13 +92,50 @@ class SessionImpl implements Session {
 
   private lastAuthError: unknown;
 
+  ensureOutbox(): OutboxHandle | null {
+    if (this.outbox) return this.outbox;
+    if (!this.parts || this.disposed || this.authLost) return null;
+    // Persistent exactly when the cache is (the host gave a cacheScope); otherwise the kv is memory-only.
+    const ob = createOutbox({ kv: this.parts.cache.kv, client: this.client }) as OutboxHandle;
+    ob.on('authLost', ({ discarded }) => this.noteDiscarded(discarded));
+    this.outbox = ob;
+    return ob;
+  }
+
+  private noteDiscarded(n: number): void {
+    if (n <= this.discarded) return;
+    this.discarded = n;
+    for (const l of [...this.discardListeners]) l();
+  }
+
+  onDiscarded(listener: () => void): () => void {
+    this.discardListeners.add(listener);
+    return () => void this.discardListeners.delete(listener);
+  }
+
+  /** Queued changes are thrown away with the session: from the live outbox, or straight from storage. */
+  private async purgeOutbox(): Promise<void> {
+    try {
+      if (this.outbox) {
+        this.noteDiscarded(await this.outbox.purge());
+      } else if (this.parts) {
+        const kv = this.parts.cache.kv;
+        const rows = await kv.list('outbox');
+        this.noteDiscarded(rows.filter((r) => !r.key.startsWith('~')).length);
+        await kv.clear(['outbox']);
+      }
+    } catch {
+      /* best effort */
+    }
+  }
+
   loseAuth(err: unknown): void {
     if (this.authLost || this.disposed) return;
     this.authLost = true;
     this.lastAuthError = err;
     if (registry.get(this.key) === this) registry.delete(this.key);
     const e = err instanceof ShelfError ? err : new ShelfError(401, 'unauthorized', 'The session is no longer authorised');
-    void (this.parts ? this.parts.swr.purge() : Promise.resolve()).finally(() => {
+    void Promise.all([this.parts ? this.parts.swr.purge() : Promise.resolve(), this.purgeOutbox()]).finally(() => {
       for (const l of [...this.lostListeners]) {
         try {
           l(e);
@@ -135,6 +185,8 @@ class SessionImpl implements Session {
     this.unregister?.();
     const p = this.parts;
     this.parts = null;
+    this.outbox?.destroy();
+    this.outbox = null;
     if (p) {
       p.swr.destroy();
       p.loader.dispose();
@@ -142,6 +194,7 @@ class SessionImpl implements Session {
     }
     this.lostListeners.clear();
     this.readyListeners.clear();
+    this.discardListeners.clear();
   }
 }
 
