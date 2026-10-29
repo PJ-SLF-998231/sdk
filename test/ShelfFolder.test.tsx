@@ -122,7 +122,7 @@ describe('ShelfFolder', () => {
     expect(screen.queryByLabelText(/Actions for Contracts/)).toBeNull();
     expect(screen.queryByLabelText(/Actions for shelf|Actions for folder/)).toBeNull();
     // Documents do get a menu: rename, move and delete are real routes.
-    fireEvent.click(screen.getByLabelText('Actions for plan.pdf'));
+    fireEvent.click(await screen.findByLabelText('Actions for plan.pdf')); // write controls arrive with the lazy outbox chunk
     expect(screen.getAllByRole('menuitem').map((m) => m.textContent)).toEqual(['Rename', 'Move to…', 'Delete']);
   });
 
@@ -131,9 +131,9 @@ describe('ShelfFolder', () => {
     await screen.findByText('plan.pdf');
     await waitFor(() => expect(container.querySelector('.shelf-sdk__file-count')?.textContent).toBe('3 items · 2 folders'));
     expect(container.querySelector('.shelf-sdk__folder-tile .shelf-sdk__card-meta')?.textContent).toBe('1 item');
-    expect(container.querySelector('.shelf-sdk__dropzone-limits')?.textContent?.replace(/ /g, ' ')).toBe(
+    await waitFor(() => expect(container.querySelector('.shelf-sdk__dropzone-limits')?.textContent?.replace(/ /g, ' ')).toBe(
       'Drop documents here to add them to Aisle CMS · PDF, Word, Excel, text, Markdown, JSON, or scans and photos of documents · up to 25 MB',
-    );
+    ));
   });
 
   it('omits counts it cannot verify', async () => {
@@ -154,11 +154,12 @@ describe('ShelfFolder', () => {
     render(<ShelfFolder client={client} />);
     await screen.findByText('plan.pdf');
     const file = new File(['x'], 'new.pdf', { type: 'application/pdf' });
-    fireEvent.change(screen.getByLabelText('Upload files'), { target: { files: [file] } });
-    await waitFor(() => expect(client.upload).toHaveBeenCalledWith(file, { folder_id: 'root' }));
+    fireEvent.change(await screen.findByLabelText('Upload files'), { target: { files: [file] } });
+    // Uploads go through the outbox: a Blob of the bytes, the file name and an idempotency client_ref.
+    await waitFor(() => expect(client.upload).toHaveBeenCalledWith(expect.any(Blob), expect.objectContaining({ filename: 'new.pdf', folder_id: 'root', client_ref: expect.any(String) }), expect.anything()));
     const dropped = new File(['y'], 'drop.pdf');
     fireEvent.drop(screen.getByTestId('shelf-dropzone'), { dataTransfer: { files: [dropped] } });
-    await waitFor(() => expect(client.upload).toHaveBeenCalledWith(dropped, { folder_id: 'root' }));
+    await waitFor(() => expect(client.upload).toHaveBeenCalledWith(expect.any(Blob), expect.objectContaining({ filename: 'drop.pdf', folder_id: 'root' }), expect.anything()));
     await waitFor(() => expect(vi.mocked(client.listFiles).mock.calls.filter(([p]) => p?.recursive === false)).toHaveLength(3));
   });
 
@@ -172,7 +173,7 @@ describe('ShelfFolder', () => {
     expect(zone.getAttribute('data-drop')).toBeNull();
   });
 
-  it('shows inline errors for 413 and 415', async () => {
+  it('shows failed cards for 413 and 415', async () => {
     const client = mock('read_write', {
       upload: vi.fn(async (f: File) => {
         throw f.name === 'big.pdf' ? new ShelfError(413, 'too_large', 'x') : new ShelfError(415, 'bad_type', 'x');
@@ -180,11 +181,13 @@ describe('ShelfFolder', () => {
     });
     render(<ShelfFolder client={client} />);
     await screen.findByText('plan.pdf');
-    fireEvent.change(screen.getByLabelText('Upload files'), {
+    fireEvent.change(await screen.findByLabelText('Upload files'), {
       target: { files: [new File(['x'], 'big.pdf'), new File(['x'], 'odd.exe')] },
     });
-    await screen.findByText(/big\.pdf: the file is too large/);
-    expect(screen.getByText(/odd\.exe: this file type is not supported/)).toBeTruthy();
+    await screen.findByText('big.pdf');
+    await waitFor(() => expect(screen.getAllByText('Failed')).toHaveLength(2));
+    expect(screen.getByText('odd.exe')).toBeTruthy();
+    expect(screen.getAllByText('Discard')).toHaveLength(2);
   });
 
   it('renames and moves from the document view, deletes from a card menu', async () => {
@@ -193,27 +196,27 @@ describe('ShelfFolder', () => {
     fireEvent.click(await screen.findByText('plan.pdf'));
     await screen.findByText('hello parsed text');
 
-    fireEvent.click(screen.getByLabelText('Actions for plan.pdf'));
+    fireEvent.click(await screen.findByLabelText('Actions for plan.pdf'));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Rename' }));
     fireEvent.change(screen.getByLabelText('New name'), { target: { value: 'renamed.pdf' } });
     fireEvent.click(screen.getByText('Save name'));
-    await waitFor(() => expect(client.updateFile).toHaveBeenCalledWith('f1', { filename: 'renamed.pdf' }));
+    await waitFor(() => expect(client.updateFile).toHaveBeenCalledWith('f1', { filename: 'renamed.pdf' }, expect.anything()));
     await waitFor(() => expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('renamed.pdf'));
 
-    fireEvent.click(screen.getByLabelText('Actions for renamed.pdf'));
+    fireEvent.click(await screen.findByLabelText('Actions for renamed.pdf'));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Move to…' }));
     fireEvent.change(screen.getByLabelText('Destination folder'), { target: { value: 'sub' } });
     fireEvent.click(screen.getByText('Move here'));
-    await waitFor(() => expect(client.updateFile).toHaveBeenCalledWith('f1', { folder_id: 'sub' }));
+    await waitFor(() => expect(client.updateFile).toHaveBeenCalledWith('f1', { folder_id: 'sub' }, expect.anything()));
     await screen.findByText('notes.docx');
     expect(screen.queryByText('renamed.pdf')).toBeNull();
 
-    fireEvent.click(screen.getByLabelText('Actions for notes.docx'));
+    fireEvent.click(await screen.findByLabelText('Actions for notes.docx'));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
     expect(screen.getByRole('alertdialog', { name: 'Confirm delete' }).textContent).toMatch(/^Move .+ to the Shelf trash\? You can restore it in Shelf\.Confirm deleteCancel/);
     expect(client.deleteFile).not.toHaveBeenCalled();
     fireEvent.click(screen.getByText('Confirm delete'));
-    await waitFor(() => expect(client.deleteFile).toHaveBeenCalledWith('f2'));
+    await waitFor(() => expect(client.deleteFile).toHaveBeenCalledWith('f2', expect.anything()));
     await waitFor(() => expect(screen.queryByText('notes.docx')).toBeNull());
   });
 
@@ -242,7 +245,7 @@ describe('ShelfFolder', () => {
   it('every class it renders is prefixed, so host CSS cannot match it', async () => {
     const { container } = render(<ShelfFolder client={mock('read_write')} className="mine" />);
     await screen.findByText('plan.pdf');
-    fireEvent.click(screen.getByLabelText('Actions for plan.pdf'));
+    fireEvent.click(await screen.findByLabelText('Actions for plan.pdf'));
     for (const el of Array.from(container.querySelectorAll('[class]'))) {
       for (const c of Array.from(el.classList)) expect(c === 'shelf-sdk' || c === 'mine' || c.startsWith('shelf-sdk__'), c).toBe(true);
     }

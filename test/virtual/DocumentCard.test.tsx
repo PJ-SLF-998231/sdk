@@ -67,14 +67,15 @@ describe('sync state', () => {
     expect(html).toContain('Pending');
     expect(html).not.toContain('Retry');
   });
-  it('failed and conflict show Retry and Discard wired to the outbox id', () => {
+  it('failed shows Retry, conflict shows Keep mine, both Discard, wired to the outbox id', () => {
     for (const sync of ['failed', 'conflict'] as const) {
       const onRetry = vi.fn();
       const onDiscard = vi.fn();
       const { getByText, unmount } = render(
         <DocumentCard item={{ ...base, sync, outboxId: 'o9' } as ShelfItem} view="gallery" loader={loader} onOpen={noop} onRetry={onRetry} onDiscard={onDiscard} />,
       );
-      fireEvent.click(getByText('Retry'));
+      // a conflict is a choice between keeping the local change (forced) and the server's value
+      fireEvent.click(getByText(sync === 'conflict' ? 'Keep mine' : 'Retry'));
       fireEvent.click(getByText('Discard'));
       expect(onRetry).toHaveBeenCalledWith('o9');
       expect(onDiscard).toHaveBeenCalledWith('o9');

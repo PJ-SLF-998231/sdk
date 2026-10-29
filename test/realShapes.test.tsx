@@ -77,7 +77,7 @@ describe('real API shapes', () => {
 
     // toolbar: Add documents (read_write), Gallery | List; no New folder (the API cannot create folders)
     const bar = container.querySelector('.shelf-sdk__shelf-toolbar')!;
-    expect(Array.from(bar.querySelectorAll(':scope > button')).map(text)).toEqual(['Add documents']);
+    await waitFor(() => expect(Array.from(bar.querySelectorAll(':scope > button')).map(text)).toEqual(['Add documents'])); // arrives with the lazy outbox chunk
     expect(bar.querySelector('button.shelf-sdk__btn.shelf-sdk__btn--accent.shelf-sdk__btn--sm')).toBeTruthy();
     expect(Array.from(bar.querySelectorAll('.shelf-sdk__layout-toggle > button.shelf-sdk__layout-toggle-btn')).map((b) => [text(b), b.getAttribute('aria-pressed')])).toEqual([
       ['Gallery', 'true'],

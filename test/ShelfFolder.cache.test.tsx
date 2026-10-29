@@ -169,9 +169,9 @@ describe('ShelfFolder cache', () => {
     render(<ShelfFolder client={client} cacheScope="user-1" onAuthLost={onAuthLost} />);
     await screen.findByText('plan.pdf');
     await waitFor(async () => expect(await seeded('user-1')).toBeGreaterThanOrEqual(3));
-    fireEvent.change(screen.getByLabelText('Upload files'), { target: { files: [new File(['x'], 'new.pdf')] } });
+    fireEvent.change(await screen.findByLabelText('Upload files'), { target: { files: [new File(['x'], 'new.pdf')] } });
     await screen.findByText("Shelf isn't connected");
-    expect(onAuthLost).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(onAuthLost).toHaveBeenCalledTimes(1)); // the host callback runs after the purge, not with the first repaint
     expect(screen.queryByText('plan.pdf')).toBeNull();
     expect(await seeded('user-1')).toBe(0);
   });

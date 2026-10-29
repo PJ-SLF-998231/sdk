@@ -27,7 +27,7 @@ export function SyncPill({ sync }: { sync: Sync }) {
   return <span className={cx('pill', `pill--${tone}`, 'sync-pill')}>{label}</span>;
 }
 
-/** Retry / Discard for an entry that needs a decision. Nothing for synced or merely pending items. */
+/** Retry / Discard for a failed entry; "Keep mine" (overwrite the server) / Discard for a conflict. Nothing for synced or merely pending items. */
 export function SyncActions({ item, onRetry, onDiscard }: Pick<DocumentItemProps, 'item' | 'onRetry' | 'onDiscard'>) {
   if ((item.sync !== 'failed' && item.sync !== 'conflict') || !item.outboxId) return null;
   const outboxId = item.outboxId;
@@ -36,7 +36,7 @@ export function SyncActions({ item, onRetry, onDiscard }: Pick<DocumentItemProps
       {item.syncError && <span className={cx('card-meta')}>{item.syncError}</span>}
       {onRetry && (
         <button type="button" className={cx('btn', 'btn--ghost', 'btn--sm', 'sync-btn')} onClick={() => onRetry(outboxId)}>
-          Retry
+          {item.sync === 'conflict' ? 'Keep mine' : 'Retry'}
         </button>
       )}
       {onDiscard && (
