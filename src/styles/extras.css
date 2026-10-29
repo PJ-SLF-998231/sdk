@@ -23,3 +23,32 @@
 .shelf-sdk .shelf-sdk__shelf-main {
   min-width: 0;
 }
+
+/* 0.3: lazy thumbnails, sync state on cards and rows. */
+.shelf-sdk .shelf-sdk__thumb-sentinel {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.shelf-sdk .shelf-sdk__item-thumb {
+  position: relative;
+}
+.shelf-sdk .shelf-sdk__sync-pill {
+  margin-left: 6px;
+}
+.shelf-sdk .shelf-sdk__file-card-thumb .shelf-sdk__sync-pill {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  left: auto;
+  margin-left: 0;
+}
+.shelf-sdk .shelf-sdk__sync-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
