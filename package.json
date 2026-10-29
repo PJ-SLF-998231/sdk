@@ -53,7 +53,7 @@
     "sync-tokens": "node scripts/sync-tokens.mjs",
     "sync-web-css": "node scripts/sync-web-css.mjs",
     "prepack": "npm run build",
-    "size": "size-limit",
+    "size": "node scripts/size-budget.mjs",
     "check:treeshake": "node scripts/check-treeshake.mjs"
   },
   "peerDependencies": {
@@ -72,7 +72,6 @@
     "@fontsource-variable/geist": "^5.3.0",
     "@fontsource-variable/geist-mono": "^5.3.0",
     "@fontsource/instrument-serif": "^5.3.0",
-    "@size-limit/preset-small-lib": "^11.2.0",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.8",
@@ -84,7 +83,6 @@
     "jsdom": "^29.1.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "size-limit": "^11.2.0",
     "tsup": "^8.3.0",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"

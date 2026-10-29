@@ -23,7 +23,7 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm run check:dist
-      - run: npx size-limit
+      - run: node scripts/size-budget.mjs
       - run: node scripts/size-report.mjs
       - run: node scripts/check-treeshake.mjs
       - run: npm pack --dry-run
