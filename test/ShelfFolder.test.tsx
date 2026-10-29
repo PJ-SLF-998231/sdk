@@ -48,8 +48,9 @@ describe('ShelfFolder', () => {
     const { container } = render(<ShelfFolder client={client} />);
     await screen.findByText('plan.pdf');
     expect(screen.getByText('Contracts')).toBeTruthy();
-    expect(client.listFiles).toHaveBeenCalledWith(expect.objectContaining({ folder_id: 'root', recursive: false }));
-    expect(container.querySelector('img[src="/t/f1?size=medium"]')).toBeTruthy();
+    // The read path passes an abort signal as the second argument now.
+    expect(client.listFiles).toHaveBeenCalledWith(expect.objectContaining({ folder_id: 'root', recursive: false }), expect.anything());
+    await waitFor(() => expect(container.querySelector('img[src="/t/f1?size=medium"]')).toBeTruthy());
     expect(container.querySelector('.shelf-sdk__file-card-type')?.textContent).toBe('DOCX');
     expect(screen.getAllByText(/^2\.0 KB · PDF$/).length).toBe(1);
   });
