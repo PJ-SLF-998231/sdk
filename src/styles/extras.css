@@ -73,15 +73,8 @@
 .shelf-sdk .shelf-sdk__item-list-fixed th:nth-child(5) {
   width: 56px;
 }
-.shelf-sdk .shelf-sdk__item-list-fixed td {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.shelf-sdk .shelf-sdk__item-list-fixed .shelf-sdk__item-name-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+/* Names wrap, as web's do (.item-name-text: overflow-wrap: break-word). Row heights vary, so the virtual table measures
+   its rows (VirtualTable in ShelfFolder.tsx) instead of assuming one height. */
 
 /* 0.4: the item/folder count sat on the very top edge of the header row (the aside is a flex-start item of a
    30px row), so an embed whose container has no padding clipped it by 1-2px. Centre it on the row, as the
@@ -91,82 +84,35 @@
   line-height: 1.4;
 }
 
-/* 0.4: long names. Web's `overflow-wrap: break-word` does not move a name's min-content width, and a <button> does not
-   inherit it, so an unbroken name (Some_Long_File_Name.pdf has no break opportunity) made one unbroken line that
-   widened its column and ran out of the card. Names break anywhere when they must (`anywhere`, which does count toward
-   min-content), every grid/flex item that holds one may shrink (min-width: 0), and card names stop at 3 lines so one
-   very long name cannot make every card in the row (they share one measured height) tall. Folder tiles are not
-   clamped: they are not virtualised, and a clamp box shifts their text by sub-pixels (7 pixels of the baseline PNG). */
-.shelf-sdk .shelf-sdk__file-grid > *,
-.shelf-sdk .shelf-sdk__folder-grid > *,
-.shelf-sdk .shelf-sdk__file-card,
-.shelf-sdk .shelf-sdk__folder-tile,
-.shelf-sdk .shelf-sdk__file-card-body,
-.shelf-sdk .shelf-sdk__folder-tile-main,
-.shelf-sdk .shelf-sdk__folder-tile-text {
-  min-width: 0;
-}
-.shelf-sdk .shelf-sdk__file-card-name,
+/* 0.4: long names, the same rules as Shelf web (view.css carries web's own: overflow-wrap: break-word on
+   .file-card-name / .folder-tile-name / .item-name-text, min-width: 0 on the flex/grid containers, nowrap + ellipsis
+   on .folder-tree-name). The one thing web does not need and the SDK does: web's name is an <a>, a real inline box
+   that wraps inside its block. The SDK's is a <button> (navigation stays inside the embed), which Chromium lays out
+   as an atomic inline: its width is its min-content, and `break-word` does not count toward min-content, so an
+   unbroken name stays one 800px line. `anywhere` does count, so it is set on the button's text only (card link, list name). */
 .shelf-sdk .shelf-sdk__file-card-link,
-.shelf-sdk .shelf-sdk__folder-tile-name,
-.shelf-sdk .shelf-sdk__folder-tile-main,
-.shelf-sdk .shelf-sdk__item-name-text,
-.shelf-sdk .shelf-sdk__preview-facts dd,
-.shelf-sdk .shelf-sdk__studio-actions > span,
-.shelf-sdk .shelf-sdk__sync-actions .shelf-sdk__card-meta {
-  min-width: 0;
-  max-width: 100%;
+.shelf-sdk .shelf-sdk__item-name-text {
   overflow-wrap: anywhere;
 }
-.shelf-sdk .shelf-sdk__file-card-name {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  overflow: hidden;
-}
-.shelf-sdk .shelf-sdk__folder-tile-main {
-  text-align: left;
-}
-.shelf-sdk .shelf-sdk__preview-facts {
-  grid-template-columns: auto minmax(0, 1fr);
-}
-.shelf-sdk .shelf-sdk__studio-actions > span {
-  flex: 1 1 12rem;
-}
-.shelf-sdk .shelf-sdk__studio-actions .shelf-sdk__text-input {
-  min-width: 0;
-  max-width: 100%;
-}
-.shelf-sdk .shelf-sdk__sync-actions {
-  min-width: 0;
-}
-/* List rows have a fixed height (the table virtualiser does not measure them), so a name stays on one line with an
-   ellipsis. The flex name button and its text may shrink for the ellipsis to apply. */
-.shelf-sdk .shelf-sdk__item-list-fixed .shelf-sdk__item-name {
-  max-width: 100%;
-}
-.shelf-sdk .shelf-sdk__item-list-fixed .shelf-sdk__item-name > span:last-child {
-  min-width: 0;
-}
-/* Breadcrumbs: each crumb keeps to one line and ends in an ellipsis; the list wraps, so two long crumbs stack. */
+/* Breadcrumbs do not wrap a name; they ellipsize it: web's own rule (.doc-nav-row .breadcrumb, with li { display:
+   flex; min-width: 0 }), applied to every crumb row. Web applies it only on the document page; on the shelf page its
+   crumbs keep `display: inline-block` and an unbroken folder name overflows the column at 375px (seen in the real-Shelf
+   comparison, docs/screenshots/wrap-compare-crumbs-375.png). Deviation: the SDK does not leave that overflow in. */
 .shelf-sdk .shelf-sdk__breadcrumbs li {
   display: flex;
   align-items: center;
   min-width: 0;
-  max-width: 100%;
 }
 .shelf-sdk .shelf-sdk__breadcrumbs li + li::before {
   flex: none;
 }
 .shelf-sdk .shelf-sdk__breadcrumb {
-  min-width: 0;
-  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* Messages that quote a name: the drop hint ("...add them to <folder>"), upload errors, callouts, empty states. */
+/* Messages that quote a name ("Drop files to add them to <folder>", errors): block text in a definite-width column, so
+   web's own `break-word` is enough. */
 .shelf-sdk .shelf-sdk__dropzone-limits,
 .shelf-sdk .shelf-sdk__callout,
 .shelf-sdk .shelf-sdk__notice,
@@ -175,14 +121,14 @@
 .shelf-sdk .shelf-sdk__empty-title,
 .shelf-sdk .shelf-sdk__folder-tree-empty,
 .shelf-sdk .shelf-sdk__folder-tree-status {
-  min-width: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
-/* Document header: "Back to <folder>" quotes a folder name. It ends in an ellipsis instead of taking the title's column
-   (an unbroken name gave the title ~0px and one letter per line). On narrow embeds the actions drop under the title. */
-.shelf-sdk .shelf-sdk__doc-title .shelf-sdk__section-title {
-  overflow-wrap: anywhere;
+/* The preview facts' value column may shrink (min-width: 0 on a grid track, as web does on its grid containers). */
+.shelf-sdk .shelf-sdk__preview-facts {
+  grid-template-columns: auto minmax(0, 1fr);
 }
+/* Document header: "Back to <folder>" quotes a folder name. As web's crumbs do, it ends in an ellipsis instead of
+   taking the title's column (an unbroken name left the title ~0px wide). Narrow embeds drop the actions under the title. */
 .shelf-sdk .shelf-sdk__doc-actions {
   min-width: 0;
   max-width: 18rem;

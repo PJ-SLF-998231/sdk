@@ -298,6 +298,8 @@ export interface VirtualRowsOptions {
   /** Called when the last rendered row is within `prefetchRows` of the end, to fetch the next cursor page. */
   onNearEnd?: () => void;
   prefetchRows?: number;
+  /** Change it when the content above the list changes height, so the list re-reads where it starts. */
+  remeasureKey?: number;
 }
 
 export interface VirtualRow {
@@ -314,6 +316,11 @@ export interface VirtualRows {
   /** Full scroll height in px, so the scrollbar and layout are right before rows render. */
   totalSize: number;
   scrollToIndex(index: number, opts?: { align?: 'start' | 'center' | 'end' }): void;
+  /**
+   * For rows of varying height: pass each rendered row element (it must carry `data-index`) and its real height replaces
+   * the `rowHeight` estimate, now and whenever it resizes.
+   */
+  measureElement?(el: Element | null): void;
 }
 export type UseVirtualRowsFn = (opts: VirtualRowsOptions) => VirtualRows;
 

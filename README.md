@@ -188,6 +188,19 @@ Known differences from Shelf web's folder view, all because the integration API 
 
 Reproduce: `cd harness && npm install && npx playwright install chromium && npm run build && npm run shoot`. The harness is dev only and is not in the package.
 
+### Long names
+
+File and folder names are handled the way Shelf web handles them (rules copied from web's `global.css`; the synced `src/styles/view.css` carries them): card, folder-tile and list names use `overflow-wrap: break-word` and are never clamped, so a long name makes its card or row taller; flex and grid containers that hold a name carry `min-width: 0`; folder-tree names are one line with an ellipsis; breadcrumbs do not wrap (`nowrap` plus an ellipsis). Gallery rows are as tall as the tallest card measured so far at that width; list rows are measured one by one, so rows of different height stay correctly placed while scrolling (perf `--strict` with long names in 1 of 5 documents: CLS 0, 0 long tasks).
+
+Deliberate differences from web, each because the SDK's markup differs, not because the rule does:
+
+- The card title and the list name are `<button>`s (navigation stays inside the embed), web's are `<a>`s. A button is an atomic inline: `break-word` does not shrink it, so an unbroken name would stay one long line. `overflow-wrap: anywhere` is set on those two elements only.
+- The breadcrumb ellipsis rule web applies only on the document page is applied to every crumb row. On web's shelf page an unbroken folder name overflows the column at 375 px.
+- The document header's `Back to <folder>` button ends in an ellipsis instead of taking the title's column (web has a breadcrumb there).
+- Gallery rows share one height (the tallest card), where web's CSS grid sizes each row on its own. Web's selection checkbox and its status pill colours are not in the SDK.
+
+`docs/screenshots/wrap-compare-*.png` set web (its Vite dev server, api mocked with Playwright route interception) beside the SDK at the same grid width; `wrap-compare.txt` lists the computed-style differences. Reproduce: `cd harness && node shelf-compare.mjs` (needs a Shelf web checkout with dependencies at `../../shelf/web`, or `SHELF_WEB`). `node wrap.mjs` checks that no name overflows its container at 1280, 900 and 375 px, plain and under the hostile host stylesheet.
+
 ### Host CSS requirements
 
 None beyond importing `@pj-slf-998231/sdk/styles.css` once. Every rule sits under `.shelf-sdk` and every class is prefixed `shelf-sdk__`, so the host's element and class rules cannot match the embed and the embed never styles the host (no `:root`, `html`, `body` or bare element selectors; `npm run check:dist` fails the build if one appears). Host rules on bare elements (`h3 { font: ... }`, `li { margin: ... }`, `svg { fill: ... }`) do reach the embed's own elements, so `base.css` resets those that matter. Give it a container with a width: it fills its parent. It uses viewport media queries (720px and below stacks the layout), like Shelf web.

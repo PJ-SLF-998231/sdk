@@ -62,26 +62,41 @@ async function vi_waitFor<T extends Element>(get: () => T | null): Promise<T> {
   throw new Error('element never rendered');
 }
 
-describe('long names: CSS rules', () => {
-  const breaks = [
-    '.shelf-sdk__file-card-name', '.shelf-sdk__file-card-link', '.shelf-sdk__folder-tile-name', '.shelf-sdk__item-name-text',
-    '.shelf-sdk__preview-facts dd', '.shelf-sdk__studio-actions > span', '.shelf-sdk__dropzone-limits', '.shelf-sdk__callout',
-    '.shelf-sdk__sync-actions .shelf-sdk__card-meta', '.shelf-sdk__doc-title .shelf-sdk__section-title',
-  ];
-  it.each(breaks)('%s may break anywhere', (sel) => {
-    expect(decls(sel)).toMatch(/overflow-wrap:\s*anywhere/);
-  });
-  it.each(['.shelf-sdk__file-grid > *', '.shelf-sdk__folder-grid > *', '.shelf-sdk__file-card', '.shelf-sdk__folder-tile', '.shelf-sdk__file-card-body', '.shelf-sdk__folder-tile-main', '.shelf-sdk__folder-tile-text'])(
-    'grid/flex child %s can shrink', (sel) => {
-      expect(decls(sel)).toMatch(/min-width:\s*0/);
+describe('long names: CSS rules (the same ones as Shelf web)', () => {
+  // view.css is generated from web's global.css (scripts/sync-web-css.mjs), extras.css is the SDK's own.
+  const view = readFileSync(resolve(process.cwd(), 'src/styles/view.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const viewDecls = (sel: string): string =>
+    [...view.matchAll(/([^{}]+)\{([^}]*)\}/g)].filter((m) => m[1]!.split(',').some((x) => x.trim() === `.shelf-sdk ${sel}`)).map((m) => m[2]).join('\n');
+  const all = (sel: string) => `${viewDecls(sel)}\n${decls(sel)}`;
+
+  it.each(['.shelf-sdk__file-card-name', '.shelf-sdk__folder-tile-name', '.shelf-sdk__item-name-text', '.shelf-sdk__doc-title .shelf-sdk__section-title', '.shelf-sdk__preview-facts dd'])(
+    'names break with overflow-wrap: break-word, as web does: %s', (sel) => {
+      expect(viewDecls(sel)).toMatch(/overflow-wrap:\s*break-word/);
     });
-  it('card names stop at 3 lines', () => {
-    expect(decls('.shelf-sdk__file-card-name')).toMatch(/-webkit-line-clamp:\s*3/);
+  it.each(['.shelf-sdk__folder-tile-main', '.shelf-sdk__folder-tile-text', '.shelf-sdk__item-name'])('flex container %s can shrink (min-width: 0)', (sel) => {
+    expect(viewDecls(sel)).toMatch(/min-width:\s*0/);
   });
-  it('crumbs and list names stay on one line with an ellipsis', () => {
-    for (const s of ['.shelf-sdk__breadcrumb', '.shelf-sdk__item-list-fixed .shelf-sdk__item-name-text']) {
-      expect(decls(s)).toMatch(/text-overflow:\s*ellipsis/);
-      expect(decls(s)).toMatch(/white-space:\s*nowrap/);
-    }
+  it('no name is clamped to a number of lines', () => {
+    expect(css).not.toMatch(/line-clamp/);
+    expect(view).not.toMatch(/line-clamp/);
+  });
+  it('the buttons that carry a name break anywhere (a button is an atomic inline: break-word does not shrink it)', () => {
+    for (const sel of ['.shelf-sdk__file-card-link', '.shelf-sdk__item-name-text']) expect(decls(sel)).toMatch(/overflow-wrap:\s*anywhere/);
+  });
+  it('list names wrap: no ellipsis or nowrap on the name cell', () => {
+    expect(decls('.shelf-sdk__item-list-fixed td')).not.toMatch(/text-overflow/);
+    expect(all('.shelf-sdk__item-name-text')).not.toMatch(/white-space:\s*nowrap/);
+  });
+  it('crumbs do not wrap a name: nowrap + ellipsis, items may shrink', () => {
+    expect(decls('.shelf-sdk__breadcrumb')).toMatch(/text-overflow:\s*ellipsis/);
+    expect(decls('.shelf-sdk__breadcrumb')).toMatch(/white-space:\s*nowrap/);
+    expect(decls('.shelf-sdk__breadcrumbs li')).toMatch(/min-width:\s*0/);
+  });
+  it('folder tree names are one line with an ellipsis', () => {
+    expect(viewDecls('.shelf-sdk__folder-tree-name')).toMatch(/text-overflow:\s*ellipsis/);
+    expect(viewDecls('.shelf-sdk__folder-tree-name')).toMatch(/white-space:\s*nowrap/);
+  });
+  it('messages that quote a name break', () => {
+    expect(decls('.shelf-sdk__dropzone-limits')).toMatch(/overflow-wrap:\s*break-word/);
   });
 });

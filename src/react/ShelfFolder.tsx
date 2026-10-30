@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import type { ComponentType, DragEvent, ReactNode } from 'react';
 import { deepEqual } from '../cache/reconcile';
 import { createShelfClient, isAuthLost, isOfflineError, ShelfError } from '../client';
@@ -296,7 +296,38 @@ function VirtualTable({ items, folderRows, folderCount, loader, selectedId, canW
   // The scroll sentinel sits just above the table (not inside its overflow wrapper, which would be mistaken
   // for the scroller) and is nudged down past the header and folder rows, so row offsets count from the first document.
   const anchor = useRef<HTMLDivElement>(null);
-  const { rows, totalSize } = useVirtualRows({ count: items.length, rowHeight: TABLE_ROW_HEIGHT, scrollRef: anchor, onNearEnd, overscan: 6 });
+  const tbody = useRef<HTMLTableSectionElement>(null);
+  // Where the documents start below the anchor: header plus folder rows. Names wrap, so folder rows differ in height;
+  // the estimate holds until the first layout reads the real offset.
+  const [docsTop, setDocsTop] = useState(TABLE_HEAD_HEIGHT + folderCount * TABLE_ROW_HEIGHT);
+  const { rows, totalSize, measureElement } = useVirtualRows({ count: items.length, rowHeight: TABLE_ROW_HEIGHT, scrollRef: anchor, onNearEnd, overscan: 6, remeasureKey: docsTop });
+  // Document rows have varying heights (a long name wraps), so each drawn row is measured, and the table is watched
+  // for changes in the height above the documents (the header and the folder rows).
+  useLayoutEffect(() => {
+    const body = tbody.current;
+    if (!body) return;
+    const docRows = Array.from(body.children).filter((tr) => tr.getAttribute('aria-hidden') !== 'true').slice(folderCount);
+    docRows.forEach((tr, i) => {
+      const r = rows[i];
+      if (!r) return;
+      // Once per row: after that its ResizeObserver reports changes (measuring again on every render would loop).
+      if (tr.getAttribute('data-index') === String(r.index)) return;
+      tr.setAttribute('data-index', String(r.index));
+      measureElement?.(tr);
+    });
+    const first = body.children[folderCount] as HTMLElement | undefined;
+    if (first) setDocsTop((cur) => (Math.abs(cur - first.offsetTop) >= 1 ? first.offsetTop : cur));
+  });
+  useEffect(() => {
+    const table = tbody.current?.closest('table');
+    if (!table || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => {
+      const first = tbody.current?.children[folderCount] as HTMLElement | undefined;
+      if (first) setDocsTop((cur) => (Math.abs(cur - first.offsetTop) >= 1 ? first.offsetTop : cur));
+    });
+    ro.observe(table);
+    return () => ro.disconnect();
+  }, [folderCount]);
   const top = rows.length ? rows[0]!.start : 0;
   const bottom = rows.length ? Math.max(0, totalSize - (rows[rows.length - 1]!.start + rows[rows.length - 1]!.size)) : totalSize;
   const spacer = (h: number, key: string) =>
@@ -307,7 +338,7 @@ function VirtualTable({ items, folderRows, folderCount, loader, selectedId, canW
     ) : null;
   return (
     <>
-      <div ref={anchor} aria-hidden="true" style={{ height: 0, position: 'relative', top: TABLE_HEAD_HEIGHT + folderCount * TABLE_ROW_HEIGHT }} />
+      <div ref={anchor} aria-hidden="true" style={{ height: 0, position: 'relative', top: docsTop }} />
       <div className={cx('item-list-scroll')}>
         <table className={cx('item-list', 'item-list-fixed')} aria-label="Folder contents">
           <thead>
@@ -321,7 +352,7 @@ function VirtualTable({ items, folderRows, folderCount, loader, selectedId, canW
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody ref={tbody}>
             {folderRows}
             {spacer(top, 'top')}
             {rows.map((r) => {
