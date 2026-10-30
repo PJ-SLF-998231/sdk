@@ -6,6 +6,8 @@ import type {
   ShelfClientOptions,
   ShelfFolder,
   ShelfInfo,
+  CreateFolderInput,
+  UpdateFolderInput,
   ShelfItem,
   ShelfSite,
   ThumbnailRequestOptions,
@@ -33,6 +35,12 @@ export interface ShelfClient {
   readonly baseUrl: string;
   info(opts?: RequestOptions): Promise<ShelfInfo>;
   folders(opts?: RequestOptions): Promise<ShelfFolder[]>;
+  /** Folder writes (clients from createShelfClient have them; a hand-written client may not). POST /folders (201). Not idempotent: there is no idempotency key. `parent_id` defaults to the key's folder. */
+  createFolder?(input: CreateFolderInput, opts?: RequestOptions): Promise<ShelfFolder>;
+  /** PATCH /folders/{id}. 403 on the key's own folder, 409 on a cycle or when nested too deep. */
+  updateFolder?(id: string, patch: UpdateFolderInput, opts?: RequestOptions): Promise<ShelfFolder>;
+  /** DELETE /folders/{id} (204): the folder and everything in it go to the owner's trash. */
+  deleteFolder?(id: string, opts?: RequestOptions): Promise<void>;
   listFiles(params?: ListFilesParams, opts?: RequestOptions): Promise<ListFilesResult>;
   getFile(id: string, opts?: RequestOptions): Promise<ShelfItem>;
   upload(file: Blob, opts?: UploadOptions, req?: RequestOptions): Promise<ShelfItem>;
@@ -98,6 +106,14 @@ export function createShelfClient(options: ShelfClientOptions): ShelfClient {
       return body?.folders ?? body?.items ?? [];
     },
 
+    createFolder: (input, o) => request<ShelfFolder>('/folders', json('POST', input), o),
+
+    updateFolder: (id, patch, o) => request<ShelfFolder>(`/folders/${enc(id)}`, json('PATCH', patch), o),
+
+    async deleteFolder(id, o) {
+      await request<void>(`/folders/${enc(id)}`, { method: 'DELETE' }, o);
+    },
+
     listFiles(params = {}, o) {
       const q = new URLSearchParams();
       if (params.folder_id) q.set('folder_id', params.folder_id);
@@ -121,12 +137,7 @@ export function createShelfClient(options: ShelfClientOptions): ShelfClient {
       return request<ShelfItem>('/files', { method: 'POST', body: form }, req).then(normaliseItem);
     },
 
-    updateFile: (id, patch, req) =>
-      request<ShelfItem>(`/files/${enc(id)}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(patch),
-      }, req).then(normaliseItem),
+    updateFile: (id, patch, req) => request<ShelfItem>(`/files/${enc(id)}`, json('PATCH', patch), req).then(normaliseItem),
 
     async deleteFile(id, req) {
       await request<void>(`/files/${enc(id)}`, { method: 'DELETE' }, req);
@@ -162,6 +173,10 @@ export function createShelfClient(options: ShelfClientOptions): ShelfClient {
 
     getSite: (id, o) => request<ShelfSite>(`/files/${enc(id)}/site`, {}, o),
   };
+}
+
+function json(method: string, body: unknown): RequestInit {
+  return { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
 }
 
 /** The API answers `{files: [...], next_cursor}`; any list may arrive as null or be missing. */

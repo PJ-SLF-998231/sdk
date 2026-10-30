@@ -122,23 +122,35 @@ describe('claims', () => {
 
 describe('concurrency and ordering', () => {
   it('runs at most 3 uploads at once out of 10', async () => {
+    // Deterministic: every upload parks on a promise this test settles, so no timing decides the outcome.
     const kv = await openTestKv();
     let inflight = 0;
     let max = 0;
+    const parked: Array<() => void> = [];
     const client = fakeClient({
       upload: async () => {
         inflight++;
         max = Math.max(max, inflight);
-        await tick(10);
+        await new Promise<void>((r) => parked.push(r));
         inflight--;
-        return item({ id: 'srv' + Math.random() });
+        return item({ id: 'srv' + client.upload.mock.calls.length });
       },
     });
     const ob = make(kv, client);
     for (let i = 0; i < 10; i++) await ob.enqueue(upOp(`f${i}.pdf`));
-    await vi.waitFor(() => expect(client.upload).toHaveBeenCalledTimes(10), { timeout: 3000 });
+    await vi.waitFor(() => expect(parked).toHaveLength(3));
+    expect(client.upload).toHaveBeenCalledTimes(3); // a 4th would already have started by now if the cap were broken
+    let done = 0;
+    while (done < 10) {
+      await vi.waitFor(() => expect(parked.length).toBeGreaterThan(0));
+      parked.shift()!();
+      done++;
+      await vi.waitFor(() => expect(client.upload.mock.calls.length).toBeGreaterThanOrEqual(Math.min(10, done + 3)));
+      expect(inflight).toBeLessThanOrEqual(3);
+    }
     await ob.idle();
     expect(max).toBe(3);
+    expect(client.upload).toHaveBeenCalledTimes(10);
     expect(ob.list()).toHaveLength(0);
   });
 

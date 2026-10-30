@@ -20,14 +20,14 @@ const send = (res, code, body, type = 'application/json') => { res.writeHead(cod
 const N5K = 5000;
 const PNG1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
 const idOf = (n) => `00000000-0000-4000-8000-${n.toString(16).padStart(12, '0')}`;
-let docs5k, stats5k, delay5k = 0;
+let docs5k, stats5k, delay5k = 0, long5k = false;
 function reset5k() {
   delay5k = 0;
   stats5k = { patch: 0, post: 0, delete: 0, thumb: 0, files: 0, uploads: [] };
   docs5k = Array.from({ length: N5K }, (_, i) => {
     const img = i % 3 !== 2;
     return {
-      id: idOf(i + 1), filename: `doc-${String(i + 1).padStart(4, '0')}.${img ? 'png' : 'txt'}`, content_type: img ? 'image/png' : 'text/plain',
+      id: idOf(i + 1), filename: long5k && i >= 10 && i % 5 === 0 ? `Stellenbosch_Wedding_Colour_and_Style_Guide_White_Background_${i + 1}.${img ? 'png' : 'txt'}` : long5k && i >= 10 && i % 11 === 3 ? `Quarterly review of the Stellenbosch wedding venue shortlist and catering quotes for the October event ${i + 1}.${img ? 'png' : 'txt'}` : `doc-${String(i + 1).padStart(4, '0')}.${img ? 'png' : 'txt'}`, content_type: img ? 'image/png' : 'text/plain',
       size_bytes: 1000 + i, folder_id: ROOT, parse_status: 'ready', created_at: new Date(Date.UTC(2026, 9, 27) - i * 60000).toISOString(),
       edited_at: null, parsed_at: new Date(Date.UTC(2026, 9, 27) - i * 60000 + 4000).toISOString(), preview_sizes: img ? ['small', 'medium'] : [],
     };
@@ -85,13 +85,50 @@ async function handle5k(req, res, p, u) {
   return send(res, 404, { code: 'not_found', error: 'not found' });
 }
 
+
+// ---- Long-name fixtures under /api/shelflong (P3 wrap checks; the baseline screenshots never use this route). ----
+export const LONG_UNBROKEN = 'Stellenbosch_Wedding_Colour_and_Style_Guide_White_Background_Final_Approved_Revision_Seven.pdf';
+export const LONG_SPACED = 'Quarterly review of the Stellenbosch wedding venue shortlist and catering quotes for the October event.pdf';
+export const LONG_FOLDER_UNBROKEN = 'Stellenbosch_Wedding_Colour_and_Style_Guide_White_Background_Final_Approved_Revision_Seven';
+export const LONG_FOLDER_SPACED = 'Quarterly review of the Stellenbosch wedding venue shortlist and catering quotes';
+const LROOT = '44444444-4444-4444-8444-444444444441';
+const LFOLDERS = [
+  { id: LROOT, parent_id: null, name: LONG_FOLDER_UNBROKEN },
+  { id: '44444444-4444-4444-8444-444444444442', parent_id: LROOT, name: LONG_FOLDER_UNBROKEN },
+  { id: '44444444-4444-4444-8444-444444444443', parent_id: LROOT, name: LONG_FOLDER_SPACED },
+];
+const ldoc = (n, name, type) => ({
+  id: `55555555-5555-4555-8555-${String(n).padStart(12, '0')}`, filename: name, content_type: type, size_bytes: 1500000 + n, folder_id: LROOT,
+  parse_status: 'ready', created_at: '2026-10-27T09:12:00Z', edited_at: null, parsed_at: '2026-10-27T09:12:04Z', preview_sizes: [],
+});
+export const COMPARE_NAME = 'Stellenbosch_Wedding_Colour_and_Style_Guide_White_Background.pdf';
+export const LDOCS = [
+  ldoc(1, LONG_UNBROKEN, 'application/pdf'),
+  ldoc(2, LONG_SPACED, 'application/pdf'),
+  ldoc(3, '2026-10-29-ready-set-gunrun-event-entry.jpg', 'image/jpeg'),
+  ldoc(4, 'a'.repeat(72) + '.txt', 'text/plain'),
+  ldoc(5, 'short.txt', 'text/plain'),
+  ldoc(6, COMPARE_NAME, 'application/pdf'),
+];
+function handleLong(res, p) {
+  if (p === '/') return send(res, 200, { id: 'kl', name: 'Long key', access: 'read_write', expires_at: null, folder: { id: LROOT, name: LONG_FOLDER_UNBROKEN } });
+  if (p === '/folders') return send(res, 200, { folders: LFOLDERS });
+  if (p === '/files') return send(res, 200, { files: LDOCS, next_cursor: null });
+  const d = /^\/files\/([^/]+)$/.exec(p);
+  const doc = d && LDOCS.find((x) => x.id === d[1]);
+  if (doc) return send(res, 200, { ...doc, parsed_text: TEXT, parsed_meta: {}, parse_result: null, parse_error: null, parser_name: 'text', download_url: '' });
+  return send(res, 404, { error: 'not found' });
+}
+
 /** Returns true when it handled the request. */
 export function handle(req, res) {
   const u = new URL(req.url, 'http://x');
   if (u.pathname === '/__harness/delay') { delay5k = Number(u.searchParams.get('ms')) || 0; return send(res, 200, { delay: delay5k }), true; }
+  if (u.pathname === '/__harness/long') { long5k = u.searchParams.get('on') === '1'; reset5k(); return send(res, 200, { long: long5k }), true; }
   if (u.pathname === '/__harness/reset') { reset5k(); return send(res, 200, { ok: true }), true; }
   if (u.pathname === '/__harness/stats') return send(res, 200, { ...stats5k, docs: docs5k.length }), true;
   if (u.pathname.startsWith('/api/shelf5k')) { handle5k(req, res, u.pathname.slice('/api/shelf5k'.length) || '/', u).catch((e) => { res.headersSent || send(res, 500, { error: String(e) }); }); return true; }
+  if (u.pathname.startsWith('/api/shelflong')) return handleLong(res, u.pathname.slice('/api/shelflong'.length) || '/'), true;
   if (!u.pathname.startsWith('/api/shelf')) return false;
   const p = u.pathname.slice('/api/shelf'.length) || '/';
   if (p === '/' ) return send(res, 200, { id: 'k1', name: 'Aisle key', access: 'read_write', expires_at: null, folder: { id: ROOT, name: 'Aisle CMS' } }), true;

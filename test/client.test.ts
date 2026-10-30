@@ -17,6 +17,47 @@ function setup(res: () => Response, opts: { baseUrl?: string; apiKey?: string } 
   return { client, call, fetchMock };
 }
 
+describe('folder writes', () => {
+  const folderRec = { id: 'n1', name: 'New', parent_id: 'root' };
+  it('createFolder POSTs {name, parent_id} and returns the 201 folder', async () => {
+    const { client, call } = setup(() => json(folderRec, 201), { apiKey: 'k' });
+    expect(await client.createFolder!({ name: 'New', parent_id: 'root' })).toEqual(folderRec);
+    const { init, url, headers } = call();
+    expect(url).toBe('https://x.test/api/v1/integration/folders');
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body as string)).toEqual({ name: 'New', parent_id: 'root' });
+    expect(headers.get('Content-Type')).toBe('application/json');
+    expect(headers.get('Authorization')).toBe('Bearer k');
+  });
+  it('createFolder leaves parent_id out so the key folder is the parent', async () => {
+    const { client, call } = setup(() => json(folderRec, 201));
+    await client.createFolder!({ name: 'New' });
+    expect(JSON.parse(call().init.body as string)).toEqual({ name: 'New' });
+  });
+  it('updateFolder PATCHes name and/or parent_id on /folders/{id}', async () => {
+    const { client, call } = setup(() => json(folderRec));
+    await client.updateFolder!('a/b', { name: 'X', parent_id: 'p' });
+    const { init, url } = call();
+    expect(url).toBe('https://x.test/api/v1/integration/folders/a%2Fb');
+    expect(init.method).toBe('PATCH');
+    expect(JSON.parse(init.body as string)).toEqual({ name: 'X', parent_id: 'p' });
+  });
+  it('deleteFolder DELETEs and resolves on 204', async () => {
+    const { client, call } = setup(() => new Response(null, { status: 204 }));
+    await expect(client.deleteFolder!('n1')).resolves.toBeUndefined();
+    expect(call().init.method).toBe('DELETE');
+    expect(call().url).toMatch(/\/folders\/n1$/);
+  });
+  it('403 on the key folder and 409 on a cycle become ShelfErrors', async () => {
+    const { client: c403 } = setup(() => json({ error: 'An integration can\'t rename or move its own folder.' }, 403));
+    expect(await c403.updateFolder!('root', { name: 'x' }).catch((e) => e)).toMatchObject({ status: 403 });
+    const { client: c409 } = setup(() => json({ message: 'A folder can\'t go inside itself.' }, 409));
+    const e = (await c409.updateFolder!('a', { parent_id: 'b' }).catch((x) => x)) as ShelfError;
+    expect(e).toBeInstanceOf(ShelfError);
+    expect(e.status).toBe(409);
+  });
+});
+
 describe('routes', () => {
   it('info GET /', async () => {
     const { client, call } = setup(() => json({ name: 'shelf' }));

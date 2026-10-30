@@ -2,14 +2,15 @@ import { memo, useMemo } from 'react';
 import { cx } from './cx';
 import { documentKind, formatDate, formatSize, orderedSizes, statusPill, typeLabel } from './format';
 import { ActionMenu } from './ActionMenu';
-import { SyncActions, SyncPill, itemMenu } from './syncUi';
+import { SyncActions, SyncPill, itemMenu, useThumbLoader } from './syncUi';
 import type { DocumentItemProps } from './syncUi';
 import { Thumb } from './Thumb';
 
 export type DocumentRowProps = DocumentItemProps;
 
 /** A list-view table row. Markup matches 0.2.0's ShelfFolder row exactly when the item has no sync state. */
-function DocumentRowImpl({ item: f, loader, selected, onOpen, onRetry, onDiscard, onDragStart, canWrite, onAction }: DocumentRowProps) {
+function DocumentRowImpl({ item: f, loader: given, client, selected, onOpen, onRetry, onDiscard, onDragStart, canWrite, onAction }: DocumentRowProps) {
+  const loader = useThumbLoader(given, client);
   const hasPreview = orderedSizes(f.preview_sizes).length > 0;
   const pill = statusPill(f.parse_status);
   const actions = useMemo(() => itemMenu(f, canWrite, onAction), [f, canWrite, onAction]);

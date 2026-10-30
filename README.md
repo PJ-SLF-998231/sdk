@@ -161,6 +161,16 @@ The markup, class structure, CSS, tokens and icons are ported from Shelf web (`s
 
 The Gallery/List choice is remembered in `localStorage` (`shelf-sdk.layout`), and so is whether the folder tree is open (`shelf-sdk.folderTree`). If storage is unavailable (private windows, locked-down hosts) both still toggle, they are just not remembered.
 
+### The document page on its own
+
+`DocumentPage` (also `DocumentTextTab`, `DocumentPreviewTab` and `DocumentContentTab`) from `@pj-slf-998231/sdk/react/document-page` draws one document without the folder view: `<DocumentPage documentId="..." client={client} />`, or inside a `ShelfProvider`. Options of the page and, where it applies, of its tabs:
+
+| Prop | Default | |
+| --- | --- | --- |
+| `showPreviewSizes` | `true` | `false` hides the Small / Medium / Large / Original bar over an image preview; the image still shows, at the size it opens with (the original, as wide as its container, loaded lazily). PDFs and other previews are unaffected. Also on `DocumentPreviewTab`. |
+| `documentTabs` | `['text', 'preview', 'content']` | Which tabs, in what order. A listed tab that does not apply (Content for a document without a generated site) is skipped; the page opens on the first one that is available, so `['content', 'preview', 'text']` opens a document with a site on Content and one without on Preview. Arrow keys, Home and End move between the tabs in the order shown. |
+| `actions` | none | `{ rename, move, delete }` callbacks. Only the ones given appear (Rename, Move to, Delete); without them the page offers Download only. |
+
 ### What it does not show
 
 The folder view only offers what the integration API can do. It has no route to create, rename, move or delete folders, so the **New folder** button and the folder cards' and header's `...` menus are not rendered. Bulk select and the bulk bar are not rendered either. Documents get Rename, Move to and Delete.
@@ -187,6 +197,19 @@ Known differences from Shelf web's folder view, all because the integration API 
 - The page padding and scrollbar of Shelf web's app shell belong to the host page, not the component.
 
 Reproduce: `cd harness && npm install && npx playwright install chromium && npm run build && npm run shoot`. The harness is dev only and is not in the package.
+
+### Long names
+
+File and folder names are handled the way Shelf web handles them (rules copied from web's `global.css`; the synced `src/styles/view.css` carries them): card, folder-tile and list names use `overflow-wrap: break-word` and are never clamped, so a long name makes its card or row taller; flex and grid containers that hold a name carry `min-width: 0`; folder-tree names are one line with an ellipsis; breadcrumbs do not wrap (`nowrap` plus an ellipsis). Gallery rows are as tall as the tallest card measured so far at that width; list rows are measured one by one, so rows of different height stay correctly placed while scrolling (perf `--strict` with long names in 1 of 5 documents: CLS 0, 0 long tasks).
+
+Deliberate differences from web, each because the SDK's markup differs, not because the rule does:
+
+- The card title and the list name are `<button>`s (navigation stays inside the embed), web's are `<a>`s. A button is an atomic inline: `break-word` does not shrink it, so an unbroken name would stay one long line. `overflow-wrap: anywhere` is set on those two elements only.
+- The breadcrumb ellipsis rule web applies only on the document page is applied to every crumb row. On web's shelf page an unbroken folder name overflows the column at 375 px.
+- The document header's `Back to <folder>` button ends in an ellipsis instead of taking the title's column (web has a breadcrumb there).
+- Gallery rows share one height (the tallest card), where web's CSS grid sizes each row on its own. Web's selection checkbox and its status pill colours are not in the SDK.
+
+`docs/screenshots/wrap-compare-*.png` set web (its Vite dev server, api mocked with Playwright route interception) beside the SDK at the same grid width; `wrap-compare.txt` lists the computed-style differences. Reproduce: `cd harness && node shelf-compare.mjs` (needs a Shelf web checkout with dependencies at `../../shelf/web`, or `SHELF_WEB`). `node wrap.mjs` checks that no name overflows its container at 1280, 900 and 375 px, plain and under the hostile host stylesheet.
 
 ### Host CSS requirements
 

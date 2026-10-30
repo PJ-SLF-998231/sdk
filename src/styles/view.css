@@ -290,6 +290,10 @@
 .shelf-sdk .shelf-sdk__text-input[aria-invalid="true"] {
   border-color: var(--danger);
 }
+.shelf-sdk .shelf-sdk__text-input--sm {
+  padding: 7px 10px;
+  font-size: 14px;
+}
 .shelf-sdk select.shelf-sdk__text-input {
   appearance: none;
   -webkit-appearance: none;
@@ -314,6 +318,13 @@
   overflow: hidden;
   cursor: pointer;
   transition: border-color 140ms ease;
+}
+.shelf-sdk select.shelf-sdk__text-input--sm {
+  padding: 7px 34px 7px 10px;
+  font-size: 14px;
+  background-position:
+    right 17px center,
+    right 12px center;
 }
 .shelf-sdk .shelf-sdk__field-error {
   font-size: 13px;
@@ -747,6 +758,17 @@
 .shelf-sdk .shelf-sdk__folder-tile--skeleton {
   min-height: 92px;
   justify-content: center;
+}
+.shelf-sdk .shelf-sdk__folder-name-form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.shelf-sdk .shelf-sdk__folder-name-form-actions {
+  display: flex;
+  gap: 6px;
 }
 .shelf-sdk .shelf-sdk__shelf-item {
   position: relative;
@@ -1421,6 +1443,10 @@
   background: var(--bg);
   box-shadow: var(--shadow);
   color: var(--fg);
+}
+.shelf-sdk .shelf-sdk__list-new-folder {
+  max-width: 420px;
+  margin-bottom: 14px;
 }
 .shelf-sdk .shelf-sdk__item-list-scroll {
   position: relative;

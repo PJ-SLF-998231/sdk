@@ -5,7 +5,7 @@ import { ShelfError } from '../../src/client';
 import type { ShelfClient } from '../../src/client';
 import { openKv } from '../../src/storage/db';
 import type { KvStore } from '../../src/storage/db';
-import type { ShelfItem } from '../../src/types';
+import type { ShelfFolder, ShelfItem } from '../../src/types';
 import type { LockManagerLike } from '../../src/outbox/outbox';
 
 export const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -49,10 +49,16 @@ export type FakeClient = ShelfClient & {
   getFile: ReturnType<typeof vi.fn>;
   updateFile: ReturnType<typeof vi.fn>;
   deleteFile: ReturnType<typeof vi.fn>;
+  folders: ReturnType<typeof vi.fn>;
+  createFolder: ReturnType<typeof vi.fn>;
+  updateFolder: ReturnType<typeof vi.fn>;
+  deleteFolder: ReturnType<typeof vi.fn>;
 };
 
+export const folder = (o: Partial<ShelfFolder> = {}): ShelfFolder => ({ id: 'fo1', name: 'Plans', parent_id: 'root', ...o });
+
 /** A client whose methods succeed. Override per test with mockImplementation. */
-export function fakeClient(over: Partial<Record<'upload' | 'getFile' | 'updateFile' | 'deleteFile', (...a: any[]) => any>> = {}): FakeClient {
+export function fakeClient(over: Partial<Record<'upload' | 'getFile' | 'updateFile' | 'deleteFile' | 'folders' | 'createFolder' | 'updateFolder' | 'deleteFolder', (...a: any[]) => any>> = {}): FakeClient {
   let n = 0;
   return {
     baseUrl: 'https://x.test',
@@ -60,6 +66,10 @@ export function fakeClient(over: Partial<Record<'upload' | 'getFile' | 'updateFi
     getFile: vi.fn(over.getFile ?? (async (id: string) => item({ id }))),
     updateFile: vi.fn(over.updateFile ?? (async (id: string, p: object) => item({ id, ...p }))),
     deleteFile: vi.fn(over.deleteFile ?? (async () => undefined)),
+    folders: vi.fn(over.folders ?? (async () => [folder({ id: 'root', name: 'Key', parent_id: null }), folder()])),
+    createFolder: vi.fn(over.createFolder ?? (async (i: { name: string; parent_id?: string }) => folder({ id: 'srv-folder-' + ++n, name: i.name, parent_id: i.parent_id ?? 'root' }))),
+    updateFolder: vi.fn(over.updateFolder ?? (async (id: string, p: object) => folder({ id, ...p }))),
+    deleteFolder: vi.fn(over.deleteFolder ?? (async () => undefined)),
   } as unknown as FakeClient;
 }
 

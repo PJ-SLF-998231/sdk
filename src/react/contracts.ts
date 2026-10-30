@@ -246,7 +246,8 @@ export interface FolderToolbarProps extends ShelfComponentProps {
   onAddFiles(files: File[]): void;
   /** Present only when folders can be created. */
   onNewFolder?(): void;
-  adding: boolean;
+  /** Uploads in flight: a count ("Adding 2 documents…") or just whether any are (U4 widened this from `boolean`, additive). */
+  adding: boolean | number;
   layout: FolderLayout;
   onLayoutChange(layout: FolderLayout): void;
 }
@@ -284,7 +285,8 @@ export interface DocumentCardProps extends ShelfComponentProps {
 export interface DocumentCollectionProps extends ShelfSource, ShelfComponentProps {
   /** Folder whose documents to show (data-bound), or pass `items` directly. */
   folderId?: string | null;
-  items?: readonly OverlayItem[];
+  /** Server items; items from the outbox overlay (`sync`, `outboxId`, ...) are drawn with their sync state. */
+  items?: readonly DocumentCardProps['item'][];
   selectedId?: string | null;
   canWrite?: boolean;
   onOpen(id: string): void;
@@ -303,8 +305,22 @@ export interface DocumentListProps extends DocumentCollectionProps {
   folderActions?(folder: ShelfFolderRecord): MenuAction[];
 }
 
-export interface DocumentPageProps extends ShelfSource, ShelfComponentProps {
+/** The document page's tabs. */
+export type DocumentTabId = 'content' | 'preview' | 'text';
+
+/** Shared by the document page and its Preview tab (additive in 0.4 U6). */
+export interface DocumentPreviewOptions {
+  /** Show the Small / Medium / Large / Original bar over an image preview. Default true. When false the image shows at the size it opens with. */
+  showPreviewSizes?: boolean;
+}
+
+export interface DocumentPageProps extends ShelfSource, ShelfComponentProps, DocumentPreviewOptions {
   documentId: string;
+  /**
+   * Which tabs to show and in what order. Default ['text', 'preview', 'content']. A listed tab that does not apply
+   * (Content without a generated site) is skipped; the page opens on the first one that is available.
+   */
+  documentTabs?: readonly DocumentTabId[];
   /** The listing's record, shown while the full document loads. */
   initial?: ShelfItem;
   /** Where it sits, for the Location row. */
@@ -318,7 +334,7 @@ export interface DocumentPageProps extends ShelfSource, ShelfComponentProps {
 export interface DocumentTextTabProps extends ShelfComponentProps {
   text: string | null | undefined;
 }
-export interface DocumentPreviewTabProps extends ShelfComponentProps {
+export interface DocumentPreviewTabProps extends ShelfComponentProps, DocumentPreviewOptions {
   document: ShelfDocument;
   client?: ShelfClient;
   loader?: ThumbLoader;

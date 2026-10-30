@@ -3,16 +3,17 @@ import { cx } from './cx';
 import { describeMeta, documentKind, formatSize, orderedSizes, statusPill, typeLabel } from './format';
 import type { ParsedMeta } from './format';
 import { ActionMenu } from './ActionMenu';
-import { SyncActions, SyncPill, itemMenu } from './syncUi';
+import { SyncActions, SyncPill, itemMenu, useThumbLoader } from './syncUi';
 import type { DocumentItemProps } from './syncUi';
 import { Thumb } from './Thumb';
 
 export type DocumentCardProps = DocumentItemProps;
 
 /** A gallery card. Markup matches 0.2.0's ShelfFolder card exactly when the item has no sync state. */
-function DocumentCardImpl({ item: f, loader, selected, onOpen, onRetry, onDiscard, onDragStart, canWrite, onAction }: DocumentCardProps) {
+function DocumentCardImpl({ item: f, loader: given, client, selected, onOpen, onRetry, onDiscard, onDragStart, canWrite, onAction }: DocumentCardProps) {
   const type = typeLabel(f.content_type);
   const kind = documentKind(f.content_type);
+  const loader = useThumbLoader(given, client);
   const hasPreview = orderedSizes(f.preview_sizes).length > 0;
   const busy = f.parse_status === 'pending' || f.parse_status === 'parsing';
   const meta = describeMeta(f.parsed_meta as ParsedMeta | null | undefined);

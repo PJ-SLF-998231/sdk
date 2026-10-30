@@ -85,12 +85,14 @@ export const entries = [
     // DocumentPage is the thing this entry is for; the document-site renderer stays lazy.
     banned: LAZY_ONLY,
     scenarios: [
-      { name: '*', imports: '*', initialKb: 12.5 },
+      // 14.7 (was 12.5): the connected page, the documentTabs config and keyboard handling add real code.
+      { name: '*', imports: '*', initialKb: 14.7 },
       { name: '{DocumentTextTab}', imports: ['DocumentTextTab'], initialKb: 1.5 },
     ],
   }),
   react('offline-banner', { banned: LEAF, scenarios: [{ name: '*', imports: '*', initialKb: 1.3 }] }),
-  react('action-menu', { banned: LEAF, scenarios: [{ name: '*', imports: '*', initialKb: 1.1 }] }),
+  // 1.2 kB: root wrapper plus key handling measure 1105 B; ActionMenu is extracted unchanged.
+  react('action-menu', { banned: LEAF, scenarios: [{ name: '*', imports: '*', initialKb: 1.2 }] }),
   react('folder-tree', { scenarios: [{ name: '*', imports: '*', initialKb: 2.8 }] }),
 ];
 
@@ -112,7 +114,9 @@ export const combos = [
  * 0.3 baseline: 10.29 kB measured without the nested chunk; 16.72 kB with it (budget = measured + 5%, plan ceiling 19.0).
  */
 // 17.7 (plan: 17.6, hard cap 19.0): raised with the hooks budgets above, same heavier session core.
-export const lazy = { entry: './react', totalKb: 17.7 };
+// 18.8 (hard cap 19.0): the connected page, documentTabs config and keyboard handling add real code, and the lazy total
+// started with ~0 headroom.
+export const lazy = { entry: './react', totalKb: 18.8 };
 
 /** Extra files in the package, outside the entries: reserved/produced by the build. */
 export const staticExports = {
