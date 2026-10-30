@@ -28,6 +28,7 @@ export function FolderCardBody({
   actions,
   renaming,
   sync,
+  meta,
 }: Omit<FolderCardProps, 'theme' | 'className'>) {
   const text = caption ?? (folderCount === undefined && itemCount === undefined ? null : folderCaption(folderCount ?? 0, itemCount ?? 0));
   const pill = sync && sync !== 'synced' ? sync : null;
@@ -70,6 +71,7 @@ export function FolderCardBody({
             </span>
           </button>
         )}
+        {!renaming && meta}
         {!renaming && actions && actions.length > 0 && <ActionMenu label={`folder ${folder.name}`} actions={actions} />}
       </article>
     </>

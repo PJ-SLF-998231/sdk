@@ -206,6 +206,8 @@ export interface FolderCardProps extends ShelfComponentProps {
   /** The card is showing the inline rename form. */
   renaming?: { error: string | null; onSubmit(name: string): void; onCancel(): void; onEdit(): void } | null;
   sync?: ItemSyncState;
+  /** Extra content after the name, outside the open button (ShelfFolder puts Retry / Keep mine / Discard here). Additive, 0.4 U8. */
+  meta?: ReactNode;
 }
 
 export interface FolderNameFormProps extends ShelfComponentProps {

@@ -14,6 +14,11 @@ export function FolderToolbar({ canWrite, onAddFiles, onNewFolder, adding, layou
       <div className={cx('shelf-toolbar')}>
         {canWrite && (
           <>
+            {onNewFolder && (
+              <button type="button" className={cx('btn', 'btn--ghost', 'btn--sm')} onClick={onNewFolder}>
+                New folder
+              </button>
+            )}
             <button type="button" className={cx('btn', 'btn--accent', 'btn--sm')} onClick={() => picker.current?.click()}>
               Add documents
             </button>
@@ -29,11 +34,6 @@ export function FolderToolbar({ canWrite, onAddFiles, onNewFolder, adding, layou
                 e.target.value = '';
               }}
             />
-            {onNewFolder && (
-              <button type="button" className={cx('btn', 'btn--ghost', 'btn--sm')} onClick={onNewFolder}>
-                New folder
-              </button>
-            )}
           </>
         )}
         <p className={cx('drag-status')} aria-live="polite">

@@ -36,11 +36,14 @@ function lazyPart<P extends object>(load: Loader<P>) {
 type DocumentPageProps = Parameters<typeof import('../DocumentPage').DocumentPageView>[0];
 type FolderTreeProps = Parameters<typeof import('../FolderTree').FolderTree>[0];
 type ActionDialogProps = Parameters<typeof import('../ActionDialog').ActionDialog>[0];
+type FolderDialogProps = Parameters<typeof import('../ActionDialog').FolderDialog>[0];
 
 /** The parts ShelfFolder loads on demand: the document page, the folder tree and the rename/move/delete form. */
 export const DocumentPagePart = lazyPart<DocumentPageProps>(() => import('../DocumentPage').then((m) => ({ default: m.DocumentPageView })));
 export const FolderTreePart = lazyPart<FolderTreeProps>(() => import('../FolderTree').then((m) => ({ default: m.FolderTree })));
 export const ActionDialogPart = lazyPart<ActionDialogProps>(() => import('../ActionDialog').then((m) => ({ default: m.ActionDialog })));
+// The same module as the item dialog, so the same chunk.
+export const FolderDialogPart = lazyPart<FolderDialogProps>(() => import('../ActionDialog').then((m) => ({ default: m.FolderDialog })));
 
 /** Fallbacks hold the space the part will take, so the page does not jump when the chunk lands. */
 export const docFallback = (

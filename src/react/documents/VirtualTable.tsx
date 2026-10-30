@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import type { ItemSyncState } from '../../internal/contracts';
 import type { ShelfFolder } from '../../types';
 import { useVirtualRows } from '../../virtual';
 import { ActionMenu } from '../ActionMenu';
@@ -7,6 +8,7 @@ import type { MenuAction } from '../contracts';
 import { cx } from '../cx';
 import { DocumentRow } from '../DocumentRow';
 import { FolderIcon } from '../icons';
+import { SyncPill } from '../syncUi';
 import type { VirtualGalleryProps } from './VirtualGallery';
 
 /** List view: a 40px thumbnail plus the 8px cell padding either side and the 1px rule. */
@@ -110,21 +112,27 @@ export function VirtualTable({ items, folderRows, folderCount, loader, selectedI
 }
 
 /** A subfolder as a table row (no menu unless `actions` are given, which is the 0.3 markup). */
-export function FolderRow({ folder, caption, onOpen, actions }: { folder: ShelfFolder; caption?: string | null; onOpen?: (id: string) => void; actions?: MenuAction[] }) {
+export function FolderRow({ folder, caption, onOpen, actions, sync, meta, rename }: { folder: ShelfFolder; caption?: string | null; onOpen?: (id: string) => void; actions?: MenuAction[]; sync?: ItemSyncState; meta?: ReactNode; rename?: ReactNode }) {
   return (
     <tr className={cx('item-row', 'item-row--folder')}>
       <td>
-        <button type="button" className={cx('link-btn', 'item-name')} onClick={() => onOpen?.(folder.id)}>
-          <span className={cx('item-thumb', 'item-thumb--folder')}>
-            <FolderIcon />
-          </span>
-          <span className={cx('item-name-text')}>{folder.name}</span>
-        </button>
+        {rename ?? (
+          <button type="button" className={cx('link-btn', 'item-name')} onClick={() => onOpen?.(folder.id)}>
+            <span className={cx('item-thumb', 'item-thumb--folder')}>
+              <FolderIcon />
+            </span>
+            <span className={cx('item-name-text')}>{folder.name}</span>
+          </button>
+        )}
       </td>
-      <td className={cx('item-list-muted')}>{caption ?? ''}</td>
+      <td className={cx('item-list-muted')}>
+        {caption ?? ''}
+        <SyncPill sync={sync} />
+        {meta}
+      </td>
       <td className={cx('item-list-num', 'item-list-muted')}>—</td>
       <td className={cx('item-list-muted')}></td>
-      <td className={cx('item-list-actions')}>{actions && actions.length > 0 ? <ActionMenu label={folder.name} actions={actions} /> : null}</td>
+      <td className={cx('item-list-actions')}>{actions && actions.length > 0 && !rename ? <ActionMenu label={folder.name} actions={actions} /> : null}</td>
     </tr>
   );
 }

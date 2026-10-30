@@ -578,6 +578,7 @@ exports[`ShelfFolder 0.3 baseline markup > read_write key: empty folder 1`] = `
 </div>
 </div>
 <div class="shelf-sdk__shelf-toolbar">
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm">New folder</button>
 <button type="button" class="shelf-sdk__btn shelf-sdk__btn--accent shelf-sdk__btn--sm">Add documents</button>
 <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/plain,text/markdown,application/json,.pdf,.docx,.doc,.xlsx,.xls,.txt,.md,.json" multiple="" hidden="" aria-label="Upload files">
 <p class="shelf-sdk__drag-status" aria-live="polite">
@@ -619,6 +620,18 @@ exports[`ShelfFolder 0.3 baseline markup > read_write key: empty folder 1`] = `
 <span class="shelf-sdk__card-meta">1 item</span>
 </span>
 </button>
+<div class="shelf-sdk__action-menu">
+<button type="button" class="shelf-sdk__action-menu-button" aria-label="Actions for folder Contracts" aria-haspopup="menu" aria-expanded="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<circle cx="3" cy="8" r="1.5">
+</circle>
+<circle cx="8" cy="8" r="1.5">
+</circle>
+<circle cx="13" cy="8" r="1.5">
+</circle>
+</svg>
+</button>
+</div>
 </article>
 </div>
 <p class="shelf-sdk__dropzone-limits shelf-sdk__shelf-dropzone-hint">Drop documents here to add them to Aisle CMS · PDF, Word, Excel, text, Markdown, JSON, or scans and photos of documents · up&nbsp;to&nbsp;25&nbsp;MB</p>
@@ -658,6 +671,7 @@ exports[`ShelfFolder 0.3 baseline markup > read_write key: list layout 1`] = `
 </div>
 </div>
 <div class="shelf-sdk__shelf-toolbar">
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm">New folder</button>
 <button type="button" class="shelf-sdk__btn shelf-sdk__btn--accent shelf-sdk__btn--sm">Add documents</button>
 <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/plain,text/markdown,application/json,.pdf,.docx,.doc,.xlsx,.xls,.txt,.md,.json" multiple="" hidden="" aria-label="Upload files">
 <p class="shelf-sdk__drag-status" aria-live="polite">
@@ -719,6 +733,18 @@ exports[`ShelfFolder 0.3 baseline markup > read_write key: list layout 1`] = `
 <td class="shelf-sdk__item-list-muted">
 </td>
 <td class="shelf-sdk__item-list-actions">
+<div class="shelf-sdk__action-menu">
+<button type="button" class="shelf-sdk__action-menu-button" aria-label="Actions for Contracts" aria-haspopup="menu" aria-expanded="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<circle cx="3" cy="8" r="1.5">
+</circle>
+<circle cx="8" cy="8" r="1.5">
+</circle>
+<circle cx="13" cy="8" r="1.5">
+</circle>
+</svg>
+</button>
+</div>
 </td>
 </tr>
 <tr class="shelf-sdk__item-row">
@@ -822,6 +848,7 @@ exports[`ShelfFolder 0.3 baseline markup > read_write key: offline banner with 2
 </div>
 </div>
 <div class="shelf-sdk__shelf-toolbar">
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm">New folder</button>
 <button type="button" class="shelf-sdk__btn shelf-sdk__btn--accent shelf-sdk__btn--sm">Add documents</button>
 <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/plain,text/markdown,application/json,.pdf,.docx,.doc,.xlsx,.xls,.txt,.md,.json" multiple="" hidden="" aria-label="Upload files">
 <p class="shelf-sdk__drag-status" aria-live="polite">
@@ -863,6 +890,18 @@ exports[`ShelfFolder 0.3 baseline markup > read_write key: offline banner with 2
 <span class="shelf-sdk__card-meta">1 item</span>
 </span>
 </button>
+<div class="shelf-sdk__action-menu">
+<button type="button" class="shelf-sdk__action-menu-button" aria-label="Actions for folder Contracts" aria-haspopup="menu" aria-expanded="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<circle cx="3" cy="8" r="1.5">
+</circle>
+<circle cx="8" cy="8" r="1.5">
+</circle>
+<circle cx="13" cy="8" r="1.5">
+</circle>
+</svg>
+</button>
+</div>
 </article>
 </div>
 <div class="shelf-sdk__shelf-section-head">
@@ -961,6 +1000,7 @@ exports[`ShelfFolder 0.3 baseline markup > read_write key: root gallery 1`] = `
 </div>
 </div>
 <div class="shelf-sdk__shelf-toolbar">
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm">New folder</button>
 <button type="button" class="shelf-sdk__btn shelf-sdk__btn--accent shelf-sdk__btn--sm">Add documents</button>
 <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/plain,text/markdown,application/json,.pdf,.docx,.doc,.xlsx,.xls,.txt,.md,.json" multiple="" hidden="" aria-label="Upload files">
 <p class="shelf-sdk__drag-status" aria-live="polite">
@@ -1002,6 +1042,18 @@ exports[`ShelfFolder 0.3 baseline markup > read_write key: root gallery 1`] = `
 <span class="shelf-sdk__card-meta">1 item</span>
 </span>
 </button>
+<div class="shelf-sdk__action-menu">
+<button type="button" class="shelf-sdk__action-menu-button" aria-label="Actions for folder Contracts" aria-haspopup="menu" aria-expanded="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<circle cx="3" cy="8" r="1.5">
+</circle>
+<circle cx="8" cy="8" r="1.5">
+</circle>
+<circle cx="13" cy="8" r="1.5">
+</circle>
+</svg>
+</button>
+</div>
 </article>
 </div>
 <div class="shelf-sdk__shelf-section-head">

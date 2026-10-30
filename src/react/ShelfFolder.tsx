@@ -18,10 +18,12 @@ import { Header } from './folder/Header';
 import { FolderToolbar } from './folder/FolderToolbar';
 import { placesOf } from './folder/places';
 import { FolderSidebar } from './folder/FolderSidebar';
-import { ActionDialogPart, DocumentPagePart, docFallback, dialogFallback, FolderTreePart } from './folder/lazyParts';
+import { ActionDialogPart, DocumentPagePart, docFallback, dialogFallback, FolderDialogPart, FolderTreePart } from './folder/lazyParts';
 import { LAYOUT_KEY, readStore, TREE_KEY, writeStore } from './folder/store';
 import { Zone } from './folder/Zone';
 import { useSelectedDocument } from './folder/useSelectedDocument';
+import { LOCAL_FOLDER_PREFIX } from './folder/folderOps';
+import { useFolderEditor } from './folder/useFolderEditor';
 import { describe, NO_EDITS, useFolderWrites } from './folder/useFolderWrites';
 import { plural, UPLOAD_LIMITS } from './format';
 import { useFoldersOf } from './hooks/useFolders';
@@ -150,8 +152,11 @@ function FolderView({ s, initialFolderId, documentId, initialDocumentId, onNavig
     },
   });
   const { edits, landed } = w;
+  const editorReset = useRef<() => void>(() => undefined);
   const go = useCallback(
     (id: string | null) => {
+      if (id?.startsWith(LOCAL_FOLDER_PREFIX)) return; // a folder made offline cannot be opened until it has reached the server
+      editorReset.current();
       setChosen(id);
       setSelectedId(null);
       notify(id, null);
@@ -184,6 +189,8 @@ function FolderView({ s, initialFolderId, documentId, initialDocumentId, onNavig
   const subfolders = model.childrenOf(currentId);
   const { crumbs, currentName, rootName, locationOf, captionOf } = placesOf(model, currentId, rootId);
   const hasFolders = rootId == null ? folders.length > 0 : folders.some((f) => f.id !== rootId);
+  const editor = useFolderEditor({ outbox, folders: model.folders, keyRootId: s.rootFolderId ?? model.rootId, currentId, onRetry: w.onRetry, onDiscard: w.onDiscard, go });
+  editorReset.current = editor.reset;
 
   // Fetch the lazily loaded parts while the browser is idle, so opening one does not wait for a chunk.
   useEffect(() => {
@@ -191,10 +198,11 @@ function FolderView({ s, initialFolderId, documentId, initialDocumentId, onNavig
     const t = setTimeout(() => {
       DocumentPagePart.preload();
       ActionDialogPart.preload();
+      if (canWrite) FolderDialogPart.preload();
       if (hasFolders) FolderTreePart.preload();
     }, 0);
     return () => clearTimeout(t);
-  }, [ready, hasFolders]);
+  }, [ready, hasFolders, canWrite]);
 
   // Stable, so the memoised cards and rows skip re-rendering when something unrelated changes.
   const onOpen = useCallback(
@@ -222,23 +230,27 @@ function FolderView({ s, initialFolderId, documentId, initialDocumentId, onNavig
   // Nothing is known about this folder's documents until the first page (or the cache) answers.
   const listingKnown = listing.complete || listing.nextCursor !== null || listing.items.length > 0 || listing.error !== undefined;
   const listLoading = open && !listingKnown && items.length === 0 && subfolders.length === 0;
-  const isEmpty = open && listingKnown && subfolders.length === 0 && items.length === 0 && !error;
+  const isEmpty = open && listingKnown && subfolders.length === 0 && items.length === 0 && !error && !editor.adding;
   const headerMeta = model.totalItems !== null ? `${plural(model.totalItems, 'item')} · ${plural(folders.length, 'folder')}` : folders.length ? plural(folders.length, 'folder') : '';
 
   const listProps = loader ? { items, loader, selectedId, canWrite, onOpen, onRetry: outbox ? w.onRetry : undefined, onDiscard: outbox ? w.onDiscard : undefined, onAction, onNearEnd } : null;
   // Keyed so the list re-measures where it starts when the content above it (the folders) changes.
   const listKey = `${currentId ?? ''}:${subfolders.length}`;
-  const folderRows = subfolders.map((f) => <FolderRow key={`d-${f.id}`} folder={f} caption={captionOf(f)} onOpen={go} />);
+  const folderRows = subfolders.map((f) => <FolderRow key={`d-${f.id}`} folder={f} caption={captionOf(f)} onOpen={go} {...editor.rowProps(f)} />);
   const showing = layout === 'list' ? (
-    items.length > 0 ? listProps && <VirtualTable key={listKey} {...listProps} folderRows={folderRows} folderCount={subfolders.length} /> : listProps && <FolderRowsTable folderRows={folderRows} />
+    <>
+      {editor.newFolder(true)}
+      {items.length > 0 ? listProps && <VirtualTable key={listKey} {...listProps} folderRows={folderRows} folderCount={subfolders.length} /> : listProps && <FolderRowsTable folderRows={folderRows} />}
+    </>
   ) : (
     <>
-      {subfolders.length > 0 && (
+      {(subfolders.length > 0 || editor.adding) && (
         <>
           <h2 className={cx('kicker', 'shelf-section-label')}>Folders</h2>
           <div className={cx('folder-grid')}>
+            {editor.newFolder(false)}
             {subfolders.map((f) => (
-              <FolderCard key={f.id} folder={f} caption={captionOf(f) ?? undefined} onOpen={go} />
+              <FolderCard key={f.id} folder={f} caption={captionOf(f) ?? undefined} onOpen={go} {...editor.cardProps(f)} />
             ))}
           </div>
         </>
@@ -299,7 +311,9 @@ function FolderView({ s, initialFolderId, documentId, initialDocumentId, onNavig
         )}
 
         <section className={cx('shelf-main')} aria-label={`Contents of ${currentName}`}>
-          <Header crumbs={crumbs} onNavigate={go} meta={headerMeta} documentOpen={!!selected} />
+          <Header crumbs={crumbs} onNavigate={go} meta={headerMeta} documentOpen={!!selected} actions={editor.headerMenu} />
+
+          {editor.panel}
 
           {pending && (
             <ActionDialogPart.Part
@@ -341,6 +355,7 @@ function FolderView({ s, initialFolderId, documentId, initialDocumentId, onNavig
               <FolderToolbar
                 canWrite={canWrite}
                 onAddFiles={(files) => void w.upload(files)}
+                onNewFolder={canWrite ? editor.startAdding : undefined}
                 adding={addingCount}
                 layout={layout}
                 onLayoutChange={(next) => {
