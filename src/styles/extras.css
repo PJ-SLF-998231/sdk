@@ -90,3 +90,119 @@
   align-self: center;
   line-height: 1.4;
 }
+
+/* 0.4: long names. Web's `overflow-wrap: break-word` does not move a name's min-content width, and a <button> does not
+   inherit it, so an unbroken name (Some_Long_File_Name.pdf has no break opportunity) made one unbroken line that
+   widened its column and ran out of the card. Names break anywhere when they must (`anywhere`, which does count toward
+   min-content), every grid/flex item that holds one may shrink (min-width: 0), and card names stop at 3 lines so one
+   very long name cannot make every card in the row (they share one measured height) tall. Folder tiles are not
+   clamped: they are not virtualised, and a clamp box shifts their text by sub-pixels (7 pixels of the baseline PNG). */
+.shelf-sdk .shelf-sdk__file-grid > *,
+.shelf-sdk .shelf-sdk__folder-grid > *,
+.shelf-sdk .shelf-sdk__file-card,
+.shelf-sdk .shelf-sdk__folder-tile,
+.shelf-sdk .shelf-sdk__file-card-body,
+.shelf-sdk .shelf-sdk__folder-tile-main,
+.shelf-sdk .shelf-sdk__folder-tile-text {
+  min-width: 0;
+}
+.shelf-sdk .shelf-sdk__file-card-name,
+.shelf-sdk .shelf-sdk__file-card-link,
+.shelf-sdk .shelf-sdk__folder-tile-name,
+.shelf-sdk .shelf-sdk__folder-tile-main,
+.shelf-sdk .shelf-sdk__item-name-text,
+.shelf-sdk .shelf-sdk__preview-facts dd,
+.shelf-sdk .shelf-sdk__studio-actions > span,
+.shelf-sdk .shelf-sdk__sync-actions .shelf-sdk__card-meta {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.shelf-sdk .shelf-sdk__file-card-name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+.shelf-sdk .shelf-sdk__folder-tile-main {
+  text-align: left;
+}
+.shelf-sdk .shelf-sdk__preview-facts {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+.shelf-sdk .shelf-sdk__studio-actions > span {
+  flex: 1 1 12rem;
+}
+.shelf-sdk .shelf-sdk__studio-actions .shelf-sdk__text-input {
+  min-width: 0;
+  max-width: 100%;
+}
+.shelf-sdk .shelf-sdk__sync-actions {
+  min-width: 0;
+}
+/* List rows have a fixed height (the table virtualiser does not measure them), so a name stays on one line with an
+   ellipsis. The flex name button and its text may shrink for the ellipsis to apply. */
+.shelf-sdk .shelf-sdk__item-list-fixed .shelf-sdk__item-name {
+  max-width: 100%;
+}
+.shelf-sdk .shelf-sdk__item-list-fixed .shelf-sdk__item-name > span:last-child {
+  min-width: 0;
+}
+/* Breadcrumbs: each crumb keeps to one line and ends in an ellipsis; the list wraps, so two long crumbs stack. */
+.shelf-sdk .shelf-sdk__breadcrumbs li {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+}
+.shelf-sdk .shelf-sdk__breadcrumbs li + li::before {
+  flex: none;
+}
+.shelf-sdk .shelf-sdk__breadcrumb {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Messages that quote a name: the drop hint ("...add them to <folder>"), upload errors, callouts, empty states. */
+.shelf-sdk .shelf-sdk__dropzone-limits,
+.shelf-sdk .shelf-sdk__callout,
+.shelf-sdk .shelf-sdk__notice,
+.shelf-sdk .shelf-sdk__status-note,
+.shelf-sdk .shelf-sdk__drag-status,
+.shelf-sdk .shelf-sdk__empty-title,
+.shelf-sdk .shelf-sdk__folder-tree-empty,
+.shelf-sdk .shelf-sdk__folder-tree-status {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+/* Document header: "Back to <folder>" quotes a folder name. It ends in an ellipsis instead of taking the title's column
+   (an unbroken name gave the title ~0px and one letter per line). On narrow embeds the actions drop under the title. */
+.shelf-sdk .shelf-sdk__doc-title .shelf-sdk__section-title {
+  overflow-wrap: anywhere;
+}
+.shelf-sdk .shelf-sdk__doc-actions {
+  min-width: 0;
+  max-width: 18rem;
+}
+.shelf-sdk .shelf-sdk__doc-actions > .shelf-sdk__btn--sm {
+  min-width: 0;
+  justify-content: flex-start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .shelf-sdk .shelf-sdk__doc-header {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .shelf-sdk .shelf-sdk__doc-actions {
+    grid-column: 1;
+    grid-row: 3;
+    max-width: 100%;
+    height: auto;
+    margin-top: 12px;
+  }
+}
