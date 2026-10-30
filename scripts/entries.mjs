@@ -7,7 +7,7 @@
 //   module     source file of the entry, relative to the repo root
 //   out        tsup entry name: dist/<out>.{js,cjs,d.ts,d.cts}
 //   client     true: dist/react/**/index.{js,cjs} get a leading "use client" (everything except '.')
-//   css        { file, parts }: the per-entry stylesheet dist/css/<file>, built from src/styles/<part>.css (filled in by 0.4 U9-A)
+//   css        { file, parts }: the per-entry stylesheet dist/css/<file>, derived by scripts/split-css.mjs: core.css + the rules of the classes the entry renders (`parts` stays [])
 //   banned     src path fragments the entry's STATIC import closure must not contain (check-imports.mjs)
 //   scenarios  size budgets: gzip kB of what a consumer's bundler ships for `import {imports} from <entry>` ('*' = every export),
 //              with dynamic import() chunks left out. initialKb is the ceiling; lazyKb (optional) caps the lazy chunks that

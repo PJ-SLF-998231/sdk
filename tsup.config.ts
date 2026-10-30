@@ -2,6 +2,7 @@ import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameS
 import { join } from 'node:path';
 import { defineConfig } from 'tsup';
 import { entries } from './scripts/entries.mjs';
+import { splitCss } from './scripts/split-css.mjs';
 
 // The entry files of the React subpaths: index.js and index.cjs at any depth under dist/react (never '.' and never a shared chunk).
 function reactEntryFiles(dir: string): string[] {
@@ -23,6 +24,7 @@ export default defineConfig({
   // Module graph for scripts/check-imports.mjs. tsup writes dist/metafile-*.json; onSuccess moves them out of dist so they are never packed.
   metafile: true,
   external: ['react', 'react-dom', 'react/jsx-runtime'],
+  // dist/css/*.css: see scripts/split-css.mjs.
   // dist/styles.css = scoped tokens (scripts/sync-tokens.mjs) + fonts + base + the folder view's rules
   // (scripts/sync-web-css.mjs, from Shelf web) + SDK extras. The font files sit beside it in dist/fonts.
   onSuccess: async () => {
@@ -36,6 +38,10 @@ export default defineConfig({
     mkdirSync('dist/fonts', { recursive: true });
     const css = ['styles', 'fonts', 'base', 'view', 'extras'].map((f) => readFileSync(`src/styles/${f}.css`, 'utf8')).join('\n');
     writeFileSync('dist/styles.css', css);
+    // dist/css/core.css + one stylesheet per entry (scripts/split-css.mjs). Unknown classes fail the build here.
+    const split = splitCss({ entries, metafile: JSON.parse(readFileSync('.build/metafile-esm.json', 'utf8')) });
+    mkdirSync('dist/css', { recursive: true });
+    for (const [f, text] of Object.entries(split.files)) writeFileSync(join('dist', f), text);
     const fontFiles: Array<[string, string]> = [
       ['@fontsource-variable/geist/files/geist-latin-wght-normal.woff2', 'geist-latin-wght-normal.woff2'],
       ['@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2', 'geist-mono-latin-wght-normal.woff2'],
