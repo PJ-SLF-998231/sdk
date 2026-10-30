@@ -367,3 +367,35 @@ export interface DocumentCardProps {
 export type DocumentDetail = ShelfDocument;
 /** Params for a listing request as the cache keys it. */
 export type ListingKeyParams = Pick<ListFilesParams, 'folder_id' | 'recursive'>;
+
+/* ===================================================================== 0.4.0: folder operations in the outbox */
+
+/**
+ * FROZEN by 0.4 U1, as separate types: `OutboxOp` above is NOT widened here. U3 widens it with `FolderOutboxOp`
+ * (and `OutboxEvents.applied` gains `folder?`) and implements the rules:
+ *  - a createFolder gets the local id `local-folder:<clientRef>` until it is applied;
+ *  - POST /integration/folders has no idempotency key, so a 409 on create is `applied` when a sibling with the same name exists;
+ *  - 403 fails permanently; 404 on delete is `applied`; 404 on rename/move is a conflict;
+ *  - nothing is uploaded or moved into a `local-folder:*` target; operations that depend on a local folder collapse into its create.
+ */
+export type FolderOutboxOp =
+  | { kind: 'createFolder'; name: string; parentId: string | null; clientRef: string }
+  | { kind: 'renameFolder'; folderId: string; name: string; /** The name the user saw. */ baseName: string }
+  | { kind: 'moveFolder'; folderId: string; parentId: string; /** The parent the user saw. */ baseParentId: string | null }
+  | { kind: 'deleteFolder'; folderId: string };
+
+/** An outbox entry whose operation is a folder operation. */
+export type FolderOutboxEntry = Omit<OutboxEntry, 'op'> & { op: FolderOutboxOp };
+
+/** A folder as the user should see it given the outbox. */
+export interface OverlayFolder extends ShelfFolder {
+  sync: ItemSyncState;
+  /** The outbox entry behind `sync`, for retry/discard. */
+  outboxId?: string;
+  /** A createFolder that has no server folder yet (id is `local-folder:<clientRef>`). */
+  localOnly?: boolean;
+  syncError?: string;
+}
+
+/** Folders with queued folder operations applied (deleted ones removed, created ones added as `localOnly`). */
+export type ApplyFolderOutboxFn = (folders: readonly ShelfFolder[], entries: readonly FolderOutboxEntry[]) => OverlayFolder[];

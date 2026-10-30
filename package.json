@@ -35,7 +35,168 @@
         "default": "./dist/react/index.cjs"
       }
     },
+    "./react/folder-view": {
+      "import": {
+        "types": "./dist/react/folder-view/index.d.ts",
+        "default": "./dist/react/folder-view/index.js"
+      },
+      "require": {
+        "types": "./dist/react/folder-view/index.d.cts",
+        "default": "./dist/react/folder-view/index.cjs"
+      }
+    },
+    "./react/provider": {
+      "import": {
+        "types": "./dist/react/provider/index.d.ts",
+        "default": "./dist/react/provider/index.js"
+      },
+      "require": {
+        "types": "./dist/react/provider/index.d.cts",
+        "default": "./dist/react/provider/index.cjs"
+      }
+    },
+    "./react/hooks": {
+      "import": {
+        "types": "./dist/react/hooks/index.d.ts",
+        "default": "./dist/react/hooks/index.js"
+      },
+      "require": {
+        "types": "./dist/react/hooks/index.d.cts",
+        "default": "./dist/react/hooks/index.cjs"
+      }
+    },
+    "./react/folder-card": {
+      "import": {
+        "types": "./dist/react/folder-card/index.d.ts",
+        "default": "./dist/react/folder-card/index.js"
+      },
+      "require": {
+        "types": "./dist/react/folder-card/index.d.cts",
+        "default": "./dist/react/folder-card/index.cjs"
+      }
+    },
+    "./react/folder-grid": {
+      "import": {
+        "types": "./dist/react/folder-grid/index.d.ts",
+        "default": "./dist/react/folder-grid/index.js"
+      },
+      "require": {
+        "types": "./dist/react/folder-grid/index.d.cts",
+        "default": "./dist/react/folder-grid/index.cjs"
+      }
+    },
+    "./react/folder-header": {
+      "import": {
+        "types": "./dist/react/folder-header/index.d.ts",
+        "default": "./dist/react/folder-header/index.js"
+      },
+      "require": {
+        "types": "./dist/react/folder-header/index.d.cts",
+        "default": "./dist/react/folder-header/index.cjs"
+      }
+    },
+    "./react/folder-toolbar": {
+      "import": {
+        "types": "./dist/react/folder-toolbar/index.d.ts",
+        "default": "./dist/react/folder-toolbar/index.js"
+      },
+      "require": {
+        "types": "./dist/react/folder-toolbar/index.d.cts",
+        "default": "./dist/react/folder-toolbar/index.cjs"
+      }
+    },
+    "./react/view-toggle": {
+      "import": {
+        "types": "./dist/react/view-toggle/index.d.ts",
+        "default": "./dist/react/view-toggle/index.js"
+      },
+      "require": {
+        "types": "./dist/react/view-toggle/index.d.cts",
+        "default": "./dist/react/view-toggle/index.cjs"
+      }
+    },
+    "./react/upload-dropzone": {
+      "import": {
+        "types": "./dist/react/upload-dropzone/index.d.ts",
+        "default": "./dist/react/upload-dropzone/index.js"
+      },
+      "require": {
+        "types": "./dist/react/upload-dropzone/index.d.cts",
+        "default": "./dist/react/upload-dropzone/index.cjs"
+      }
+    },
+    "./react/document-card": {
+      "import": {
+        "types": "./dist/react/document-card/index.d.ts",
+        "default": "./dist/react/document-card/index.js"
+      },
+      "require": {
+        "types": "./dist/react/document-card/index.d.cts",
+        "default": "./dist/react/document-card/index.cjs"
+      }
+    },
+    "./react/document-gallery": {
+      "import": {
+        "types": "./dist/react/document-gallery/index.d.ts",
+        "default": "./dist/react/document-gallery/index.js"
+      },
+      "require": {
+        "types": "./dist/react/document-gallery/index.d.cts",
+        "default": "./dist/react/document-gallery/index.cjs"
+      }
+    },
+    "./react/document-list": {
+      "import": {
+        "types": "./dist/react/document-list/index.d.ts",
+        "default": "./dist/react/document-list/index.js"
+      },
+      "require": {
+        "types": "./dist/react/document-list/index.d.cts",
+        "default": "./dist/react/document-list/index.cjs"
+      }
+    },
+    "./react/document-page": {
+      "import": {
+        "types": "./dist/react/document-page/index.d.ts",
+        "default": "./dist/react/document-page/index.js"
+      },
+      "require": {
+        "types": "./dist/react/document-page/index.d.cts",
+        "default": "./dist/react/document-page/index.cjs"
+      }
+    },
+    "./react/offline-banner": {
+      "import": {
+        "types": "./dist/react/offline-banner/index.d.ts",
+        "default": "./dist/react/offline-banner/index.js"
+      },
+      "require": {
+        "types": "./dist/react/offline-banner/index.d.cts",
+        "default": "./dist/react/offline-banner/index.cjs"
+      }
+    },
+    "./react/action-menu": {
+      "import": {
+        "types": "./dist/react/action-menu/index.d.ts",
+        "default": "./dist/react/action-menu/index.js"
+      },
+      "require": {
+        "types": "./dist/react/action-menu/index.d.cts",
+        "default": "./dist/react/action-menu/index.cjs"
+      }
+    },
+    "./react/folder-tree": {
+      "import": {
+        "types": "./dist/react/folder-tree/index.d.ts",
+        "default": "./dist/react/folder-tree/index.js"
+      },
+      "require": {
+        "types": "./dist/react/folder-tree/index.d.cts",
+        "default": "./dist/react/folder-tree/index.cjs"
+      }
+    },
     "./styles.css": "./dist/styles.css",
+    "./css/*.css": "./dist/css/*.css",
     "./package.json": "./package.json"
   },
   "files": [
@@ -43,7 +204,8 @@
     "README.md"
   ],
   "sideEffects": [
-    "./dist/styles.css"
+    "./dist/styles.css",
+    "./dist/css/*.css"
   ],
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -54,7 +216,11 @@
     "sync-web-css": "node scripts/sync-web-css.mjs",
     "prepack": "npm run build",
     "size": "node scripts/size-budget.mjs",
-    "check:treeshake": "node scripts/check-treeshake.mjs"
+    "check:treeshake": "node scripts/check-treeshake.mjs",
+    "check:entries": "node scripts/check-entries.mjs",
+    "check:imports": "node scripts/check-imports.mjs",
+    "check:types": "tsc -p test/types/bundler && tsc -p test/types/node16",
+    "check:package": "attw --pack . && publint"
   },
   "peerDependencies": {
     "react": ">=18",
@@ -69,6 +235,7 @@
     }
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
     "@fontsource-variable/geist": "^5.3.0",
     "@fontsource-variable/geist-mono": "^5.3.0",
     "@fontsource/instrument-serif": "^5.3.0",
@@ -81,6 +248,7 @@
     "esbuild": "^0.28.2",
     "fake-indexeddb": "^6.2.6",
     "jsdom": "^29.1.1",
+    "publint": "^0.3.25",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tsup": "^8.3.0",

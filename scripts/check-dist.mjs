@@ -13,8 +13,9 @@ for (const f of jsFiles) {
   const s = readFileSync(f, 'utf8');
   if (/__SECRET_INTERNALS|ReactCurrentDispatcher/.test(s)) fail(`${f} bundles react`);
 }
-for (const f of ['dist/react/index.js', 'dist/react/index.cjs']) {
-  if (!/["']react\/jsx-runtime["']/.test(readFileSync(f, 'utf8'))) fail(`${f} does not import react/jsx-runtime externally`);
+// react is imported, never bundled: the React code (entries and the chunks they share) imports react/jsx-runtime externally.
+for (const [ext, files] of [['js', jsFiles.filter((f) => f.endsWith('.js'))], ['cjs', jsFiles.filter((f) => f.endsWith('.cjs'))]]) {
+  if (!files.some((f) => /["']react\/jsx-runtime["']/.test(readFileSync(f, 'utf8')))) fail(`no .${ext} file imports react/jsx-runtime externally`);
 }
 
 const css = readFileSync('dist/styles.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
