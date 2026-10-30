@@ -32,7 +32,7 @@ afterEach(() => {
 describe('DocumentList', () => {
   for (const [label, key, extra] of [
     ['read key', 'read key: list layout', {}],
-    ['read_write key', 'read_write key: list layout', { canWrite: true, onAction: noop }],
+    ['read_write key', 'read_write key: list layout', { canWrite: true, onAction: noop, folderActions: () => [{ label: 'Rename', onSelect: noop }] }],
   ] as const) {
     it(`draws the 0.3 list fragment byte for byte (${label})`, async () => {
       const { container } = render(<DocumentList client={mock()} items={docs} folders={folders} folderCaption={caption} onOpenFolder={noop} onOpen={noop} {...extra} />);

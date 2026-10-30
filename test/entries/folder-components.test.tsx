@@ -42,6 +42,8 @@ const RW = 'read_write key: root gallery';
 const sub = { ...FOLDERS[1]!, item_count: 1, total_item_count: 1, sync: 'synced' } as OverlayFolder;
 const root = { ...FOLDERS[0]!, sync: 'synced' } as OverlayFolder;
 const noop = () => undefined;
+// A read_write key's folder cards carry the '⋯' menu (0.4 U8); the read key's do not.
+const acts = () => [{ label: 'Rename', onSelect: noop }];
 
 afterEach(() => {
   cleanup();
@@ -51,17 +53,18 @@ afterEach(() => {
 
 describe.each([READ, RW])('fragment equality with the 0.3 baseline (%s)', (name) => {
   const base = () => snapshot(name);
-  it('FolderCard', () => expect(base()).toContain(nested(<FolderCard folder={sub} itemCount={1} folderCount={0} />)));
+  const rw = name === RW;
+  it('FolderCard', () => expect(base()).toContain(nested(<FolderCard folder={sub} itemCount={1} folderCount={0} {...(rw ? { actions: acts() } : {})} />)));
   it('FolderCard with no actions is the same DOM as an empty list of actions', () => {
     expect(nested(<FolderCard folder={sub} caption="1 item" actions={[]} />)).toBe(nested(<FolderCard folder={sub} caption="1 item" />));
-    expect(base()).toContain(nested(<FolderCard folder={sub} caption="1 item" actions={[]} />));
+    if (!rw) expect(base()).toContain(nested(<FolderCard folder={sub} caption="1 item" actions={[]} />));
   });
-  it('FolderGrid (records)', () => expect(base()).toContain(nested(<FolderGrid folders={[sub]} onOpenFolder={noop} />)));
+  it('FolderGrid (records)', () => expect(base()).toContain(nested(<FolderGrid folders={[sub]} onOpenFolder={noop} {...(rw ? { folderActions: acts } : {})} />)));
   it('FolderHeader (crumbs)', () =>
     expect(base()).toContain(nested(<FolderHeader crumbs={[{ id: 'root', name: 'Aisle CMS' }]} onNavigate={noop} meta="3 items · 2 folders" />)));
   it('FolderToolbar', () => {
     const canWrite = name === RW;
-    expect(base()).toContain(nested(<FolderToolbar canWrite={canWrite} onAddFiles={noop} adding={false} layout="grid" onLayoutChange={noop} />));
+    expect(base()).toContain(nested(<FolderToolbar canWrite={canWrite} {...(canWrite ? { onNewFolder: noop } : {})} onAddFiles={noop} adding={false} layout="grid" onLayoutChange={noop} />));
   });
   it('ViewToggle', () => expect(base()).toContain(nested(<ViewToggle value="grid" onChange={noop} />)));
 });
@@ -88,7 +91,7 @@ describe('fragment equality, other snapshots', () => {
         hint={<p className={cx('dropzone-limits', 'shelf-dropzone-hint')}>Drop documents here to add them to Aisle CMS · {UPLOAD_LIMITS}</p>}
       >
         <h2 className={cx('kicker', 'shelf-section-label')}>Folders</h2>
-        <FolderGrid folders={[sub]} onOpenFolder={noop} />
+        <FolderGrid folders={[sub]} onOpenFolder={noop} folderActions={acts} />
       </UploadDropzone>,
     );
     expect(snapshot('read_write key: empty folder')).toContain(fragment);

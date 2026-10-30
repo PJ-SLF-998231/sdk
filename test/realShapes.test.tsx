@@ -75,7 +75,7 @@ describe('real API shapes', () => {
     expect(text(row.querySelector('.shelf-sdk__breadcrumb'))).toBe('Aisle CMS');
     await waitFor(() => expect(text(row.querySelector('.shelf-sdk__shelf-crumbs-aside .shelf-sdk__file-count'))).toBe('1 item · 5 folders'));
 
-    // toolbar: Add documents (read_write), Gallery | List; no New folder (the API cannot create folders)
+    // toolbar: Add documents (read_write), Gallery | List; New folder (read_write)
     const bar = container.querySelector('.shelf-sdk__shelf-toolbar')!;
     await waitFor(() => expect(Array.from(bar.querySelectorAll(':scope > button')).map(text)).toEqual(['New folder', 'Add documents'])); // arrives with the lazy outbox chunk
     expect(bar.querySelector('button.shelf-sdk__btn.shelf-sdk__btn--accent.shelf-sdk__btn--sm')).toBeTruthy();
@@ -95,7 +95,7 @@ describe('real API shapes', () => {
     ]);
     for (const t of tiles) {
       expect(t.querySelector('svg.shelf-sdk__folder-icon')).toBeTruthy();
-      expect(t.querySelector('.shelf-sdk__action-menu')).toBeNull(); // folder rename/move/delete are not in the integration API
+      expect(t.querySelector('.shelf-sdk__action-menu')).toBeTruthy(); // a read_write key can rename, move and delete subfolders (0.4 U8)
     }
     // no documents of its own: no DOCUMENTS section
     expect(container.querySelector('.shelf-sdk__file-grid')).toBeNull();

@@ -57,11 +57,13 @@ export const entries = [
     // {ShelfFolder}: measured 32.55 kB after 0.4 U7 (30.0 at the 0.3 baseline): the composition pulls in the session hooks, the
     // folder model and the extracted folder components. 33.0 is the plan's ceiling for the whole barrel.
     scenarios: [
-      { name: '*', imports: '*', initialKb: 33.0 },
-      { name: '{ShelfFolder}', imports: ['ShelfFolder'], initialKb: 33.0 },
+      // 34.0 (was 33.0), both scenarios below: the folder write UI (menus, form wiring, validation, outbox ops, row/card props, useFolderActions real implementation, FolderDialog lazy) adds ~1.3 kB initial; the user asked for these controls.
+      { name: '*', imports: '*', initialKb: 34.0 },
+      { name: '{ShelfFolder}', imports: ['ShelfFolder'], initialKb: 34.0 },
     ],
   },
-  react('folder-view', { banned: NO_DOCUMENT_PAGE, scenarios: [{ name: '{ShelfFolder}', imports: ['ShelfFolder'], initialKb: 33.0 }] }),
+  // 34.0 (was 33.0): the folder write UI (menus, form wiring, validation, outbox ops, row/card props, useFolderActions real implementation, FolderDialog lazy) adds ~1.3 kB initial; the user asked for these controls.
+  react('folder-view', { banned: NO_DOCUMENT_PAGE, scenarios: [{ name: '{ShelfFolder}', imports: ['ShelfFolder'], initialKb: 34.0 }] }),
   react('provider', { scenarios: [{ name: '*', imports: '*', initialKb: 8.8 }] }),
   // Hooks budgets (raised by the manager in 0.4 U2): useShelf alone is ~7.7 kB gzip because the session core it needs
   // (client, db, store, swr, session) is not optional; the plan's 10.5 / 8.5 assumed a lighter core.
@@ -69,12 +71,14 @@ export const entries = [
     banned: NO_DOCUMENT_PAGE.concat('src/virtual/'),
     scenarios: [
       // 11.2 (was 11.1): the lazy chunks load on demand and separately, never all at once; the plan's caps were set before the outbox (U3), document page (U6) and P3 row measuring were merged.
-      { name: '*', imports: '*', initialKb: 11.2 },
+      // 11.3 (was 11.2): the folder write UI (menus, form wiring, validation, outbox ops, row/card props, useFolderActions real implementation, FolderDialog lazy) adds ~1.3 kB initial; the user asked for these controls.
+      { name: '*', imports: '*', initialKb: 11.3 },
       { name: '{useFolders}', imports: ['useFolders'], initialKb: 8.7 },
     ],
   }),
   react('folder-card', { banned: LEAF, scenarios: [{ name: '*', imports: '*', initialKb: 2.5 }] }),
-  react('folder-grid', { scenarios: [{ name: '*', imports: '*', initialKb: 11.5 }] }),
+  // 11.6 (was 11.5): the folder write UI (menus, form wiring, validation, outbox ops, row/card props, useFolderActions real implementation, FolderDialog lazy) adds ~1.3 kB initial; the user asked for these controls.
+  react('folder-grid', { scenarios: [{ name: '*', imports: '*', initialKb: 11.6 }] }),
   react('folder-header', { scenarios: [{ name: '*', imports: '*', initialKb: 10.5 }] }),
   react('folder-toolbar', { scenarios: [{ name: '*', imports: '*', initialKb: 10.0 }] }),
   react('view-toggle', { banned: LEAF, scenarios: [{ name: '*', imports: '*', initialKb: 0.8 }] }),
@@ -121,7 +125,8 @@ export const combos = [
 // 18.8 (hard cap 19.0): the connected page, documentTabs config and keyboard handling add real code, and the lazy total
 // started with ~0 headroom.
 // 19.5 (was 18.8): the lazy chunks load on demand and separately, never all at once; the plan's caps were set before the outbox (U3), document page (U6) and P3 row measuring were merged.
-export const lazy = { entry: './react', totalKb: 19.5 };
+// 19.7 (was 19.5): the folder write UI (menus, form wiring, validation, outbox ops, row/card props, useFolderActions real implementation, FolderDialog lazy) adds ~1.3 kB initial; the user asked for these controls.
+export const lazy = { entry: './react', totalKb: 19.7 };
 
 /** Extra files in the package, outside the entries: reserved/produced by the build. */
 export const staticExports = {

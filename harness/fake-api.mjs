@@ -120,11 +120,50 @@ function handleLong(res, p) {
   return send(res, 404, { error: 'not found' });
 }
 
+
+// Folder writes with the real api shapes (api internal/integrations): 201 {id,parent_id,name,item_count,total_item_count}, 409 on a
+// duplicate sibling name, 403 for the key's root folder, 204 on delete. The list is mutated in memory; /__harness/folders-reset restores it.
+const FOLDERS0 = FOLDERS.map((f) => ({ ...f }));
+let folderSeq = 0;
+const sib = (parent, name, except) => FOLDERS.some((f) => f.parent_id === parent && f.id !== except && f.name.toLowerCase() === name.toLowerCase());
+const descendants = (id) => { const out = new Set([id]); let grew = true; while (grew) { grew = false; for (const f of FOLDERS) if (f.parent_id && out.has(f.parent_id) && !out.has(f.id)) { out.add(f.id); grew = true; } } return out; };
+async function handleFolderWrite(req, res, p) {
+  let body = {};
+  try { body = JSON.parse((await readBody(req)).toString() || '{}'); } catch { return send(res, 400, { error: 'invalid json' }); }
+  if (req.method === 'POST') {
+    const name = String(body.name ?? '').trim();
+    const parent = body.parent_id || ROOT;
+    if (!name) return send(res, 400, { error: 'name is required' });
+    if (!FOLDERS.some((f) => f.id === parent)) return send(res, 404, { error: 'parent not found' });
+    if (sib(parent, name)) return send(res, 409, { error: 'a folder with that name already exists' });
+    const f = { id: `44444444-4444-4444-8444-${String(++folderSeq).padStart(12, '0')}`, parent_id: parent, name };
+    FOLDERS.push(f);
+    return send(res, 201, { ...f, item_count: 0, total_item_count: 0 });
+  }
+  const id = p.slice('/folders/'.length);
+  const f = FOLDERS.find((x) => x.id === id);
+  if (!f) return send(res, 404, { error: 'folder not found' });
+  if (f.id === ROOT) return send(res, 403, { error: "the key's root folder cannot be changed" });
+  if (req.method === 'DELETE') {
+    const gone = descendants(id);
+    for (let i = FOLDERS.length - 1; i >= 0; i--) if (gone.has(FOLDERS[i].id)) FOLDERS.splice(i, 1);
+    res.writeHead(204); return res.end();
+  }
+  const name = body.name !== undefined ? String(body.name).trim() : f.name;
+  const parent = body.parent_id !== undefined ? body.parent_id : f.parent_id;
+  if (!name) return send(res, 400, { error: 'name is required' });
+  if (descendants(id).has(parent)) return send(res, 400, { error: 'a folder cannot be moved into itself' });
+  if (sib(parent, name, id)) return send(res, 409, { error: 'a folder with that name already exists' });
+  f.name = name; f.parent_id = parent;
+  return send(res, 200, { ...f, item_count: 0, total_item_count: 0 });
+}
+
 /** Returns true when it handled the request. */
 export function handle(req, res) {
   const u = new URL(req.url, 'http://x');
   if (u.pathname === '/__harness/delay') { delay5k = Number(u.searchParams.get('ms')) || 0; return send(res, 200, { delay: delay5k }), true; }
   if (u.pathname === '/__harness/long') { long5k = u.searchParams.get('on') === '1'; reset5k(); return send(res, 200, { long: long5k }), true; }
+  if (u.pathname === '/__harness/folders-reset') { FOLDERS.splice(0, FOLDERS.length, ...FOLDERS0.map((f) => ({ ...f }))); return send(res, 200, { ok: true }), true; }
   if (u.pathname === '/__harness/reset') { reset5k(); return send(res, 200, { ok: true }), true; }
   if (u.pathname === '/__harness/stats') return send(res, 200, { ...stats5k, docs: docs5k.length }), true;
   if (u.pathname.startsWith('/api/shelf5k')) { handle5k(req, res, u.pathname.slice('/api/shelf5k'.length) || '/', u).catch((e) => { res.headersSent || send(res, 500, { error: String(e) }); }); return true; }
@@ -132,6 +171,8 @@ export function handle(req, res) {
   if (!u.pathname.startsWith('/api/shelf')) return false;
   const p = u.pathname.slice('/api/shelf'.length) || '/';
   if (p === '/' ) return send(res, 200, { id: 'k1', name: 'Aisle key', access: 'read_write', expires_at: null, folder: { id: ROOT, name: 'Aisle CMS' } }), true;
+  if (p === '/folders' && req.method === 'POST') { handleFolderWrite(req, res, p); return true; }
+  if (/^\/folders\/[^/]+$/.test(p) && (req.method === 'PATCH' || req.method === 'DELETE')) { handleFolderWrite(req, res, p); return true; }
   if (p === '/folders') return send(res, 200, { folders: FOLDERS }), true;
   if (p === '/files') {
     const f = u.searchParams.get('folder_id') || ROOT;
