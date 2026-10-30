@@ -1,4 +1,5 @@
 import { isAuthLost, isOfflineError, ShelfError } from '../client';
+import type { ShelfClient } from '../client';
 import type {
   CreateOutboxFn,
   CreateOutboxOptions,
@@ -9,8 +10,8 @@ import type {
   OutboxStatus,
 } from '../internal/contracts';
 import { STORAGE_CHANNEL } from '../storage/db';
-import type { ShelfItem } from '../types';
-import { fileKeyOf } from './overlay';
+import type { ShelfFolder, ShelfItem } from '../types';
+import { fileKeyOf, isFolderOp, LOCAL_FOLDER } from './overlay';
 
 const MiB = 1024 * 1024;
 const MAX_ATTEMPTS = 8;
@@ -57,7 +58,7 @@ interface Stored extends OutboxEntry {
   force?: boolean;
 }
 
-type Settle = { applied: ShelfItem | true } | { conflict: Partial<ShelfItem> | null; message: string };
+type Settle = { applied: ShelfItem | ShelfFolder | true } | { conflict: Partial<ShelfItem> | null; message: string };
 
 function defaultUuid(): string {
   const c = globalThis.crypto;
@@ -92,7 +93,7 @@ export const createOutbox: CreateOutboxFn = (options: OutboxOptions): OutboxHand
   const persisted = new Map<string, Stored>();
   const mem = new Map<string, Stored>();
   const running = new Map<string, AbortController>();
-  /** clientRef -> server id for uploads applied by this instance (resolves ops queued meanwhile). */
+  /** `local:<ref>` / `local-folder:<ref>` -> server id for uploads and folders created by this instance (resolves ops queued meanwhile). */
   const appliedRefs = new Map<string, string>();
   const listeners: { [K in keyof OutboxEvents]: Set<(p: OutboxEvents[K]) => void> } = {
     change: new Set(),
@@ -258,9 +259,18 @@ export const createOutbox: CreateOutboxFn = (options: OutboxOptions): OutboxHand
     return n;
   }
 
-  function dependentsOf(ref: string, except: string): Stored[] {
-    return all().filter((r) => r.id !== except && r.op.kind !== 'upload' && r.op.fileId === 'local:' + ref);
+  /** Changes queued against the not-yet-created `key` (`local:<ref>` or `local-folder:<ref>`). */
+  function dependentsOf(key: string, except: string): Stored[] {
+    return all().filter((r) => r.id !== except && r.op.kind !== 'upload' && r.op.kind !== 'createFolder' && fileKeyOf(r) === key);
   }
+
+  const retarget = (op: OutboxOp, id: string): OutboxOp => ({ ...op, [isFolderOp(op) ? 'folderId' : 'fileId']: id }) as OutboxOp;
+
+  /** The client's folder writes (optional on the interface). */
+  const fc = (): Required<ShelfClient> => {
+    if (!client.createFolder || !client.updateFolder || !client.deleteFolder) throw new Error('no folder writes');
+    return client as Required<ShelfClient>;
+  };
 
   async function enqueueInner(input: OutboxOp): Promise<PublicOutboxEntry> {
     if (dead) throw new Error('outbox destroyed');
@@ -268,56 +278,59 @@ export const createOutbox: CreateOutboxFn = (options: OutboxOptions): OutboxHand
     await reload();
     let op = input;
 
-    if (op.kind === 'upload') {
-      op = { ...op, clientRef: op.clientRef || uuid() };
-    } else if (op.fileId.startsWith('local:')) {
-      const ref = op.fileId.slice(6);
-      const target = all().find((r) => r.op.kind === 'upload' && r.op.clientRef === ref);
-      if (target && !isActive(target)) {
-        // Fold into the queued upload: nothing has been sent yet.
-        const dep = dependentsOf(ref, target.id);
-        if (op.kind === 'delete') {
-          const gone = toPublic(target);
-          await remove(target.id);
-          for (const d of dep) await remove(d.id);
+    // Nothing goes into a folder that does not exist yet.
+    const into = op.kind === 'createFolder' || op.kind === 'moveFolder' ? op.parentId : op.kind === 'upload' || op.kind === 'move' ? op.folderId : null;
+    if (into?.startsWith(LOCAL_FOLDER)) throw new Error('the folder is not created yet');
+    if (op.kind === 'upload' || op.kind === 'createFolder') op = { ...op, clientRef: op.clientRef || uuid() };
+
+    if (op.kind !== 'upload' && op.kind !== 'createFolder') {
+      const key = fileKeyOf({ op });
+      if (key.startsWith(LOCAL_FOLDER) || key.startsWith('local:')) {
+        const target = all().find((r) => (r.op.kind === 'upload' || r.op.kind === 'createFolder') && fileKeyOf(r) === key);
+        if (target && !isActive(target)) {
+          // Fold into the queued create/upload: nothing has been sent yet.
+          const dep = dependentsOf(key, target.id);
+          if (op.kind === 'delete' || op.kind === 'deleteFolder') {
+            const gone = toPublic(target);
+            await remove(target.id);
+            for (const d of dep) await remove(d.id);
+            notifyOthers();
+            pump();
+            return gone;
+          }
+          const o = op as { filename?: string; folderId?: string; name?: string; parentId?: string };
+          const fields = 'filename' in o ? { filename: o.filename } : 'name' in o ? { name: o.name } : 'parentId' in o ? { parentId: o.parentId } : { folderId: o.folderId };
+          const folded = await patch(target.id, (cur) => ({ ...cur, op: { ...cur.op, ...fields } }) as Stored);
           notifyOthers();
-          pump();
-          return gone;
+          if (folded) return toPublic(folded);
+        } else if (!target) {
+          const serverId = appliedRefs.get(key);
+          if (!serverId) throw new Error('the queued item is gone');
+          op = retarget(op, serverId);
         }
-        const folded = await patch(target.id, (cur) => {
-          if (cur.op.kind !== 'upload') return cur;
-          return {
-            ...cur,
-            op: op.kind === 'rename' ? { ...cur.op, filename: op.filename } : { ...cur.op, folderId: (op as { folderId: string }).folderId },
-          };
-        });
-        notifyOthers();
-        if (folded) return toPublic(folded);
-      } else if (!target) {
-        const serverId = appliedRefs.get(ref);
-        if (!serverId) throw new Error('the queued upload is gone');
-        op = { ...op, fileId: serverId };
       }
     }
 
-    // Coalesce with a waiting (never started) change to the same document.
-    if (op.kind !== 'upload') {
-      const fid = op.fileId;
-      const same = all().filter((r) => r.op.kind !== 'upload' && r.op.fileId === fid && r.status === 'pending' && !isActive(r));
-      if (op.kind === 'rename' || op.kind === 'move') {
-        const prev = same.find((r) => r.op.kind === op.kind);
-        const kind = op.kind;
+    // Coalesce with a waiting (never started) change to the same document or folder.
+    if (op.kind !== 'upload' && op.kind !== 'createFolder') {
+      const key = fileKeyOf({ op });
+      const same = all().filter((r) => r.op.kind !== 'upload' && r.op.kind !== 'createFolder' && fileKeyOf(r) === key && r.status === 'pending' && !isActive(r));
+      const o = op;
+      if (o.kind === 'rename' || o.kind === 'move' || o.kind === 'renameFolder' || o.kind === 'moveFolder') {
+        const prev = same.find((r) => r.op.kind === o.kind);
         if (prev) {
           const merged = await patch(prev.id, (cur) => {
-            if (cur.op.kind !== kind) return cur;
-            return { ...cur, op: kind === 'rename' ? { ...cur.op, filename: (op as { filename: string }).filename } : { ...cur.op, folderId: (op as { folderId: string }).folderId } } as Stored;
+            const c = cur.op;
+            if (c.kind !== o.kind) return cur;
+            // The first change's "base*" fields stay: that is what the user originally saw.
+            return { ...cur, op: { ...o, ...Object.fromEntries(Object.entries(c).filter(([k]) => k.startsWith('base'))) } } as Stored;
           });
           notifyOthers();
           if (merged) return toPublic(merged);
         }
-      } else if (op.kind === 'delete') {
-        for (const r of same) if (r.op.kind === 'rename' || r.op.kind === 'move') await remove(r.id);
-        const dup = same.find((r) => r.op.kind === 'delete');
+      } else {
+        for (const r of same) if (r.op.kind !== 'delete' && r.op.kind !== 'deleteFolder') await remove(r.id);
+        const dup = same.find((r) => r.op.kind === o.kind);
         if (dup) return toPublic(dup);
       }
     }
@@ -530,6 +543,26 @@ export const createOutbox: CreateOutboxFn = (options: OutboxOptions): OutboxHand
       case 'delete':
         await client.deleteFile(op.fileId, { signal });
         return { applied: true };
+      case 'createFolder':
+        // No idempotency key: a retry after an unknown outcome is told apart in classify (409).
+        return { applied: await fc().createFolder({ name: op.name, ...(op.parentId ? { parent_id: op.parentId } : {}) }, { signal }) };
+      case 'renameFolder':
+      case 'moveFolder': {
+        const rn = op.kind === 'renameFolder';
+        const want = rn ? op.name : op.parentId;
+        const base = rn ? op.baseName : op.baseParentId;
+        if (!rec.force) {
+          const cur = (await client.folders({ signal })).find((f) => f.id === op.folderId);
+          if (!cur) return { conflict: null, message: 'deleted or moved out of reach' };
+          const have = rn ? cur.name : (cur.parent_id ?? null);
+          if (have === want) return { applied: cur };
+          if (have !== base) return { conflict: null, message: rn ? `Renamed on the server to "${have}"` : 'Moved to another folder on the server' };
+        }
+        return { applied: await fc().updateFolder(op.folderId, rn ? { name: op.name } : { parent_id: op.parentId }, { signal }) };
+      }
+      case 'deleteFolder':
+        await fc().deleteFolder(op.folderId, { signal });
+        return { applied: true };
     }
   }
 
@@ -574,8 +607,23 @@ export const createOutbox: CreateOutboxFn = (options: OutboxOptions): OutboxHand
     if (err instanceof ShelfError) {
       const info = { status: err.status, code: err.code, message: err.message };
       if (err.status === 404) {
-        if (op.kind === 'delete') return { applied: true };
+        if (op.kind === 'delete' || op.kind === 'deleteFolder') return { applied: true };
         if (op.kind !== 'upload') return { conflict: null, message: 'deleted or moved out of reach' };
+      }
+      if (err.status === 409 && isFolderOp(op)) {
+        if (op.kind === 'createFolder') {
+          // Either an earlier attempt of ours landed (unknown outcome) or the name is taken: a sibling of that name settles it.
+          try {
+            const all = await client.folders();
+            const root = all.find((f) => f.parent_id == null)?.id;
+            const hit = all.find((f) => f.name.toLowerCase() === op.name.toLowerCase() && (f.parent_id ?? null) === (op.parentId ?? root ?? null));
+            if (hit) return { applied: hit };
+          } catch (e2) {
+            return classify(rec, e2);
+          }
+        }
+        await settle(rec, 'failed', { error: info }); // a cycle, nested too deep or a taken name: retrying cannot help
+        throw err;
       }
       if (err.status === 409 || err.status >= 500) {
         await transient(rec, err);
@@ -615,19 +663,19 @@ export const createOutbox: CreateOutboxFn = (options: OutboxOptions): OutboxHand
     notifyOthers();
   }
 
-  async function applied(rec: Stored, item: ShelfItem | undefined): Promise<void> {
+  async function applied(rec: Stored, result: ShelfItem | ShelfFolder | undefined): Promise<void> {
+    const folder = result && isFolderOp(rec.op) ? (result as ShelfFolder) : undefined;
+    const item = result && !folder ? (result as ShelfItem) : undefined;
     setOffline(false);
     const snapshot = toPublic(rec);
     await remove(rec.id);
-    if (rec.op.kind === 'upload' && item) {
-      const ref = rec.op.clientRef;
-      appliedRefs.set(ref, item.id);
-      for (const d of dependentsOf(ref, rec.id)) {
-        await patch(d.id, (cur) => (cur.op.kind === 'upload' ? cur : ({ ...cur, op: { ...cur.op, fileId: item.id } } as Stored)));
-      }
+    if ((rec.op.kind === 'upload' || rec.op.kind === 'createFolder') && result) {
+      const key = fileKeyOf(rec);
+      appliedRefs.set(key, result.id);
+      for (const d of dependentsOf(key, rec.id)) await patch(d.id, (cur) => ({ ...cur, op: retarget(cur.op, result.id) }));
     }
     notifyOthers();
-    emit('applied', { entry: snapshot, ...(item ? { item } : {}) });
+    emit('applied', { entry: snapshot, ...(item ? { item } : {}), ...(folder ? { folder } : {}) });
   }
 
   async function purgeAll(): Promise<number> {
@@ -710,7 +758,7 @@ export const createOutbox: CreateOutboxFn = (options: OutboxOptions): OutboxHand
         if (!rec) return;
         running.get(id)?.abort();
         await remove(id);
-        if (rec.op.kind === 'upload') for (const d of dependentsOf(rec.op.clientRef, id)) await remove(d.id);
+        if (rec.op.kind === 'upload' || rec.op.kind === 'createFolder') for (const d of dependentsOf(fileKeyOf(rec), id)) await remove(d.id);
         notifyOthers();
         try {
           options.onDiscarded?.(toPublic(rec));
