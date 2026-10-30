@@ -514,17 +514,17 @@ With a `read_write` key, Rename, Move to, Delete and uploads work offline, and s
 
 | Measure | Target | Result |
 | --- | --- | --- |
-| Warm first paint of the visible window (cache filled, API delayed 300 ms, median of 5) | < 100 ms | **28.1 ms** (27.6, 28.1, 29.6, 27.6, 29.6; 30 cards) |
-| Cold first paint (nothing cached, API not delayed, median of 5) | none | 53.2 ms (52.6 to 54.0) |
+| Warm first paint of the visible window (cache filled, API delayed 300 ms, median of 5) | < 100 ms | **27.1 ms** (27.5, 27.1, 26.5, 27.0, 27.6; 30 cards) |
+| Cold first paint (nothing cached, API not delayed, median of 5) | none | 51.6 ms (51.2 to 51.9) |
 | Most cards in the DOM during a full scroll through 5000 documents (Gallery) | <= 150 | **50** |
 | Long tasks over 50 ms during that scroll | 0 | **0** (longest: none recorded) |
-| 95th percentile frame interval during that scroll | <= 20 ms | **16.8 ms** (every frame 16.7 to 16.8) |
+| 95th percentile frame interval during that scroll | <= 20 ms | **16.8 ms** |
 | Cumulative layout shift (load plus scroll) | < 0.01 | **0** |
 | Offline run: rename, upload, delete queued offline, then online | each sent once | 0 requests offline, then 1 PATCH, 1 POST, 1 DELETE |
 
 First paint runs from `performance.mark('sdk-mount')`, just before React renders, to the double `requestAnimationFrame` after the first document card appears (found with a `MutationObserver`). The warm case can only be served from IndexedDB because the API answers 300 ms late; the cold case shows the network-free cost of the same path. The scroll is continuous, 40 px per frame (about 2400 px/s), through all 25 pages (about 270 000 px).
 
-The List layout is measured the same way: 28 rows at most in the DOM, 0 long tasks, p95 frame 16.7 ms and, since 0.4.0, a CLS of **0.0004** (it was 0.053 in 0.3.0, when the table's automatic column layout re-measured the columns as rows with different content widths scrolled in and out; the list table now uses `table-layout: fixed`). `perf.mjs --strict` gates the exit status on every target.
+The List layout is measured the same way: 28 rows at most in the DOM, 0 long tasks, p95 frame 16.7 ms and, since 0.4.0, a CLS of **0** (it was 0.053 in 0.3.0, when the table's automatic column layout re-measured the columns as rows with different content widths scrolled in and out; the list table now uses `table-layout: fixed`). `perf.mjs --strict` gates the exit status on every target.
 
 Visual parity with 0.2.0: `harness/compare.mjs` compares the 21 evidence screenshots of the 0.2.0 build against this one pixel by pixel. All 21 are identical (0 differing pixels), and the isolation checks (component pixels with and without hostile host CSS, host elements unchanged by the SDK) still show 0 differing pixels.
 
@@ -550,7 +550,7 @@ The lazy chunks at 0.4.0 are the outbox (5.94 kB, loaded only for `read_write` k
 - Folder writes for `read_write` keys: `createFolder`, `updateFolder` and `deleteFolder` on the client, and New folder, Rename, Move to and Delete in `ShelfFolder`. If your proxy allowlist is the 0.3 one, add the folder routes (see the [route table](#server-side-proxy-recipe)). To keep a `read_write` key read-only in the embed, pass `offline={{ outbox: false }}` to a `ShelfProvider`.
 - `ShelfFolder` props `documentId`, `initialDocumentId`, `onNavigate`, `showPreviewSizes` and `documentTabs`.
 - The default theme is `light` (0.3.x followed the OS, so a light host could show a dark embed to dark-mode visitors). Pass `theme="auto"` to keep the old behaviour.
-- The List layout uses `table-layout: fixed`, so scrolling it no longer shifts the layout (CLS 0.0004, was 0.053).
+- The List layout uses `table-layout: fixed`, so scrolling it no longer shifts the layout (CLS 0, was 0.053).
 
 Deprecations: none. Three things every host should do (the first two were advice in 0.3): pass `cacheScope`, call `clearCache()` on sign-out, and do not gate the embed on `online` (see the [host checklist](#local-first-cache)).
 
