@@ -1,2 +1,2 @@
-export { FolderTree } from '../react/FolderTree';
-export type { FolderTreeProps } from '../react/FolderTree';
+export { FolderTree } from '../react/standalone/FolderTree';
+export type { FolderTreeProps } from '../react/standalone/FolderTree';

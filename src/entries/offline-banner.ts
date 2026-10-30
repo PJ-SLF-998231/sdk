@@ -1,1 +1,1 @@
-export { OfflineBanner } from '../react/OfflineBanner';
+export { OfflineBanner } from '../react/standalone/OfflineBanner';

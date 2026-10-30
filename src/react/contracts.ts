@@ -246,7 +246,8 @@ export interface FolderToolbarProps extends ShelfComponentProps {
   onAddFiles(files: File[]): void;
   /** Present only when folders can be created. */
   onNewFolder?(): void;
-  adding: boolean;
+  /** Uploads in flight: a count ("Adding 2 documents…") or just whether any are (U4 widened this from `boolean`, additive). */
+  adding: boolean | number;
   layout: FolderLayout;
   onLayoutChange(layout: FolderLayout): void;
 }
