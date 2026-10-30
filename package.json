@@ -1,6 +1,6 @@
 {
   "name": "@pj-slf-998231/sdk",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Client and UI for the Shelf integration API",
   "type": "module",
   "license": "UNLICENSED",
@@ -223,7 +223,11 @@
     "check:package": "attw --pack . && publint",
     "check:css": "node scripts/check-css.mjs",
     "build:css": "node scripts/build-css.mjs",
-    "parts": "node harness/parts.mjs --shots docs/screenshots/parts"
+    "parts": "node harness/parts.mjs --shots docs/screenshots/parts",
+    "check:tokens": "node scripts/check-tokens.mjs",
+    "check:readme": "node scripts/check-readme.mjs",
+    "check:docs": "npm run check:tokens && npm run check:readme",
+    "check:example": "node examples/folder-card-only/size.mjs"
   },
   "peerDependencies": {
     "react": ">=18",
