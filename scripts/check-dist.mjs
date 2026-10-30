@@ -13,13 +13,16 @@ for (const f of jsFiles) {
   const s = readFileSync(f, 'utf8');
   if (/__SECRET_INTERNALS|ReactCurrentDispatcher/.test(s)) fail(`${f} bundles react`);
 }
-for (const f of ['dist/react/index.js', 'dist/react/index.cjs']) {
-  if (!/["']react\/jsx-runtime["']/.test(readFileSync(f, 'utf8'))) fail(`${f} does not import react/jsx-runtime externally`);
+// react is imported, never bundled: the React code (entries and the chunks they share) imports react/jsx-runtime externally.
+for (const [ext, files] of [['js', jsFiles.filter((f) => f.endsWith('.js'))], ['cjs', jsFiles.filter((f) => f.endsWith('.cjs'))]]) {
+  if (!files.some((f) => /["']react\/jsx-runtime["']/.test(readFileSync(f, 'utf8')))) fail(`no .${ext} file imports react/jsx-runtime externally`);
 }
 
-const css = readFileSync('dist/styles.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-if (!css.includes('.shelf-sdk')) fail('dist/styles.css is not scoped to .shelf-sdk');
-if (/@import/.test(css)) fail('dist/styles.css has an @import (third-party requests are not allowed)');
+// One stylesheet: scoped to .shelf-sdk, prefixed classes, fonts resolve from where the file sits.
+function checkCss(file, fontRel, minSelectors) {
+const css = readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+if (!css.includes('.shelf-sdk')) fail(`${file} is not scoped to .shelf-sdk`);
+if (/@import/.test(css)) fail(`${file} has an @import (third-party requests are not allowed)`);
 
 // Walk every rule. `selectors` collects the prelude of each style rule, at any @media/@supports depth.
 const selectors = [];
@@ -53,32 +56,46 @@ let checked = 0;
 for (const prelude of selectors) {
   for (const sel of split(prelude)) {
     checked++;
-    if (!/^\.shelf-sdk(?![\w-])/.test(sel)) fail(`unscoped selector: ${sel}`);
-    if (/(^|[\s>+~(,])(:root|html|body)(?![\w-])/.test(sel)) fail(`selector reaches the host (:root/html/body): ${sel}`);
+    if (!/^\.shelf-sdk(?![\w-])/.test(sel)) fail(`${file}: unscoped selector: ${sel}`);
+    if (/(^|[\s>+~(,])(:root|html|body)(?![\w-])/.test(sel)) fail(`${file}: selector reaches the host (:root/html/body): ${sel}`);
     for (const m of sel.matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)) {
       const c = m[1];
-      if (c !== 'shelf-sdk' && !c.startsWith('shelf-sdk__')) fail(`unprefixed class .${c} in: ${sel}`);
+      if (c !== 'shelf-sdk' && !c.startsWith('shelf-sdk__')) fail(`${file}: unprefixed class .${c} in: ${sel}`);
     }
     // Bare element rules ("button { ... }") would have been caught by the .shelf-sdk prefix test above.
   }
 }
-if (checked < 100) fail(`only ${checked} selectors found; the stylesheet looks truncated`);
+if (checked < minSelectors) fail(`${file}: only ${checked} selectors found; the stylesheet looks truncated`);
 
 for (const a of atRules) {
-  if (a.startsWith('@keyframes') && !/^@keyframes shelf-sdk-/.test(a)) fail(`unprefixed ${a}`);
+  if (a.startsWith('@keyframes') && !/^@keyframes shelf-sdk-/.test(a)) fail(`${file}: unprefixed ${a}`);
   if (a.startsWith('@font-face')) continue;
-  if (!/^@(keyframes|font-face)/.test(a)) fail(`unexpected at-rule: ${a}`);
+  if (!/^@(keyframes|font-face)/.test(a)) fail(`${file}: unexpected at-rule: ${a}`);
 }
 // @font-face: families are "Shelf ...", files exist beside the stylesheet.
 const faces = [...css.matchAll(/@font-face\s*\{([^}]*)\}/g)].map((m) => m[1]);
-if (faces.length === 0) fail('no @font-face rules');
+if (faces.length === 0) fail(`${file}: no @font-face rules`);
 for (const f of faces) {
   const fam = /font-family:\s*"([^"]+)"/.exec(f)?.[1];
-  if (!fam?.startsWith('Shelf ')) fail(`@font-face family must be "Shelf ...", got ${fam}`);
-  const url = /url\("?\.\/(fonts\/[^")]+)"?\)/.exec(f)?.[1];
-  if (!url || !existsSync(`dist/${url}`)) fail(`@font-face file missing: ${url}`);
+  if (!fam?.startsWith('Shelf ')) fail(`${file}: @font-face family must be "Shelf ...", got ${fam}`);
+  // url() is relative to the stylesheet: ./fonts/ beside dist/styles.css, ../fonts/ from dist/css/
+  const url = new RegExp(`url\\("?${fontRel.replace(/\./g, '\\.')}(fonts\\/[^")]+)"?\\)`).exec(f)?.[1];
+  if (!url || !existsSync(`dist/${url}`)) fail(`${file}: @font-face file missing: ${url}`);
+}
+  return { checked, faces: faces.length, css };
+}
+
+const reports = [];
+const main = checkCss('dist/styles.css', './', 100);
+reports.push(`dist/styles.css: ${main.checked} selectors`);
+const coreCss = checkCss('dist/css/core.css', '../', 20);
+const coreBody = readFileSync('dist/css/core.css', 'utf8').replace(/^\/\*[\s\S]*?\*\/\n/, '');
+for (const f of readdirSync('dist/css').filter((n) => n.endsWith('.css')).sort()) {
+  const r = checkCss(`dist/css/${f}`, '../', coreCss.checked);
+  if (f !== 'core.css' && !readFileSync(`dist/css/${f}`, 'utf8').includes(coreBody)) fail(`dist/css/${f} does not carry core.css (a component stylesheet must work alone)`);
+  reports.push(`dist/css/${f}: ${r.checked}`);
 }
 for (const l of ['Geist-LICENSE.txt', 'Geist-Mono-LICENSE.txt', 'Instrument-Serif-LICENSE.txt']) {
   if (!existsSync(`dist/fonts/${l}`)) fail(`licence missing: dist/fonts/${l}`);
 }
-console.log(`check-dist: ok (${checked} selectors, all under .shelf-sdk; ${faces.length} font faces)`);
+console.log(`check-dist: ok (${reports.length} stylesheets, every selector under .shelf-sdk, font urls resolve; ${reports.join('; ')})`);

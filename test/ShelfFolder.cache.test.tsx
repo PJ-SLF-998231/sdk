@@ -89,7 +89,10 @@ describe('ShelfFolder cache', () => {
   it('a second mount with the same cacheScope shows rows before listFiles resolves', async () => {
     await warm('user-1');
     let release: (v: unknown) => void = () => undefined;
-    const slow = mock({ listFiles: vi.fn(() => new Promise((r) => (release = r))) });
+    // The folder's own listing is the slow one; the census (a recursive listing, the folders here carry no counts) answers at once.
+    const slow = mock({
+      listFiles: vi.fn((p?: { recursive?: boolean }) => (p?.recursive ? Promise.resolve({ items: [], next_cursor: null }) : new Promise((r) => (release = r)))),
+    });
     render(<ShelfFolder client={slow} cacheScope="user-1" />);
     await screen.findByText('plan.pdf');
     expect(screen.getByText('notes.pdf')).toBeTruthy();

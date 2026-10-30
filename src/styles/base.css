@@ -16,7 +16,8 @@
   text-align: left;
   text-transform: none;
   letter-spacing: normal;
-  box-sizing: border-box;
+  /* !important: the next rule covers the descendants; the root itself must also beat a host's `* { box-sizing: content-box !important }`. */
+  box-sizing: border-box !important;
 }
 /* !important: a host that sets `* { box-sizing: ... !important }` would otherwise win over the lower-specificity reset. */
 .shelf-sdk *,
@@ -39,6 +40,8 @@
   padding: 0;
   border: 0;
   font-style: normal;
+  /* A host's `font:` shorthand on h1-h3 (or button) resets font-feature-settings to normal, which drops the root's ss01/cv11. */
+  font-feature-settings: inherit;
   text-transform: none;
   letter-spacing: normal;
 }
@@ -71,6 +74,10 @@
 .shelf-sdk time {
   color: inherit;
 }
+.shelf-sdk img {
+  /* A host's `img { border: ... }` must not frame the thumbnails; the component's own rules (two classes deep) still win. */
+  border: 0;
+}
 .shelf-sdk svg[fill="none"] {
   fill: none;
 }
@@ -97,6 +104,7 @@
 .shelf-sdk input,
 .shelf-sdk select {
   font: inherit;
+  font-feature-settings: inherit;
   color: inherit;
 }
 .shelf-sdk button {

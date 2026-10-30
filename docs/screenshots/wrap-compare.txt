@@ -1,0 +1,30 @@
+1280  card title: identical
+1280  card title link: DIFF overflow-wrap: shelf=break-word sdk=anywhere; height: shelf=64 sdk=65
+1280  folder tile name: identical
+1280  folder tile text: identical
+1280  folder tile main: identical
+1280  cards in the first row: shelf=4 sdk=4
+1280  file grid size: shelf=1152x602 sdk=1152x624
+1280  crumbs: breadcrumbs: identical
+1280  crumbs: breadcrumb (current): DIFF display: shelf=inline-block sdk=block; white-space: shelf=normal sdk=nowrap; text-overflow: shelf=clip sdk=ellipsis; overflow: shelf=visible sdk=hidden; min-width: shelf=0px sdk=auto
+1280  crumbs: breadcrumb li: DIFF display: shelf=list-item sdk=flex; min-width: shelf=auto sdk=0px
+900  card title: identical
+900  card title link: DIFF overflow-wrap: shelf=break-word sdk=anywhere; width: shelf=219 sdk=221; height: shelf=64 sdk=65
+900  folder tile name: identical
+900  folder tile text: identical
+900  folder tile main: identical
+900  cards in the first row: shelf=3 sdk=3
+900  file grid size: shelf=810x605 sdk=810x606
+900  crumbs: breadcrumbs: identical
+900  crumbs: breadcrumb (current): DIFF display: shelf=inline-block sdk=block; white-space: shelf=normal sdk=nowrap; text-overflow: shelf=clip sdk=ellipsis; overflow: shelf=visible sdk=hidden; min-width: shelf=0px sdk=auto
+900  crumbs: breadcrumb li: DIFF display: shelf=list-item sdk=flex; min-width: shelf=auto sdk=0px
+375  card title: identical
+375  card title link: DIFF overflow-wrap: shelf=break-word sdk=anywhere; width: shelf=284 sdk=287
+375  folder tile name: identical
+375  folder tile text: identical
+375  folder tile main: identical
+375  cards in the first row: shelf=1 sdk=1
+375  file grid size: shelf=325x1853 sdk=325x1940
+375  crumbs: breadcrumbs: DIFF height: shelf=99 sdk=55; lines: shelf=4 sdk=2
+375  crumbs: breadcrumb (current): DIFF display: shelf=inline-block sdk=block; white-space: shelf=normal sdk=nowrap; text-overflow: shelf=clip sdk=ellipsis; overflow: shelf=visible sdk=hidden; min-width: shelf=0px sdk=auto; width: shelf=335 sdk=320; height: shelf=49 sdk=28; lines: shelf=2 sdk=1
+375  crumbs: breadcrumb li: DIFF display: shelf=list-item sdk=flex; min-width: shelf=auto sdk=0px; width: shelf=674 sdk=335

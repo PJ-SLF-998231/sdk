@@ -2,12 +2,12 @@ import { createCacheStore } from '../cache/store';
 import { registerPurge } from '../cache/purgeRegistry';
 import { createSwr } from '../cache/swr';
 import type { SwrImpl } from '../cache/swr';
-import { createThumbLoader } from '../cache/thumbs';
-import { isAuthLost, ShelfError } from '../client';
+import { createShelfClient, isAuthLost, ShelfError } from '../client';
 import type { ShelfClient } from '../client';
 import type { CacheStore, ThumbLoader } from '../internal/contracts';
 import type { OutboxHandle } from '../outbox';
-import type { ApplyOutboxFn } from '../internal/contracts';
+import type { ApplyFolderOutboxFn, ApplyOutboxFn, FolderOutboxEntry, OutboxEntry, OverlayFolder } from '../internal/contracts';
+import type { ShelfOfflineOptions } from './contracts';
 import { namespaceFor, openKv } from '../storage/db';
 
 export interface SessionParts {
@@ -34,12 +34,16 @@ export interface Session {
   discarded: number;
   /** The overlay function; set together with `outbox` (both come from the lazily loaded outbox chunk). */
   applyOutbox: ApplyOutboxFn | null;
+  /** Folder overlay; set with `applyOutbox` once the outbox chunk exports it (0.4 U3), else null. */
+  applyFolderOutbox: ((folders: Parameters<ApplyFolderOutboxFn>[0], entries: readonly OutboxEntry[]) => OverlayFolder[]) | null;
+  /** Host callbacks already told about the lost session, so each hears it once however many hooks share the session. */
+  readonly notified: Set<unknown>;
   /**
    * Creates the outbox once the store is open; null while it is not, while the (lazy) outbox chunk is loading
    * or after the session was lost. Read-only hosts never call it, so they never download the chunk.
    * Listeners of `onReady` are told when the chunk has arrived.
    */
-  ensureOutbox(): OutboxHandle | null;
+  ensureOutbox(opts?: Pick<ShelfOfflineOptions, 'uploadConcurrency' | 'maxAttempts'>): OutboxHandle | null;
   onAuthLost(listener: (err: ShelfError) => void): () => void;
   onReady(listener: () => void): () => void;
   /** `discarded` changed. */
@@ -59,6 +63,8 @@ class SessionImpl implements Session {
   disposed = false;
   outbox: OutboxHandle | null = null;
   applyOutbox: ApplyOutboxFn | null = null;
+  applyFolderOutbox: Session['applyFolderOutbox'] = null;
+  readonly notified = new Set<unknown>();
   private outboxMod: typeof import('../outbox') | null = null;
   private outboxLoading = false;
   discarded = 0;
@@ -88,8 +94,15 @@ class SessionImpl implements Session {
       if (this.disposed) return;
       const cache = createCacheStore(kv);
       const swr = createSwr(cache, { onAuthLost: () => this.loseAuth(this.lastAuthError) });
-      const loader = createThumbLoader({ client: this.client, cache });
-      this.parts = { cache, swr, loader };
+      const session = this;
+      // The thumbnail loader is built on first use (a getter), so hooks that never draw a thumbnail never fetch its chunk.
+      this.parts = {
+        cache,
+        swr,
+        get loader() {
+          return (session.thumbs ??= lazyThumbLoader(session.client, cache));
+        },
+      };
       this.unregister = registerPurge(async () => {
         await swr.purge();
       });
@@ -100,8 +113,9 @@ class SessionImpl implements Session {
   }
 
   private lastAuthError: unknown;
+  thumbs: ThumbLoader | null = null;
 
-  ensureOutbox(): OutboxHandle | null {
+  ensureOutbox(opts?: Pick<ShelfOfflineOptions, 'uploadConcurrency' | 'maxAttempts'>): OutboxHandle | null {
     if (this.outbox) return this.outbox;
     if (!this.parts || this.disposed || this.authLost) return null;
     if (!this.outboxMod) {
@@ -111,6 +125,8 @@ class SessionImpl implements Session {
           (m) => {
             this.outboxMod = m;
             this.applyOutbox = m.applyOutbox;
+            // Takes the whole queue: the folder operations in it (isFolderOp) are what the overlay applies.
+            this.applyFolderOutbox = (folders, entries) => m.applyFolderOutbox(folders, entries.filter((e): e is FolderOutboxEntry => m.isFolderOp(e.op)));
             if (!this.disposed) for (const l of [...this.readyListeners]) l();
           },
           () => {
@@ -121,7 +137,12 @@ class SessionImpl implements Session {
       return null;
     }
     // Persistent exactly when the cache is (the host gave a cacheScope); otherwise the kv is memory-only.
-    const ob = this.outboxMod.createOutbox({ kv: this.parts.cache.kv, client: this.client }) as OutboxHandle;
+    const ob = this.outboxMod.createOutbox({
+      kv: this.parts.cache.kv,
+      client: this.client,
+      ...(opts?.uploadConcurrency !== undefined ? { uploadConcurrency: opts.uploadConcurrency } : {}),
+      ...(opts?.maxAttempts !== undefined ? { maxAttempts: opts.maxAttempts } : {}),
+    }) as OutboxHandle;
     ob.on('authLost', ({ discarded }) => this.noteDiscarded(discarded));
     this.outbox = ob;
     return ob;
@@ -214,7 +235,8 @@ class SessionImpl implements Session {
     this.outbox = null;
     if (p) {
       p.swr.destroy();
-      p.loader.dispose();
+      this.thumbs?.dispose();
+      this.thumbs = null;
       p.cache.close();
     }
     this.lostListeners.clear();
@@ -223,45 +245,60 @@ class SessionImpl implements Session {
   }
 }
 
-/** Wraps a client so a lost session reported by any call reaches `onLost` before the error propagates. */
+/** A ThumbLoader whose implementation (src/cache/thumbs) is imported on first use. */
+function lazyThumbLoader(client: ShelfClient, cache: CacheStore): ThumbLoader {
+  let inner: ThumbLoader | null = null;
+  let disposed = false;
+  const ready = import('../cache/thumbs').then((m) => (disposed ? null : (inner = m.createThumbLoader({ client, cache }))));
+  return {
+    load: (req) => ready.then((l) => (l ? l.load(req) : null)),
+    peek: (id, size) => inner?.peek(id, size) ?? null,
+    dispose() {
+      disposed = true;
+      inner?.dispose();
+      inner = null;
+    },
+  };
+}
+
+/**
+ * Wraps a client so a lost session reported by any call reaches `onLost` before the error propagates. Every
+ * function-valued member is wrapped except the `*Url` builders (synchronous, no request), so methods added to
+ * the client later are covered without touching this.
+ */
 function guardClient(raw: ShelfClient, onLost: (err: unknown) => void): ShelfClient {
-  const wrap = <K extends 'info' | 'folders' | 'listFiles' | 'getFile' | 'upload' | 'updateFile' | 'deleteFile' | 'getSite'>(name: K): ShelfClient[K] =>
-    (async (...args: unknown[]) => {
+  const guarded: Record<string, unknown> = {};
+  for (const [name, value] of Object.entries(raw)) {
+    if (typeof value !== 'function' || name.endsWith('Url')) {
+      guarded[name] = value;
+      continue;
+    }
+    guarded[name] = async (...args: unknown[]) => {
       try {
-        return await (raw[name] as (...a: unknown[]) => Promise<unknown>).apply(raw, args);
+        return await (value as (...a: unknown[]) => unknown).apply(raw, args);
       } catch (err) {
         if (isAuthLost(err)) onLost(err);
         throw err;
       }
-    }) as ShelfClient[K];
-  const guarded: ShelfClient = {
-    baseUrl: raw.baseUrl,
-    info: wrap('info'),
-    folders: wrap('folders'),
-    listFiles: wrap('listFiles'),
-    getFile: wrap('getFile'),
-    upload: wrap('upload'),
-    updateFile: wrap('updateFile'),
-    deleteFile: wrap('deleteFile'),
-    getSite: wrap('getSite'),
-    thumbnailUrl: (id, size) => raw.thumbnailUrl(id, size),
-    originalUrl: (id, name) => raw.originalUrl(id, name),
-  };
-  // Optional methods are wrapped only when the client has them.
-  for (const name of ['thumbnail', 'original'] as const) {
-    const fn = raw[name] as ((...a: unknown[]) => Promise<unknown>) | undefined;
-    if (typeof fn === 'function') {
-      (guarded as unknown as Record<string, unknown>)[name] = async (...args: unknown[]) => {
-        try {
-          return await fn.apply(raw, args);
-        } catch (err) {
-          if (isAuthLost(err)) onLost(err);
-          throw err;
-        }
-      };
-    }
+    };
   }
-  return guarded;
+  return guarded as unknown as ShelfClient;
+}
+
+const clients = new Map<string, ShelfClient>();
+/** One client per base URL, so every hook and component on the same base URL shares a session and its requests. */
+export function clientForBaseUrl(baseUrl: string): ShelfClient {
+  let c = clients.get(baseUrl);
+  if (!c) {
+    c = createShelfClient({ baseUrl });
+    clients.set(baseUrl, c);
+  }
+  return c;
+}
+
+/** Number of live sessions (tests: a server render must create none). Not part of the public API. */
+export function sessionCount(): number {
+  return registry.size;
 }
 
 /**

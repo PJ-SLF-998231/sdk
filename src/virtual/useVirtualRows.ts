@@ -38,7 +38,7 @@ function listOffset(list: HTMLElement, scroller: HTMLElement | null): number {
  * its nearest overflow auto/scroll ancestor, else the window. `start` is relative to the list container.
  */
 export function useVirtualRows(opts: VirtualRowsOptions): VirtualRows {
-  const { count, rowHeight, scrollRef, overscan = 3, onNearEnd, prefetchRows } = opts;
+  const { count, rowHeight, scrollRef, overscan = 3, onNearEnd, prefetchRows, remeasureKey } = opts;
   const [scroller, setScroller] = useState<Scroller | null>(null);
 
   useLayoutEffect(() => {
@@ -48,13 +48,18 @@ export function useVirtualRows(opts: VirtualRowsOptions): VirtualRows {
     const margin = listOffset(list, el);
     setScroller((cur) => (cur && cur.el === el && cur.margin === margin ? cur : { el, margin }));
     // Re-measured when the list changes shape, not on every scroll-driven render.
-  }, [scrollRef, count, rowHeight]);
+  }, [scrollRef, count, rowHeight, remeasureKey]);
 
   const useWindow = scroller !== null && scroller.el === null;
   const margin = scroller?.margin ?? 0;
   const virt = useVirtualizer<any, Element>({
     count: scroller ? count : 0,
     estimateSize: () => rowHeight,
+    // A row with no layout box (jsdom, display: none) keeps the estimate instead of collapsing to 0 and drawing everything.
+    measureElement: (el: Element, entry: ResizeObserverEntry | undefined) => {
+      const h = entry?.borderBoxSize?.[0]?.blockSize ?? (el as HTMLElement).getBoundingClientRect().height;
+      return h > 0 ? Math.round(h) : rowHeight;
+    },
     overscan,
     scrollMargin: margin,
     getScrollElement: () => (useWindow ? (typeof window !== 'undefined' ? window : null) : (scroller?.el ?? null)),
@@ -95,6 +100,7 @@ export function useVirtualRows(opts: VirtualRowsOptions): VirtualRows {
   return {
     rows,
     totalSize,
+    measureElement: virt.measureElement,
     scrollToIndex: (index, o) => virt.scrollToIndex(index, { align: o?.align ?? 'start' }),
   };
 }

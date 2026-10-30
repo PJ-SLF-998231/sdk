@@ -18,6 +18,8 @@ const TARGETS = { warmFirstPaintMs: 100, maxCardsInDom: 150, longTasksOver50ms: 
 const srv = spawn('node', [here + 'serve.mjs'], { env: { ...process.env, PORT }, stdio: ['ignore', 'ignore', 'inherit'] });
 await new Promise((r) => setTimeout(r, 800));
 const ctl = (path) => fetch(base + path).then((r) => r.json());
+// PERF_LONGNAMES=1: every 5th document has an unbroken 70+ char name and every 11th a long spaced one (P3: wrapped names, variable row heights).
+if (process.env.PERF_LONGNAMES === '1') await ctl('/__harness/long?on=1');
 const median = (a) => [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)];
 const pct = (a, p) => { const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.ceil(p * s.length) - 1)]; };
 const url = (scope) => `${base}/?api=${API}&bare=1${scope ? `&cacheScope=${scope}` : ''}`;
@@ -104,7 +106,7 @@ try {
     page.on('pageerror', (e) => console.error('pageerror', e.message));
     await page.goto(url(`perf-scroll-${layout}`));
     await page.waitForSelector(CARD);
-    if (layout === 'list') { await page.getByRole('button', { name: 'List' }).click(); await page.waitForSelector('.shelf-sdk__item-row'); }
+    if (layout === 'list') { await page.getByRole('button', { name: 'List', exact: true }).click(); await page.waitForSelector('.shelf-sdk__item-row'); }
     await page.evaluate(() => document.fonts.ready);
     await page.waitForTimeout(1000);
     const sel = layout === 'gallery' ? CARD : '.shelf-sdk__item-row';

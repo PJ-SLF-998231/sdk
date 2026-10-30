@@ -23,7 +23,16 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm run check:dist
+      - run: node scripts/check-css.mjs
+      - run: node scripts/check-entries.mjs
+      - run: node scripts/check-imports.mjs
       - run: node scripts/size-budget.mjs
       - run: node scripts/size-report.mjs
+      - run: npm run check:example
+      - run: npm run check:docs
       - run: node scripts/check-treeshake.mjs
+      - run: npx attw --pack .
+      - run: npx publint
+      - run: npx tsc -p test/types/bundler
+      - run: npx tsc -p test/types/node16
       - run: npm pack --dry-run

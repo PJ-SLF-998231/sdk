@@ -193,7 +193,8 @@ export type OutboxOp =
       /** The folder the user saw it in; a different current folder is a conflict. */
       baseFolderId: string | null;
     }
-  | { kind: 'delete'; fileId: string };
+  | { kind: 'delete'; fileId: string }
+  | FolderOutboxOp;
 
 /**
  * pending: waiting (or backing off). running: a request is in flight. failed: gave up or permanent error,
@@ -221,7 +222,7 @@ export interface OutboxEvents {
   /** The entry list changed (add, status, remove). */
   change: OutboxEntry[];
   /** An entry was applied on the server and removed; `item` is the API's answer when there is one. */
-  applied: { entry: OutboxEntry; item?: ShelfItem };
+  applied: { entry: OutboxEntry; item?: ShelfItem; /** The API's folder for a folder operation (createFolder, renameFolder, moveFolder). */ folder?: ShelfFolder };
   /** Network reachability as the outbox sees it (failed with isOfflineError / recovered). */
   offline: boolean;
   /** 401/503 not_configured: the outbox stopped; `discarded` is how many changes were thrown away. */
@@ -298,6 +299,8 @@ export interface VirtualRowsOptions {
   /** Called when the last rendered row is within `prefetchRows` of the end, to fetch the next cursor page. */
   onNearEnd?: () => void;
   prefetchRows?: number;
+  /** Change it when the content above the list changes height, so the list re-reads where it starts. */
+  remeasureKey?: number;
 }
 
 export interface VirtualRow {
@@ -314,6 +317,11 @@ export interface VirtualRows {
   /** Full scroll height in px, so the scrollbar and layout are right before rows render. */
   totalSize: number;
   scrollToIndex(index: number, opts?: { align?: 'start' | 'center' | 'end' }): void;
+  /**
+   * For rows of varying height: pass each rendered row element (it must carry `data-index`) and its real height replaces
+   * the `rowHeight` estimate, now and whenever it resizes.
+   */
+  measureElement?(el: Element | null): void;
 }
 export type UseVirtualRowsFn = (opts: VirtualRowsOptions) => VirtualRows;
 
@@ -367,3 +375,35 @@ export interface DocumentCardProps {
 export type DocumentDetail = ShelfDocument;
 /** Params for a listing request as the cache keys it. */
 export type ListingKeyParams = Pick<ListFilesParams, 'folder_id' | 'recursive'>;
+
+/* ===================================================================== 0.4.0: folder operations in the outbox */
+
+/**
+ * Declared by 0.4 U1 as separate types; 0.4 U3 widened `OutboxOp` above with `FolderOutboxOp` (and `OutboxEvents.applied`
+ * gained `folder?`). The rules, implemented in src/outbox:
+ *  - a createFolder gets the local id `local-folder:<clientRef>` until it is applied;
+ *  - POST /integration/folders has no idempotency key, so a 409 on create is `applied` when a sibling with the same name exists;
+ *  - 403 fails permanently; 404 on delete is `applied`; 404 on rename/move is a conflict;
+ *  - nothing is uploaded or moved into a `local-folder:*` target; operations that depend on a local folder collapse into its create.
+ */
+export type FolderOutboxOp =
+  | { kind: 'createFolder'; name: string; parentId: string | null; clientRef: string }
+  | { kind: 'renameFolder'; folderId: string; name: string; /** The name the user saw. */ baseName: string }
+  | { kind: 'moveFolder'; folderId: string; parentId: string; /** The parent the user saw. */ baseParentId: string | null }
+  | { kind: 'deleteFolder'; folderId: string };
+
+/** An outbox entry whose operation is a folder operation. */
+export type FolderOutboxEntry = Omit<OutboxEntry, 'op'> & { op: FolderOutboxOp };
+
+/** A folder as the user should see it given the outbox. */
+export interface OverlayFolder extends ShelfFolder {
+  sync: ItemSyncState;
+  /** The outbox entry behind `sync`, for retry/discard. */
+  outboxId?: string;
+  /** A createFolder that has no server folder yet (id is `local-folder:<clientRef>`). */
+  localOnly?: boolean;
+  syncError?: string;
+}
+
+/** Folders with queued folder operations applied (deleted ones removed, created ones added as `localOnly`). */
+export type ApplyFolderOutboxFn = (folders: readonly ShelfFolder[], entries: readonly FolderOutboxEntry[]) => OverlayFolder[];

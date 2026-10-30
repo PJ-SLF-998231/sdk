@@ -59,8 +59,26 @@ export interface ShelfFolder {
   [key: string]: unknown;
 }
 
+/** The record type of a folder. `ShelfFolder` is also the name of the React component, hence this alias. */
+export type ShelfFolderRecord = ShelfFolder;
+
 export interface ShelfInfo {
+  /** What the key may do: `read_write` can create, rename, move and delete folders and documents. Absent on older APIs. */
+  access?: 'read' | 'read_write';
+  /** The key's own folder: the top of what it reaches (never renamed, moved or deleted by the key). */
+  folder?: { id: string; name: string };
   [key: string]: unknown;
+}
+
+export interface CreateFolderInput {
+  name: string;
+  /** Defaults to the key's folder. */
+  parent_id?: string;
+}
+
+export interface UpdateFolderInput {
+  name?: string;
+  parent_id?: string;
 }
 
 export interface ListFilesParams {

@@ -1,0 +1,1121 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ShelfFolder 0.3 baseline markup > not connected 1`] = `
+"<div class="shelf-sdk" data-theme="light">
+<div class="shelf-sdk__callout shelf-sdk__notice" role="alert">
+<strong>Shelf isn't connected</strong>
+<p>The document store is not set up for this site yet.</p>
+</div>
+</div>"
+`;
+
+exports[`ShelfFolder 0.3 baseline markup > read key: census-fallback counts (no item_count) 1`] = `
+"<div class="shelf-sdk" data-theme="light">
+<div aria-live="polite">
+</div>
+<div class="shelf-sdk__shelf-layout shelf-sdk__shelf-layout--rail">
+<aside class="shelf-sdk__shelf-sidebar" aria-label="Folders">
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm shelf-sdk__shelf-sidebar-toggle" aria-expanded="false" aria-controls="shelf-sdk-folder-tree" title="Show folders">
+<svg class="shelf-sdk__folder-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+<path d="M3 6a1.5 1.5 0 0 1 1.5-1.5h4.4l2 2.2h8.6A1.5 1.5 0 0 1 21 8.2v10.1a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.3Z">
+</path>
+</svg>
+<span class="shelf-sdk__shelf-sidebar-toggle-label">Show folders</span>
+</button>
+<div id="shelf-sdk-folder-tree" class="shelf-sdk__shelf-sidebar-tree" hidden="">
+</div>
+</aside>
+<section class="shelf-sdk__shelf-main" aria-label="Contents of Aisle CMS">
+<div class="shelf-sdk__shelf-crumbs-row">
+<nav class="shelf-sdk__breadcrumbs" aria-label="Folder path">
+<ol>
+<li>
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__breadcrumb" aria-current="page">Aisle CMS</button>
+</li>
+</ol>
+</nav>
+<div class="shelf-sdk__shelf-crumbs-aside">
+<span class="shelf-sdk__file-count">3 items · 2 folders</span>
+</div>
+</div>
+<div class="shelf-sdk__shelf-toolbar">
+<p class="shelf-sdk__drag-status" aria-live="polite">
+</p>
+<div class="shelf-sdk__layout-toggle" role="group" aria-label="Layout">
+<button type="button" class="shelf-sdk__layout-toggle-btn" aria-pressed="true">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="9" y="1.5" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="1.5" y="9" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="9" y="9" width="5.5" height="5.5" rx="1">
+</rect>
+</svg>Gallery</button>
+<button type="button" class="shelf-sdk__layout-toggle-btn" aria-pressed="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<rect x="1.5" y="2.5" width="13" height="2" rx="1">
+</rect>
+<rect x="1.5" y="7" width="13" height="2" rx="1">
+</rect>
+<rect x="1.5" y="11.5" width="13" height="2" rx="1">
+</rect>
+</svg>List</button>
+</div>
+</div>
+<div class="shelf-sdk__shelf-dropzone" data-testid="shelf-dropzone">
+<h2 class="shelf-sdk__kicker shelf-sdk__shelf-section-label">Folders</h2>
+<div class="shelf-sdk__folder-grid">
+<article class="shelf-sdk__card shelf-sdk__folder-tile" aria-label="Folder Contracts">
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__folder-tile-main">
+<svg class="shelf-sdk__folder-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+<path d="M3 6a1.5 1.5 0 0 1 1.5-1.5h4.4l2 2.2h8.6A1.5 1.5 0 0 1 21 8.2v10.1a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.3Z">
+</path>
+</svg>
+<span class="shelf-sdk__folder-tile-text">
+<span class="shelf-sdk__folder-tile-name">Contracts</span>
+<span class="shelf-sdk__card-meta">1 item</span>
+</span>
+</button>
+</article>
+</div>
+<div class="shelf-sdk__shelf-section-head">
+<h2 class="shelf-sdk__kicker shelf-sdk__shelf-section-label">Documents</h2>
+</div>
+<div class="shelf-sdk__file-grid" aria-label="Folder contents" style="display: block; position: relative; height: 532px;">
+<div style="position: absolute; top: 0px; left: 0px; right: 0px; transform: translateY(0px); display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 16px;">
+<article class="shelf-sdk__card shelf-sdk__file-card shelf-sdk__shelf-item">
+<div class="shelf-sdk__file-card-thumb shelf-sdk__file-card-thumb--pdf">
+<img src="/t/f1?size=medium" alt="" width="400" height="300" draggable="false" decoding="async">
+<span class="shelf-sdk__pill shelf-sdk__pill--ready">Ready</span>
+</div>
+<div class="shelf-sdk__file-card-body">
+<p class="shelf-sdk__card-meta">2.0 KB · PDF</p>
+<h3 class="shelf-sdk__file-card-name">
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__file-card-link">plan.pdf</button>
+</h3>
+</div>
+</article>
+</div>
+<div style="position: absolute; top: 0px; left: 0px; right: 0px; transform: translateY(274px); display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 16px;">
+<article class="shelf-sdk__card shelf-sdk__file-card shelf-sdk__shelf-item">
+<div class="shelf-sdk__file-card-thumb shelf-sdk__file-card-thumb--doc shelf-sdk__file-card-thumb--word">
+<span class="shelf-sdk__file-card-type" aria-hidden="true">DOCX</span>
+<span class="shelf-sdk__pill shelf-sdk__pill--ready">Ready</span>
+</div>
+<div class="shelf-sdk__file-card-body">
+<p class="shelf-sdk__card-meta">2.0 KB · DOCX</p>
+<h3 class="shelf-sdk__file-card-name">
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__file-card-link">notes.docx</button>
+</h3>
+</div>
+</article>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>"
+`;
+
+exports[`ShelfFolder 0.3 baseline markup > read key: document, Text tab 1`] = `
+"<div class="shelf-sdk" data-theme="light">
+<div aria-live="polite">
+</div>
+<div class="shelf-sdk__shelf-layout shelf-sdk__shelf-layout--rail">
+<aside class="shelf-sdk__shelf-sidebar" aria-label="Folders">
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm shelf-sdk__shelf-sidebar-toggle" aria-expanded="false" aria-controls="shelf-sdk-folder-tree" title="Show folders">
+<svg class="shelf-sdk__folder-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+<path d="M3 6a1.5 1.5 0 0 1 1.5-1.5h4.4l2 2.2h8.6A1.5 1.5 0 0 1 21 8.2v10.1a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.3Z">
+</path>
+</svg>
+<span class="shelf-sdk__shelf-sidebar-toggle-label">Show folders</span>
+</button>
+<div id="shelf-sdk-folder-tree" class="shelf-sdk__shelf-sidebar-tree" hidden="">
+</div>
+</aside>
+<section class="shelf-sdk__shelf-main" aria-label="Contents of Aisle CMS">
+<div class="shelf-sdk__shelf-crumbs-row">
+<nav class="shelf-sdk__breadcrumbs" aria-label="Folder path">
+<ol>
+<li>
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__breadcrumb">Aisle CMS</button>
+</li>
+</ol>
+</nav>
+<div class="shelf-sdk__shelf-crumbs-aside">
+<span class="shelf-sdk__file-count">3 items · 2 folders</span>
+</div>
+</div>
+<section class="shelf-sdk__doc-body" aria-label="Document details">
+<header class="shelf-sdk__page-header shelf-sdk__doc-header">
+<div class="shelf-sdk__doc-title">
+<p class="shelf-sdk__section-eyebrow">PDF · 2.0 KB</p>
+<h1 class="shelf-sdk__section-title">plan.pdf</h1>
+</div>
+<div class="shelf-sdk__page-header-aside shelf-sdk__doc-actions">
+<div class="shelf-sdk__action-menu">
+<button type="button" class="shelf-sdk__action-menu-button" aria-label="Actions for plan.pdf" aria-haspopup="menu" aria-expanded="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<circle cx="3" cy="8" r="1.5">
+</circle>
+<circle cx="8" cy="8" r="1.5">
+</circle>
+<circle cx="13" cy="8" r="1.5">
+</circle>
+</svg>
+</button>
+</div>
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm">Back to Aisle CMS</button>
+</div>
+</header>
+<div aria-live="polite">
+</div>
+<div class="shelf-sdk__doc-layout">
+<section class="shelf-sdk__doc-main" aria-label="Contents">
+<div class="shelf-sdk__shelf-tabs shelf-sdk__doc-tabs" role="tablist" aria-label="View">
+<button type="button" role="tab" class="shelf-sdk__shelf-tab" aria-selected="true" aria-current="page">Text</button>
+<button type="button" role="tab" class="shelf-sdk__shelf-tab" aria-selected="false">Preview</button>
+</div>
+<div class="shelf-sdk__doc-content" role="tabpanel">
+<section class="shelf-sdk__doc-panel shelf-sdk__doc-text-panel">
+<div class="shelf-sdk__doc-panel-head">
+<div>
+<h2 class="shelf-sdk__kicker">Full text</h2>
+</div>
+<div class="shelf-sdk__doc-panel-actions">
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm">Copy</button>
+</div>
+</div>
+<pre class="shelf-sdk__doc-text">hello parsed text</pre>
+</section>
+</div>
+</section>
+<aside class="shelf-sdk__doc-aside shelf-sdk__is-open" aria-label="Details">
+<div class="shelf-sdk__doc-aside-body">
+<section class="shelf-sdk__doc-panel">
+<h2 class="shelf-sdk__kicker">Details</h2>
+<dl class="shelf-sdk__preview-facts">
+<dt>Type</dt>
+<dd>PDF</dd>
+<dt>Size</dt>
+<dd>2.0 KB</dd>
+<dt>Location</dt>
+<dd>Aisle CMS</dd>
+<dt>Status</dt>
+<dd>Ready</dd>
+<dt>Uploaded</dt>
+<dd>02 Jan 2026, 02:00</dd>
+</dl>
+</section>
+</div>
+</aside>
+</div>
+</section>
+</section>
+</div>
+</div>"
+`;
+
+exports[`ShelfFolder 0.3 baseline markup > read key: list layout 1`] = `
+"<div class="shelf-sdk" data-theme="light">
+<div aria-live="polite">
+</div>
+<div class="shelf-sdk__shelf-layout shelf-sdk__shelf-layout--rail">
+<aside class="shelf-sdk__shelf-sidebar" aria-label="Folders">
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm shelf-sdk__shelf-sidebar-toggle" aria-expanded="false" aria-controls="shelf-sdk-folder-tree" title="Show folders">
+<svg class="shelf-sdk__folder-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+<path d="M3 6a1.5 1.5 0 0 1 1.5-1.5h4.4l2 2.2h8.6A1.5 1.5 0 0 1 21 8.2v10.1a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.3Z">
+</path>
+</svg>
+<span class="shelf-sdk__shelf-sidebar-toggle-label">Show folders</span>
+</button>
+<div id="shelf-sdk-folder-tree" class="shelf-sdk__shelf-sidebar-tree" hidden="">
+</div>
+</aside>
+<section class="shelf-sdk__shelf-main" aria-label="Contents of Aisle CMS">
+<div class="shelf-sdk__shelf-crumbs-row">
+<nav class="shelf-sdk__breadcrumbs" aria-label="Folder path">
+<ol>
+<li>
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__breadcrumb" aria-current="page">Aisle CMS</button>
+</li>
+</ol>
+</nav>
+<div class="shelf-sdk__shelf-crumbs-aside">
+<span class="shelf-sdk__file-count">3 items · 2 folders</span>
+</div>
+</div>
+<div class="shelf-sdk__shelf-toolbar">
+<p class="shelf-sdk__drag-status" aria-live="polite">
+</p>
+<div class="shelf-sdk__layout-toggle" role="group" aria-label="Layout">
+<button type="button" class="shelf-sdk__layout-toggle-btn" aria-pressed="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="9" y="1.5" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="1.5" y="9" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="9" y="9" width="5.5" height="5.5" rx="1">
+</rect>
+</svg>Gallery</button>
+<button type="button" class="shelf-sdk__layout-toggle-btn" aria-pressed="true">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<rect x="1.5" y="2.5" width="13" height="2" rx="1">
+</rect>
+<rect x="1.5" y="7" width="13" height="2" rx="1">
+</rect>
+<rect x="1.5" y="11.5" width="13" height="2" rx="1">
+</rect>
+</svg>List</button>
+</div>
+</div>
+<div class="shelf-sdk__shelf-dropzone" data-testid="shelf-dropzone">
+<div aria-hidden="true" style="height: 0px; position: relative; top: 97px;">
+</div>
+<div class="shelf-sdk__item-list-scroll">
+<table class="shelf-sdk__item-list shelf-sdk__item-list-fixed" aria-label="Folder contents">
+<thead>
+<tr>
+<th>Name</th>
+<th>Status</th>
+<th class="shelf-sdk__item-list-num">Size</th>
+<th>Added</th>
+<th>
+<span class="shelf-sdk__visually-hidden">Actions</span>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr class="shelf-sdk__item-row shelf-sdk__item-row--folder">
+<td>
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__item-name">
+<span class="shelf-sdk__item-thumb shelf-sdk__item-thumb--folder">
+<svg class="shelf-sdk__folder-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+<path d="M3 6a1.5 1.5 0 0 1 1.5-1.5h4.4l2 2.2h8.6A1.5 1.5 0 0 1 21 8.2v10.1a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.3Z">
+</path>
+</svg>
+</span>
+<span class="shelf-sdk__item-name-text">Contracts</span>
+</button>
+</td>
+<td class="shelf-sdk__item-list-muted">1 item</td>
+<td class="shelf-sdk__item-list-num shelf-sdk__item-list-muted">—</td>
+<td class="shelf-sdk__item-list-muted">
+</td>
+<td class="shelf-sdk__item-list-actions">
+</td>
+</tr>
+<tr class="shelf-sdk__item-row">
+<td>
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__item-name">
+<span class="shelf-sdk__item-thumb">
+<img src="/t/f1?size=small" alt="" width="40" height="40" draggable="false" decoding="async">
+</span>
+<span>
+<span class="shelf-sdk__item-name-text">plan.pdf</span>
+</span>
+</button>
+</td>
+<td>
+<span class="shelf-sdk__pill shelf-sdk__pill--ready">Ready</span>
+</td>
+<td class="shelf-sdk__item-list-num shelf-sdk__item-list-muted">2.0 KB</td>
+<td class="shelf-sdk__item-list-muted">02 Jan 2026</td>
+<td class="shelf-sdk__item-list-actions">
+</td>
+</tr>
+<tr class="shelf-sdk__item-row">
+<td>
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__item-name">
+<span class="shelf-sdk__item-thumb shelf-sdk__item-thumb--word">DOCX</span>
+<span>
+<span class="shelf-sdk__item-name-text">notes.docx</span>
+</span>
+</button>
+</td>
+<td>
+<span class="shelf-sdk__pill shelf-sdk__pill--ready">Ready</span>
+</td>
+<td class="shelf-sdk__item-list-num shelf-sdk__item-list-muted">2.0 KB</td>
+<td class="shelf-sdk__item-list-muted">02 Jan 2026</td>
+<td class="shelf-sdk__item-list-actions">
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</div>
+</div>"
+`;
+
+exports[`ShelfFolder 0.3 baseline markup > read key: root gallery 1`] = `
+"<div class="shelf-sdk" data-theme="light">
+<div aria-live="polite">
+</div>
+<div class="shelf-sdk__shelf-layout shelf-sdk__shelf-layout--rail">
+<aside class="shelf-sdk__shelf-sidebar" aria-label="Folders">
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm shelf-sdk__shelf-sidebar-toggle" aria-expanded="false" aria-controls="shelf-sdk-folder-tree" title="Show folders">
+<svg class="shelf-sdk__folder-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+<path d="M3 6a1.5 1.5 0 0 1 1.5-1.5h4.4l2 2.2h8.6A1.5 1.5 0 0 1 21 8.2v10.1a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.3Z">
+</path>
+</svg>
+<span class="shelf-sdk__shelf-sidebar-toggle-label">Show folders</span>
+</button>
+<div id="shelf-sdk-folder-tree" class="shelf-sdk__shelf-sidebar-tree" hidden="">
+</div>
+</aside>
+<section class="shelf-sdk__shelf-main" aria-label="Contents of Aisle CMS">
+<div class="shelf-sdk__shelf-crumbs-row">
+<nav class="shelf-sdk__breadcrumbs" aria-label="Folder path">
+<ol>
+<li>
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__breadcrumb" aria-current="page">Aisle CMS</button>
+</li>
+</ol>
+</nav>
+<div class="shelf-sdk__shelf-crumbs-aside">
+<span class="shelf-sdk__file-count">3 items · 2 folders</span>
+</div>
+</div>
+<div class="shelf-sdk__shelf-toolbar">
+<p class="shelf-sdk__drag-status" aria-live="polite">
+</p>
+<div class="shelf-sdk__layout-toggle" role="group" aria-label="Layout">
+<button type="button" class="shelf-sdk__layout-toggle-btn" aria-pressed="true">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="9" y="1.5" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="1.5" y="9" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="9" y="9" width="5.5" height="5.5" rx="1">
+</rect>
+</svg>Gallery</button>
+<button type="button" class="shelf-sdk__layout-toggle-btn" aria-pressed="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<rect x="1.5" y="2.5" width="13" height="2" rx="1">
+</rect>
+<rect x="1.5" y="7" width="13" height="2" rx="1">
+</rect>
+<rect x="1.5" y="11.5" width="13" height="2" rx="1">
+</rect>
+</svg>List</button>
+</div>
+</div>
+<div class="shelf-sdk__shelf-dropzone" data-testid="shelf-dropzone">
+<h2 class="shelf-sdk__kicker shelf-sdk__shelf-section-label">Folders</h2>
+<div class="shelf-sdk__folder-grid">
+<article class="shelf-sdk__card shelf-sdk__folder-tile" aria-label="Folder Contracts">
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__folder-tile-main">
+<svg class="shelf-sdk__folder-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+<path d="M3 6a1.5 1.5 0 0 1 1.5-1.5h4.4l2 2.2h8.6A1.5 1.5 0 0 1 21 8.2v10.1a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.3Z">
+</path>
+</svg>
+<span class="shelf-sdk__folder-tile-text">
+<span class="shelf-sdk__folder-tile-name">Contracts</span>
+<span class="shelf-sdk__card-meta">1 item</span>
+</span>
+</button>
+</article>
+</div>
+<div class="shelf-sdk__shelf-section-head">
+<h2 class="shelf-sdk__kicker shelf-sdk__shelf-section-label">Documents</h2>
+</div>
+<div class="shelf-sdk__file-grid" aria-label="Folder contents" style="display: block; position: relative; height: 532px;">
+<div style="position: absolute; top: 0px; left: 0px; right: 0px; transform: translateY(0px); display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 16px;">
+<article class="shelf-sdk__card shelf-sdk__file-card shelf-sdk__shelf-item">
+<div class="shelf-sdk__file-card-thumb shelf-sdk__file-card-thumb--pdf">
+<img src="/t/f1?size=medium" alt="" width="400" height="300" draggable="false" decoding="async">
+<span class="shelf-sdk__pill shelf-sdk__pill--ready">Ready</span>
+</div>
+<div class="shelf-sdk__file-card-body">
+<p class="shelf-sdk__card-meta">2.0 KB · PDF</p>
+<h3 class="shelf-sdk__file-card-name">
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__file-card-link">plan.pdf</button>
+</h3>
+</div>
+</article>
+</div>
+<div style="position: absolute; top: 0px; left: 0px; right: 0px; transform: translateY(274px); display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 16px;">
+<article class="shelf-sdk__card shelf-sdk__file-card shelf-sdk__shelf-item">
+<div class="shelf-sdk__file-card-thumb shelf-sdk__file-card-thumb--doc shelf-sdk__file-card-thumb--word">
+<span class="shelf-sdk__file-card-type" aria-hidden="true">DOCX</span>
+<span class="shelf-sdk__pill shelf-sdk__pill--ready">Ready</span>
+</div>
+<div class="shelf-sdk__file-card-body">
+<p class="shelf-sdk__card-meta">2.0 KB · DOCX</p>
+<h3 class="shelf-sdk__file-card-name">
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__file-card-link">notes.docx</button>
+</h3>
+</div>
+</article>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>"
+`;
+
+exports[`ShelfFolder 0.3 baseline markup > read key: subfolder 1`] = `
+"<div class="shelf-sdk" data-theme="light">
+<div aria-live="polite">
+</div>
+<div class="shelf-sdk__shelf-layout shelf-sdk__shelf-layout--rail">
+<aside class="shelf-sdk__shelf-sidebar" aria-label="Folders">
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm shelf-sdk__shelf-sidebar-toggle" aria-expanded="false" aria-controls="shelf-sdk-folder-tree" title="Show folders">
+<svg class="shelf-sdk__folder-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+<path d="M3 6a1.5 1.5 0 0 1 1.5-1.5h4.4l2 2.2h8.6A1.5 1.5 0 0 1 21 8.2v10.1a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.3Z">
+</path>
+</svg>
+<span class="shelf-sdk__shelf-sidebar-toggle-label">Show folders</span>
+</button>
+<div id="shelf-sdk-folder-tree" class="shelf-sdk__shelf-sidebar-tree" hidden="">
+</div>
+</aside>
+<section class="shelf-sdk__shelf-main" aria-label="Contents of Contracts">
+<div class="shelf-sdk__shelf-crumbs-row">
+<nav class="shelf-sdk__breadcrumbs" aria-label="Folder path">
+<ol>
+<li>
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__breadcrumb">Aisle CMS</button>
+</li>
+<li>
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__breadcrumb" aria-current="page">Contracts</button>
+</li>
+</ol>
+</nav>
+<div class="shelf-sdk__shelf-crumbs-aside">
+<span class="shelf-sdk__file-count">3 items · 2 folders</span>
+</div>
+</div>
+<div class="shelf-sdk__shelf-toolbar">
+<p class="shelf-sdk__drag-status" aria-live="polite">
+</p>
+<div class="shelf-sdk__layout-toggle" role="group" aria-label="Layout">
+<button type="button" class="shelf-sdk__layout-toggle-btn" aria-pressed="true">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="9" y="1.5" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="1.5" y="9" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="9" y="9" width="5.5" height="5.5" rx="1">
+</rect>
+</svg>Gallery</button>
+<button type="button" class="shelf-sdk__layout-toggle-btn" aria-pressed="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<rect x="1.5" y="2.5" width="13" height="2" rx="1">
+</rect>
+<rect x="1.5" y="7" width="13" height="2" rx="1">
+</rect>
+<rect x="1.5" y="11.5" width="13" height="2" rx="1">
+</rect>
+</svg>List</button>
+</div>
+</div>
+<div class="shelf-sdk__shelf-dropzone" data-testid="shelf-dropzone">
+<div class="shelf-sdk__shelf-section-head">
+<h2 class="shelf-sdk__kicker shelf-sdk__shelf-section-label">Documents</h2>
+</div>
+<div class="shelf-sdk__file-grid" aria-label="Folder contents" style="display: block; position: relative; height: 258px;">
+<div style="position: absolute; top: 0px; left: 0px; right: 0px; transform: translateY(0px); display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 16px;">
+<article class="shelf-sdk__card shelf-sdk__file-card shelf-sdk__shelf-item">
+<div class="shelf-sdk__file-card-thumb shelf-sdk__file-card-thumb--doc shelf-sdk__file-card-thumb--pdf">
+<span class="shelf-sdk__file-card-type" aria-hidden="true">PDF</span>
+<span class="shelf-sdk__pill shelf-sdk__pill--ready">Ready</span>
+</div>
+<div class="shelf-sdk__file-card-body">
+<p class="shelf-sdk__card-meta">2.0 KB · PDF</p>
+<h3 class="shelf-sdk__file-card-name">
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__file-card-link">deep.txt</button>
+</h3>
+</div>
+</article>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>"
+`;
+
+exports[`ShelfFolder 0.3 baseline markup > read_write key: empty folder 1`] = `
+"<div class="shelf-sdk" data-theme="light">
+<div aria-live="polite">
+</div>
+<div class="shelf-sdk__shelf-layout shelf-sdk__shelf-layout--rail">
+<aside class="shelf-sdk__shelf-sidebar" aria-label="Folders">
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm shelf-sdk__shelf-sidebar-toggle" aria-expanded="false" aria-controls="shelf-sdk-folder-tree" title="Show folders">
+<svg class="shelf-sdk__folder-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+<path d="M3 6a1.5 1.5 0 0 1 1.5-1.5h4.4l2 2.2h8.6A1.5 1.5 0 0 1 21 8.2v10.1a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.3Z">
+</path>
+</svg>
+<span class="shelf-sdk__shelf-sidebar-toggle-label">Show folders</span>
+</button>
+<div id="shelf-sdk-folder-tree" class="shelf-sdk__shelf-sidebar-tree" hidden="">
+</div>
+</aside>
+<section class="shelf-sdk__shelf-main" aria-label="Contents of Aisle CMS">
+<div class="shelf-sdk__shelf-crumbs-row">
+<nav class="shelf-sdk__breadcrumbs" aria-label="Folder path">
+<ol>
+<li>
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__breadcrumb" aria-current="page">Aisle CMS</button>
+</li>
+</ol>
+</nav>
+<div class="shelf-sdk__shelf-crumbs-aside">
+<span class="shelf-sdk__file-count">1 item · 2 folders</span>
+</div>
+</div>
+<div class="shelf-sdk__shelf-toolbar">
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm">New folder</button>
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--accent shelf-sdk__btn--sm">Add documents</button>
+<input type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/plain,text/markdown,application/json,.pdf,.docx,.doc,.xlsx,.xls,.txt,.md,.json" multiple="" hidden="" aria-label="Upload files">
+<p class="shelf-sdk__drag-status" aria-live="polite">
+</p>
+<div class="shelf-sdk__layout-toggle" role="group" aria-label="Layout">
+<button type="button" class="shelf-sdk__layout-toggle-btn" aria-pressed="true">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="9" y="1.5" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="1.5" y="9" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="9" y="9" width="5.5" height="5.5" rx="1">
+</rect>
+</svg>Gallery</button>
+<button type="button" class="shelf-sdk__layout-toggle-btn" aria-pressed="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<rect x="1.5" y="2.5" width="13" height="2" rx="1">
+</rect>
+<rect x="1.5" y="7" width="13" height="2" rx="1">
+</rect>
+<rect x="1.5" y="11.5" width="13" height="2" rx="1">
+</rect>
+</svg>List</button>
+</div>
+</div>
+<div class="shelf-sdk__shelf-dropzone" data-testid="shelf-dropzone">
+<h2 class="shelf-sdk__kicker shelf-sdk__shelf-section-label">Folders</h2>
+<div class="shelf-sdk__folder-grid">
+<article class="shelf-sdk__card shelf-sdk__folder-tile" aria-label="Folder Contracts">
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__folder-tile-main">
+<svg class="shelf-sdk__folder-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+<path d="M3 6a1.5 1.5 0 0 1 1.5-1.5h4.4l2 2.2h8.6A1.5 1.5 0 0 1 21 8.2v10.1a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.3Z">
+</path>
+</svg>
+<span class="shelf-sdk__folder-tile-text">
+<span class="shelf-sdk__folder-tile-name">Contracts</span>
+<span class="shelf-sdk__card-meta">1 item</span>
+</span>
+</button>
+<div class="shelf-sdk__action-menu">
+<button type="button" class="shelf-sdk__action-menu-button" aria-label="Actions for folder Contracts" aria-haspopup="menu" aria-expanded="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<circle cx="3" cy="8" r="1.5">
+</circle>
+<circle cx="8" cy="8" r="1.5">
+</circle>
+<circle cx="13" cy="8" r="1.5">
+</circle>
+</svg>
+</button>
+</div>
+</article>
+</div>
+<p class="shelf-sdk__dropzone-limits shelf-sdk__shelf-dropzone-hint">Drop documents here to add them to Aisle CMS · PDF, Word, Excel, text, Markdown, JSON, or scans and photos of documents · up&nbsp;to&nbsp;25&nbsp;MB</p>
+</div>
+</section>
+</div>
+</div>"
+`;
+
+exports[`ShelfFolder 0.3 baseline markup > read_write key: list layout 1`] = `
+"<div class="shelf-sdk" data-theme="light">
+<div aria-live="polite">
+</div>
+<div class="shelf-sdk__shelf-layout shelf-sdk__shelf-layout--rail">
+<aside class="shelf-sdk__shelf-sidebar" aria-label="Folders">
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm shelf-sdk__shelf-sidebar-toggle" aria-expanded="false" aria-controls="shelf-sdk-folder-tree" title="Show folders">
+<svg class="shelf-sdk__folder-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+<path d="M3 6a1.5 1.5 0 0 1 1.5-1.5h4.4l2 2.2h8.6A1.5 1.5 0 0 1 21 8.2v10.1a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.3Z">
+</path>
+</svg>
+<span class="shelf-sdk__shelf-sidebar-toggle-label">Show folders</span>
+</button>
+<div id="shelf-sdk-folder-tree" class="shelf-sdk__shelf-sidebar-tree" hidden="">
+</div>
+</aside>
+<section class="shelf-sdk__shelf-main" aria-label="Contents of Aisle CMS">
+<div class="shelf-sdk__shelf-crumbs-row">
+<nav class="shelf-sdk__breadcrumbs" aria-label="Folder path">
+<ol>
+<li>
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__breadcrumb" aria-current="page">Aisle CMS</button>
+</li>
+</ol>
+</nav>
+<div class="shelf-sdk__shelf-crumbs-aside">
+<span class="shelf-sdk__file-count">3 items · 2 folders</span>
+</div>
+</div>
+<div class="shelf-sdk__shelf-toolbar">
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm">New folder</button>
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--accent shelf-sdk__btn--sm">Add documents</button>
+<input type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/plain,text/markdown,application/json,.pdf,.docx,.doc,.xlsx,.xls,.txt,.md,.json" multiple="" hidden="" aria-label="Upload files">
+<p class="shelf-sdk__drag-status" aria-live="polite">
+</p>
+<div class="shelf-sdk__layout-toggle" role="group" aria-label="Layout">
+<button type="button" class="shelf-sdk__layout-toggle-btn" aria-pressed="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="9" y="1.5" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="1.5" y="9" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="9" y="9" width="5.5" height="5.5" rx="1">
+</rect>
+</svg>Gallery</button>
+<button type="button" class="shelf-sdk__layout-toggle-btn" aria-pressed="true">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<rect x="1.5" y="2.5" width="13" height="2" rx="1">
+</rect>
+<rect x="1.5" y="7" width="13" height="2" rx="1">
+</rect>
+<rect x="1.5" y="11.5" width="13" height="2" rx="1">
+</rect>
+</svg>List</button>
+</div>
+</div>
+<div class="shelf-sdk__shelf-dropzone" data-testid="shelf-dropzone">
+<div aria-hidden="true" style="height: 0px; position: relative; top: 97px;">
+</div>
+<div class="shelf-sdk__item-list-scroll">
+<table class="shelf-sdk__item-list shelf-sdk__item-list-fixed" aria-label="Folder contents">
+<thead>
+<tr>
+<th>Name</th>
+<th>Status</th>
+<th class="shelf-sdk__item-list-num">Size</th>
+<th>Added</th>
+<th>
+<span class="shelf-sdk__visually-hidden">Actions</span>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr class="shelf-sdk__item-row shelf-sdk__item-row--folder">
+<td>
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__item-name">
+<span class="shelf-sdk__item-thumb shelf-sdk__item-thumb--folder">
+<svg class="shelf-sdk__folder-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+<path d="M3 6a1.5 1.5 0 0 1 1.5-1.5h4.4l2 2.2h8.6A1.5 1.5 0 0 1 21 8.2v10.1a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.3Z">
+</path>
+</svg>
+</span>
+<span class="shelf-sdk__item-name-text">Contracts</span>
+</button>
+</td>
+<td class="shelf-sdk__item-list-muted">1 item</td>
+<td class="shelf-sdk__item-list-num shelf-sdk__item-list-muted">—</td>
+<td class="shelf-sdk__item-list-muted">
+</td>
+<td class="shelf-sdk__item-list-actions">
+<div class="shelf-sdk__action-menu">
+<button type="button" class="shelf-sdk__action-menu-button" aria-label="Actions for Contracts" aria-haspopup="menu" aria-expanded="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<circle cx="3" cy="8" r="1.5">
+</circle>
+<circle cx="8" cy="8" r="1.5">
+</circle>
+<circle cx="13" cy="8" r="1.5">
+</circle>
+</svg>
+</button>
+</div>
+</td>
+</tr>
+<tr class="shelf-sdk__item-row">
+<td>
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__item-name">
+<span class="shelf-sdk__item-thumb">
+<img src="/t/f1?size=small" alt="" width="40" height="40" draggable="false" decoding="async">
+</span>
+<span>
+<span class="shelf-sdk__item-name-text">plan.pdf</span>
+</span>
+</button>
+</td>
+<td>
+<span class="shelf-sdk__pill shelf-sdk__pill--ready">Ready</span>
+</td>
+<td class="shelf-sdk__item-list-num shelf-sdk__item-list-muted">2.0 KB</td>
+<td class="shelf-sdk__item-list-muted">02 Jan 2026</td>
+<td class="shelf-sdk__item-list-actions">
+<div class="shelf-sdk__action-menu">
+<button type="button" class="shelf-sdk__action-menu-button" aria-label="Actions for plan.pdf" aria-haspopup="menu" aria-expanded="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<circle cx="3" cy="8" r="1.5">
+</circle>
+<circle cx="8" cy="8" r="1.5">
+</circle>
+<circle cx="13" cy="8" r="1.5">
+</circle>
+</svg>
+</button>
+</div>
+</td>
+</tr>
+<tr class="shelf-sdk__item-row">
+<td>
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__item-name">
+<span class="shelf-sdk__item-thumb shelf-sdk__item-thumb--word">DOCX</span>
+<span>
+<span class="shelf-sdk__item-name-text">notes.docx</span>
+</span>
+</button>
+</td>
+<td>
+<span class="shelf-sdk__pill shelf-sdk__pill--ready">Ready</span>
+</td>
+<td class="shelf-sdk__item-list-num shelf-sdk__item-list-muted">2.0 KB</td>
+<td class="shelf-sdk__item-list-muted">02 Jan 2026</td>
+<td class="shelf-sdk__item-list-actions">
+<div class="shelf-sdk__action-menu">
+<button type="button" class="shelf-sdk__action-menu-button" aria-label="Actions for notes.docx" aria-haspopup="menu" aria-expanded="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<circle cx="3" cy="8" r="1.5">
+</circle>
+<circle cx="8" cy="8" r="1.5">
+</circle>
+<circle cx="13" cy="8" r="1.5">
+</circle>
+</svg>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="shelf-sdk__dropzone-limits shelf-sdk__shelf-dropzone-hint">Drop documents here to add them to Aisle CMS · PDF, Word, Excel, text, Markdown, JSON, or scans and photos of documents · up&nbsp;to&nbsp;25&nbsp;MB</p>
+</div>
+</section>
+</div>
+</div>"
+`;
+
+exports[`ShelfFolder 0.3 baseline markup > read_write key: offline banner with 2 pending changes 1`] = `
+"<div class="shelf-sdk" data-theme="light">
+<div aria-live="polite">
+<p class="shelf-sdk__callout shelf-sdk__notice" role="status" data-testid="shelf-outbox-banner">You're offline. 2 changes will be sent when you're back online.</p>
+</div>
+<div class="shelf-sdk__shelf-layout shelf-sdk__shelf-layout--rail">
+<aside class="shelf-sdk__shelf-sidebar" aria-label="Folders">
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm shelf-sdk__shelf-sidebar-toggle" aria-expanded="false" aria-controls="shelf-sdk-folder-tree" title="Show folders">
+<svg class="shelf-sdk__folder-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+<path d="M3 6a1.5 1.5 0 0 1 1.5-1.5h4.4l2 2.2h8.6A1.5 1.5 0 0 1 21 8.2v10.1a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.3Z">
+</path>
+</svg>
+<span class="shelf-sdk__shelf-sidebar-toggle-label">Show folders</span>
+</button>
+<div id="shelf-sdk-folder-tree" class="shelf-sdk__shelf-sidebar-tree" hidden="">
+</div>
+</aside>
+<section class="shelf-sdk__shelf-main" aria-label="Contents of Aisle CMS">
+<div class="shelf-sdk__shelf-crumbs-row">
+<nav class="shelf-sdk__breadcrumbs" aria-label="Folder path">
+<ol>
+<li>
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__breadcrumb" aria-current="page">Aisle CMS</button>
+</li>
+</ol>
+</nav>
+<div class="shelf-sdk__shelf-crumbs-aside">
+<span class="shelf-sdk__file-count">3 items · 2 folders</span>
+</div>
+</div>
+<div class="shelf-sdk__shelf-toolbar">
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm">New folder</button>
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--accent shelf-sdk__btn--sm">Add documents</button>
+<input type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/plain,text/markdown,application/json,.pdf,.docx,.doc,.xlsx,.xls,.txt,.md,.json" multiple="" hidden="" aria-label="Upload files">
+<p class="shelf-sdk__drag-status" aria-live="polite">
+</p>
+<div class="shelf-sdk__layout-toggle" role="group" aria-label="Layout">
+<button type="button" class="shelf-sdk__layout-toggle-btn" aria-pressed="true">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="9" y="1.5" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="1.5" y="9" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="9" y="9" width="5.5" height="5.5" rx="1">
+</rect>
+</svg>Gallery</button>
+<button type="button" class="shelf-sdk__layout-toggle-btn" aria-pressed="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<rect x="1.5" y="2.5" width="13" height="2" rx="1">
+</rect>
+<rect x="1.5" y="7" width="13" height="2" rx="1">
+</rect>
+<rect x="1.5" y="11.5" width="13" height="2" rx="1">
+</rect>
+</svg>List</button>
+</div>
+</div>
+<div class="shelf-sdk__shelf-dropzone" data-testid="shelf-dropzone">
+<h2 class="shelf-sdk__kicker shelf-sdk__shelf-section-label">Folders</h2>
+<div class="shelf-sdk__folder-grid">
+<article class="shelf-sdk__card shelf-sdk__folder-tile" aria-label="Folder Contracts">
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__folder-tile-main">
+<svg class="shelf-sdk__folder-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+<path d="M3 6a1.5 1.5 0 0 1 1.5-1.5h4.4l2 2.2h8.6A1.5 1.5 0 0 1 21 8.2v10.1a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.3Z">
+</path>
+</svg>
+<span class="shelf-sdk__folder-tile-text">
+<span class="shelf-sdk__folder-tile-name">Contracts</span>
+<span class="shelf-sdk__card-meta">1 item</span>
+</span>
+</button>
+<div class="shelf-sdk__action-menu">
+<button type="button" class="shelf-sdk__action-menu-button" aria-label="Actions for folder Contracts" aria-haspopup="menu" aria-expanded="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<circle cx="3" cy="8" r="1.5">
+</circle>
+<circle cx="8" cy="8" r="1.5">
+</circle>
+<circle cx="13" cy="8" r="1.5">
+</circle>
+</svg>
+</button>
+</div>
+</article>
+</div>
+<div class="shelf-sdk__shelf-section-head">
+<h2 class="shelf-sdk__kicker shelf-sdk__shelf-section-label">Documents</h2>
+</div>
+<div class="shelf-sdk__file-grid" aria-label="Folder contents" style="display: block; position: relative; height: 532px;">
+<div style="position: absolute; top: 0px; left: 0px; right: 0px; transform: translateY(0px); display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 16px;">
+<article class="shelf-sdk__card shelf-sdk__file-card shelf-sdk__shelf-item">
+<div class="shelf-sdk__file-card-thumb shelf-sdk__file-card-thumb--pdf">
+<img src="/t/f1?size=medium" alt="" width="400" height="300" draggable="false" decoding="async">
+<span class="shelf-sdk__pill shelf-sdk__pill--ready">Ready</span>
+<span class="shelf-sdk__pill shelf-sdk__pill--busy shelf-sdk__sync-pill">Pending</span>
+</div>
+<div class="shelf-sdk__file-card-body">
+<p class="shelf-sdk__card-meta">2.0 KB · PDF</p>
+<h3 class="shelf-sdk__file-card-name">
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__file-card-link">renamed-one.pdf</button>
+</h3>
+</div>
+<div class="shelf-sdk__action-menu">
+<button type="button" class="shelf-sdk__action-menu-button" aria-label="Actions for renamed-one.pdf" aria-haspopup="menu" aria-expanded="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<circle cx="3" cy="8" r="1.5">
+</circle>
+<circle cx="8" cy="8" r="1.5">
+</circle>
+<circle cx="13" cy="8" r="1.5">
+</circle>
+</svg>
+</button>
+</div>
+</article>
+</div>
+<div style="position: absolute; top: 0px; left: 0px; right: 0px; transform: translateY(274px); display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 16px;">
+<article class="shelf-sdk__card shelf-sdk__file-card shelf-sdk__shelf-item">
+<div class="shelf-sdk__file-card-thumb shelf-sdk__file-card-thumb--doc shelf-sdk__file-card-thumb--word">
+<span class="shelf-sdk__file-card-type" aria-hidden="true">DOCX</span>
+<span class="shelf-sdk__pill shelf-sdk__pill--ready">Ready</span>
+<span class="shelf-sdk__pill shelf-sdk__pill--busy shelf-sdk__sync-pill">Pending</span>
+</div>
+<div class="shelf-sdk__file-card-body">
+<p class="shelf-sdk__card-meta">2.0 KB · DOCX</p>
+<h3 class="shelf-sdk__file-card-name">
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__file-card-link">renamed-two.docx</button>
+</h3>
+</div>
+<div class="shelf-sdk__action-menu">
+<button type="button" class="shelf-sdk__action-menu-button" aria-label="Actions for renamed-two.docx" aria-haspopup="menu" aria-expanded="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<circle cx="3" cy="8" r="1.5">
+</circle>
+<circle cx="8" cy="8" r="1.5">
+</circle>
+<circle cx="13" cy="8" r="1.5">
+</circle>
+</svg>
+</button>
+</div>
+</article>
+</div>
+</div>
+<p class="shelf-sdk__dropzone-limits shelf-sdk__shelf-dropzone-hint">Drop documents here to add them to Aisle CMS · PDF, Word, Excel, text, Markdown, JSON, or scans and photos of documents · up&nbsp;to&nbsp;25&nbsp;MB</p>
+</div>
+</section>
+</div>
+</div>"
+`;
+
+exports[`ShelfFolder 0.3 baseline markup > read_write key: root gallery 1`] = `
+"<div class="shelf-sdk" data-theme="light">
+<div aria-live="polite">
+</div>
+<div class="shelf-sdk__shelf-layout shelf-sdk__shelf-layout--rail">
+<aside class="shelf-sdk__shelf-sidebar" aria-label="Folders">
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm shelf-sdk__shelf-sidebar-toggle" aria-expanded="false" aria-controls="shelf-sdk-folder-tree" title="Show folders">
+<svg class="shelf-sdk__folder-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+<path d="M3 6a1.5 1.5 0 0 1 1.5-1.5h4.4l2 2.2h8.6A1.5 1.5 0 0 1 21 8.2v10.1a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.3Z">
+</path>
+</svg>
+<span class="shelf-sdk__shelf-sidebar-toggle-label">Show folders</span>
+</button>
+<div id="shelf-sdk-folder-tree" class="shelf-sdk__shelf-sidebar-tree" hidden="">
+</div>
+</aside>
+<section class="shelf-sdk__shelf-main" aria-label="Contents of Aisle CMS">
+<div class="shelf-sdk__shelf-crumbs-row">
+<nav class="shelf-sdk__breadcrumbs" aria-label="Folder path">
+<ol>
+<li>
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__breadcrumb" aria-current="page">Aisle CMS</button>
+</li>
+</ol>
+</nav>
+<div class="shelf-sdk__shelf-crumbs-aside">
+<span class="shelf-sdk__file-count">3 items · 2 folders</span>
+</div>
+</div>
+<div class="shelf-sdk__shelf-toolbar">
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm">New folder</button>
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--accent shelf-sdk__btn--sm">Add documents</button>
+<input type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/plain,text/markdown,application/json,.pdf,.docx,.doc,.xlsx,.xls,.txt,.md,.json" multiple="" hidden="" aria-label="Upload files">
+<p class="shelf-sdk__drag-status" aria-live="polite">
+</p>
+<div class="shelf-sdk__layout-toggle" role="group" aria-label="Layout">
+<button type="button" class="shelf-sdk__layout-toggle-btn" aria-pressed="true">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="9" y="1.5" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="1.5" y="9" width="5.5" height="5.5" rx="1">
+</rect>
+<rect x="9" y="9" width="5.5" height="5.5" rx="1">
+</rect>
+</svg>Gallery</button>
+<button type="button" class="shelf-sdk__layout-toggle-btn" aria-pressed="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<rect x="1.5" y="2.5" width="13" height="2" rx="1">
+</rect>
+<rect x="1.5" y="7" width="13" height="2" rx="1">
+</rect>
+<rect x="1.5" y="11.5" width="13" height="2" rx="1">
+</rect>
+</svg>List</button>
+</div>
+</div>
+<div class="shelf-sdk__shelf-dropzone" data-testid="shelf-dropzone">
+<h2 class="shelf-sdk__kicker shelf-sdk__shelf-section-label">Folders</h2>
+<div class="shelf-sdk__folder-grid">
+<article class="shelf-sdk__card shelf-sdk__folder-tile" aria-label="Folder Contracts">
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__folder-tile-main">
+<svg class="shelf-sdk__folder-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+<path d="M3 6a1.5 1.5 0 0 1 1.5-1.5h4.4l2 2.2h8.6A1.5 1.5 0 0 1 21 8.2v10.1a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.3Z">
+</path>
+</svg>
+<span class="shelf-sdk__folder-tile-text">
+<span class="shelf-sdk__folder-tile-name">Contracts</span>
+<span class="shelf-sdk__card-meta">1 item</span>
+</span>
+</button>
+<div class="shelf-sdk__action-menu">
+<button type="button" class="shelf-sdk__action-menu-button" aria-label="Actions for folder Contracts" aria-haspopup="menu" aria-expanded="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<circle cx="3" cy="8" r="1.5">
+</circle>
+<circle cx="8" cy="8" r="1.5">
+</circle>
+<circle cx="13" cy="8" r="1.5">
+</circle>
+</svg>
+</button>
+</div>
+</article>
+</div>
+<div class="shelf-sdk__shelf-section-head">
+<h2 class="shelf-sdk__kicker shelf-sdk__shelf-section-label">Documents</h2>
+</div>
+<div class="shelf-sdk__file-grid" aria-label="Folder contents" style="display: block; position: relative; height: 532px;">
+<div style="position: absolute; top: 0px; left: 0px; right: 0px; transform: translateY(0px); display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 16px;">
+<article class="shelf-sdk__card shelf-sdk__file-card shelf-sdk__shelf-item">
+<div class="shelf-sdk__file-card-thumb shelf-sdk__file-card-thumb--pdf">
+<img src="/t/f1?size=medium" alt="" width="400" height="300" draggable="false" decoding="async">
+<span class="shelf-sdk__pill shelf-sdk__pill--ready">Ready</span>
+</div>
+<div class="shelf-sdk__file-card-body">
+<p class="shelf-sdk__card-meta">2.0 KB · PDF</p>
+<h3 class="shelf-sdk__file-card-name">
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__file-card-link">plan.pdf</button>
+</h3>
+</div>
+<div class="shelf-sdk__action-menu">
+<button type="button" class="shelf-sdk__action-menu-button" aria-label="Actions for plan.pdf" aria-haspopup="menu" aria-expanded="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<circle cx="3" cy="8" r="1.5">
+</circle>
+<circle cx="8" cy="8" r="1.5">
+</circle>
+<circle cx="13" cy="8" r="1.5">
+</circle>
+</svg>
+</button>
+</div>
+</article>
+</div>
+<div style="position: absolute; top: 0px; left: 0px; right: 0px; transform: translateY(274px); display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 16px;">
+<article class="shelf-sdk__card shelf-sdk__file-card shelf-sdk__shelf-item">
+<div class="shelf-sdk__file-card-thumb shelf-sdk__file-card-thumb--doc shelf-sdk__file-card-thumb--word">
+<span class="shelf-sdk__file-card-type" aria-hidden="true">DOCX</span>
+<span class="shelf-sdk__pill shelf-sdk__pill--ready">Ready</span>
+</div>
+<div class="shelf-sdk__file-card-body">
+<p class="shelf-sdk__card-meta">2.0 KB · DOCX</p>
+<h3 class="shelf-sdk__file-card-name">
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__file-card-link">notes.docx</button>
+</h3>
+</div>
+<div class="shelf-sdk__action-menu">
+<button type="button" class="shelf-sdk__action-menu-button" aria-label="Actions for notes.docx" aria-haspopup="menu" aria-expanded="false">
+<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+<circle cx="3" cy="8" r="1.5">
+</circle>
+<circle cx="8" cy="8" r="1.5">
+</circle>
+<circle cx="13" cy="8" r="1.5">
+</circle>
+</svg>
+</button>
+</div>
+</article>
+</div>
+</div>
+<p class="shelf-sdk__dropzone-limits shelf-sdk__shelf-dropzone-hint">Drop documents here to add them to Aisle CMS · PDF, Word, Excel, text, Markdown, JSON, or scans and photos of documents · up&nbsp;to&nbsp;25&nbsp;MB</p>
+</div>
+</section>
+</div>
+</div>"
+`;

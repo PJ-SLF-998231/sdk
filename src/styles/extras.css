@@ -52,3 +52,103 @@
   gap: 6px;
   margin-top: 8px;
 }
+
+/* 0.4: stable list columns. Auto table layout re-measured every column as virtualised rows entered and left
+   (CLS 0.053 on a 5000-document scroll); fixed layout takes the widths from the header row only. Name takes the rest. */
+.shelf-sdk .shelf-sdk__item-list-fixed {
+  table-layout: fixed;
+}
+.shelf-sdk .shelf-sdk__item-list-fixed th:nth-child(1) {
+  width: 42%;
+}
+.shelf-sdk .shelf-sdk__item-list-fixed th:nth-child(2) {
+  width: 18%;
+}
+.shelf-sdk .shelf-sdk__item-list-fixed th:nth-child(3) {
+  width: 14%;
+}
+.shelf-sdk .shelf-sdk__item-list-fixed th:nth-child(4) {
+  width: 20%;
+}
+.shelf-sdk .shelf-sdk__item-list-fixed th:nth-child(5) {
+  width: 56px;
+}
+/* Names wrap, as web's do (.item-name-text: overflow-wrap: break-word). Row heights vary, so the virtual table measures
+   its rows (VirtualTable in ShelfFolder.tsx) instead of assuming one height. */
+
+/* 0.4: the item/folder count sat on the very top edge of the header row (the aside is a flex-start item of a
+   30px row), so an embed whose container has no padding clipped it by 1-2px. Centre it on the row, as the
+   breadcrumb text is. Web has the same row but its page padding hides the difference. */
+.shelf-sdk .shelf-sdk__shelf-crumbs-aside {
+  align-self: center;
+  line-height: 1.4;
+}
+
+/* 0.4: long names, the same rules as Shelf web (view.css carries web's own: overflow-wrap: break-word on
+   .file-card-name / .folder-tile-name / .item-name-text, min-width: 0 on the flex/grid containers, nowrap + ellipsis
+   on .folder-tree-name). The one thing web does not need and the SDK does: web's name is an <a>, a real inline box
+   that wraps inside its block. The SDK's is a <button> (navigation stays inside the embed), which Chromium lays out
+   as an atomic inline: its width is its min-content, and `break-word` does not count toward min-content, so an
+   unbroken name stays one 800px line. `anywhere` does count, so it is set on the button's text only (card link, list name). */
+.shelf-sdk .shelf-sdk__file-card-link,
+.shelf-sdk .shelf-sdk__item-name-text {
+  overflow-wrap: anywhere;
+}
+/* Breadcrumbs do not wrap a name; they ellipsize it: web's own rule (.doc-nav-row .breadcrumb, with li { display:
+   flex; min-width: 0 }), applied to every crumb row. Web applies it only on the document page; on the shelf page its
+   crumbs keep `display: inline-block` and an unbroken folder name overflows the column at 375px (seen in the real-Shelf
+   comparison, docs/screenshots/wrap-compare-crumbs-375.png). Deviation: the SDK does not leave that overflow in. */
+.shelf-sdk .shelf-sdk__breadcrumbs li {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.shelf-sdk .shelf-sdk__breadcrumbs li + li::before {
+  flex: none;
+}
+.shelf-sdk .shelf-sdk__breadcrumb {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Messages that quote a name ("Drop files to add them to <folder>", errors): block text in a definite-width column, so
+   web's own `break-word` is enough. */
+.shelf-sdk .shelf-sdk__dropzone-limits,
+.shelf-sdk .shelf-sdk__callout,
+.shelf-sdk .shelf-sdk__notice,
+.shelf-sdk .shelf-sdk__status-note,
+.shelf-sdk .shelf-sdk__drag-status,
+.shelf-sdk .shelf-sdk__empty-title,
+.shelf-sdk .shelf-sdk__folder-tree-empty,
+.shelf-sdk .shelf-sdk__folder-tree-status {
+  overflow-wrap: break-word;
+}
+/* The preview facts' value column may shrink (min-width: 0 on a grid track, as web does on its grid containers). */
+.shelf-sdk .shelf-sdk__preview-facts {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+/* Document header: "Back to <folder>" quotes a folder name. As web's crumbs do, it ends in an ellipsis instead of
+   taking the title's column (an unbroken name left the title ~0px wide). Narrow embeds drop the actions under the title. */
+.shelf-sdk .shelf-sdk__doc-actions {
+  min-width: 0;
+  max-width: 18rem;
+}
+.shelf-sdk .shelf-sdk__doc-actions > .shelf-sdk__btn--sm {
+  min-width: 0;
+  justify-content: flex-start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .shelf-sdk .shelf-sdk__doc-header {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .shelf-sdk .shelf-sdk__doc-actions {
+    grid-column: 1;
+    grid-row: 3;
+    max-width: 100%;
+    height: auto;
+    margin-top: 12px;
+  }
+}

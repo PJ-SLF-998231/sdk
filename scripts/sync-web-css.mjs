@@ -26,7 +26,8 @@ shelf-tabs shelf-tab
 doc-original doc-original-view doc-original-loading doc-original-loading-text doc-original-loading-size doc-original-text doc-image doc-frame
 doc-status doc-site-panel doc-site-building doc-site-updating doc-site-note doc-link-btn doc-ai-rename-btn doc-panel--skeleton
 skeleton-line skeleton-line--kicker skeleton-line--wide preview-placeholder progress progress-fill progress--indeterminate
-btn--icon notice upload-bar--parsing item-list item-list-scroll item-list-num tag`.split(/\s+/));
+btn--icon notice upload-bar--parsing item-list item-list-scroll item-list-num tag
+folder-name-form folder-name-form-actions text-input--sm folder-tile--new list-new-folder`.split(/\s+/));
 const FAMILIES = [
   /^shelf-(layout|main|crumbs|toolbar|dropzone|section|sidebar|item)/,
   /^folder-(tile|tree|icon)/,
@@ -121,7 +122,7 @@ function rewrite(sel) {
   if (classes.length === 0 || !classes.every(wanted)) return null;
   let s = sel;
   let theme = '';
-  s = s.replace(/^:root:not\(\[data-theme\]\)\s*/, () => ((theme = ':not([data-theme])'), ''));
+  s = s.replace(/^:root:not\(\[data-theme\]\)\s*/, () => ((theme = '[data-theme="auto"]'), ''));
   s = s.replace(/^\[data-theme=["']?(\w+)["']?\]\s*/, (_, t) => ((theme = `[data-theme="${t}"]`), ''));
   if (/(^|[\s>+~(])(html|body|:root|\*)([\s>+~.:#[]|$)/.test(s.replace(/\.[\w-]+/g, '.x'))) return null;
   s = s.replace(/\.(-?[_a-zA-Z][\w-]*)/g, (_, c) => `.${PREFIX}${c}`);
