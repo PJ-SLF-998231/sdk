@@ -161,6 +161,16 @@ The markup, class structure, CSS, tokens and icons are ported from Shelf web (`s
 
 The Gallery/List choice is remembered in `localStorage` (`shelf-sdk.layout`), and so is whether the folder tree is open (`shelf-sdk.folderTree`). If storage is unavailable (private windows, locked-down hosts) both still toggle, they are just not remembered.
 
+### The document page on its own
+
+`DocumentPage` (also `DocumentTextTab`, `DocumentPreviewTab` and `DocumentContentTab`) from `@pj-slf-998231/sdk/react/document-page` draws one document without the folder view: `<DocumentPage documentId="..." client={client} />`, or inside a `ShelfProvider`. Options of the page and, where it applies, of its tabs:
+
+| Prop | Default | |
+| --- | --- | --- |
+| `showPreviewSizes` | `true` | `false` hides the Small / Medium / Large / Original bar over an image preview; the image still shows, at the size it opens with (the original, as wide as its container, loaded lazily). PDFs and other previews are unaffected. Also on `DocumentPreviewTab`. |
+| `documentTabs` | `['text', 'preview', 'content']` | Which tabs, in what order. A listed tab that does not apply (Content for a document without a generated site) is skipped; the page opens on the first one that is available, so `['content', 'preview', 'text']` opens a document with a site on Content and one without on Preview. Arrow keys, Home and End move between the tabs in the order shown. |
+| `actions` | none | `{ rename, move, delete }` callbacks. Only the ones given appear (Rename, Move to, Delete); without them the page offers Download only. |
+
 ### What it does not show
 
 The folder view only offers what the integration API can do. It has no route to create, rename, move or delete folders, so the **New folder** button and the folder cards' and header's `...` menus are not rendered. Bulk select and the bulk bar are not rendered either. Documents get Rename, Move to and Delete.
