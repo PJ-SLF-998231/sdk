@@ -36,7 +36,7 @@ export interface ShelfFolderProps {
   baseUrl?: string;
   /** Folder to open first, and the top of the breadcrumb. Defaults to the key's folder. */
   initialFolderId?: string;
-  /** `auto` (default) follows the OS setting. */
+  /** `light` (default), `dark`, or `auto` to follow the OS colour scheme. Only an explicit `auto` follows the OS, so a light-only host never shows a dark embed. */
   theme?: 'light' | 'dark' | 'auto';
   className?: string;
   /**
@@ -309,7 +309,7 @@ function VirtualTable({ items, folderRows, folderCount, loader, selectedId, canW
     <>
       <div ref={anchor} aria-hidden="true" style={{ height: 0, position: 'relative', top: TABLE_HEAD_HEIGHT + folderCount * TABLE_ROW_HEIGHT }} />
       <div className={cx('item-list-scroll')}>
-        <table className={cx('item-list')} aria-label="Folder contents">
+        <table className={cx('item-list', 'item-list-fixed')} aria-label="Folder contents">
           <thead>
             <tr>
               <th>Name</th>
@@ -338,7 +338,7 @@ function VirtualTable({ items, folderRows, folderCount, loader, selectedId, canW
 
 /* ------------------------------------------------------------------ the component */
 
-export function ShelfFolder({ client: given, baseUrl, initialFolderId, theme = 'auto', className, cacheScope, onAuthLost, documentId, initialDocumentId, onNavigate }: ShelfFolderProps) {
+export function ShelfFolder({ client: given, baseUrl, initialFolderId, theme = 'light', className, cacheScope, onAuthLost, documentId, initialDocumentId, onNavigate }: ShelfFolderProps) {
   const client = useMemo<ShelfClient | null>(
     () => given ?? (baseUrl ? createShelfClient({ baseUrl }) : null),
     [given, baseUrl],
@@ -373,7 +373,7 @@ export function ShelfFolder({ client: given, baseUrl, initialFolderId, theme = '
   }, [session]);
 
   const rootClass = ['shelf-sdk', className].filter(Boolean).join(' ');
-  const themeAttr = theme === 'auto' ? undefined : theme;
+  const themeAttr: string = theme;
 
   if (!client || !session || lostSession === session || session.authLost) {
     return (
@@ -412,7 +412,7 @@ interface ViewProps {
   initialDocumentId?: string;
   onNavigate?: ShelfFolderProps['onNavigate'];
   rootClass: string;
-  themeAttr: string | undefined;
+  themeAttr: string;
 }
 
 const mergeSame = <T,>(prev: T | undefined, next: T): T => (prev !== undefined && deepEqual(prev, next) ? prev : next);
@@ -922,7 +922,7 @@ function FolderView({ session, initialFolderId, documentId, initialDocumentId, o
       <VirtualTable key={listKey} {...listProps} folderRows={folderRows} folderCount={subfolders.length} />
     ) : (
       <div className={cx('item-list-scroll')}>
-        <table className={cx('item-list')} aria-label="Folder contents">
+        <table className={cx('item-list', 'item-list-fixed')} aria-label="Folder contents">
           <thead>
             <tr>
               <th>Name</th>

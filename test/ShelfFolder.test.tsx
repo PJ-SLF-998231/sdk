@@ -243,6 +243,16 @@ describe('ShelfFolder', () => {
     expect(root.getAttribute('data-theme')).toBe('dark');
   });
 
+  it('defaults to the light theme; auto is an explicit opt-in', async () => {
+    const a = render(<ShelfFolder client={mock('read')} />);
+    await screen.findByText('plan.pdf');
+    expect(a.container.firstElementChild!.getAttribute('data-theme')).toBe('light');
+    a.unmount();
+    const b = render(<ShelfFolder client={mock('read')} theme="auto" />);
+    await screen.findByText('plan.pdf');
+    expect(b.container.firstElementChild!.getAttribute('data-theme')).toBe('auto');
+  });
+
   it('initialFolderId opens that folder as the top of the breadcrumb', async () => {
     render(<ShelfFolder client={mock('read')} initialFolderId="sub" />);
     await screen.findByText('deep.txt');

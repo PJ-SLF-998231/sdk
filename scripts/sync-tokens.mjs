@@ -23,7 +23,9 @@ let css = readFileSync(src, 'utf8');
 // Drop the source's own header comment; ours replaces it.
 css = css.replace(/^\s*\/\*[\s\S]*?\*\/\s*/, '');
 css = css
-  .replace(/:root:not\(\[data-theme\]\)/g, '.shelf-sdk:not([data-theme])')
+  // Web follows the OS when data-theme is absent. The SDK is embedded in hosts that are usually light-only, so
+  // the OS-following block applies only to an explicit data-theme="auto"; no attribute means light.
+  .replace(/:root:not\(\[data-theme\]\)/g, '.shelf-sdk[data-theme="auto"]')
   .replace(/:root,\s*\n\[data-theme="light"\]/g, '.shelf-sdk,\n.shelf-sdk[data-theme="light"]')
   .replace(/^\[data-theme="(\w+)"\]/gm, '.shelf-sdk[data-theme="$1"]');
 
@@ -34,7 +36,7 @@ const header = `/*
  * Source: web/src/styles/tokens.css in the Shelf repo, last changed in
  * commit ${commit}.
  * Selectors are scoped to .shelf-sdk so the host page is never restyled.
- * Theme: data-theme="light" | "dark" on .shelf-sdk; absent means follow the OS.
+ * Theme: data-theme="light" | "dark" | "auto" on .shelf-sdk; absent means light, "auto" follows the OS.
  */
 
 `;

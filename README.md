@@ -146,7 +146,7 @@ export function Files() {
 }
 ```
 
-Props: `baseUrl` or a ready `client`, `initialFolderId`, `theme` (`'light' | 'dark' | 'auto'`, default `auto` follows the OS), `className`, `cacheScope` (keep data on this device, see [Local-first cache](#local-first-cache)) and `onAuthLost` (called once when the key stops working).
+Props: `baseUrl` or a ready `client`, `initialFolderId`, `theme` (`'light' | 'dark' | 'auto'`, default `'light'`; only an explicit `'auto'` follows the OS), `className`, `cacheScope` (keep data on this device, see [Local-first cache](#local-first-cache)) and `onAuthLost` (called once when the key stops working).
 
 ### What it shows
 
@@ -192,7 +192,7 @@ Reproduce: `cd harness && npm install && npx playwright install chromium && npm 
 
 None beyond importing `@pj-slf-998231/sdk/styles.css` once. Every rule sits under `.shelf-sdk` and every class is prefixed `shelf-sdk__`, so the host's element and class rules cannot match the embed and the embed never styles the host (no `:root`, `html`, `body` or bare element selectors; `npm run check:dist` fails the build if one appears). Host rules on bare elements (`h3 { font: ... }`, `li { margin: ... }`, `svg { fill: ... }`) do reach the embed's own elements, so `base.css` resets those that matter. Give it a container with a width: it fills its parent. It uses viewport media queries (720px and below stacks the layout), like Shelf web.
 
-Theming: tokens are CSS custom properties on `.shelf-sdk` (`--bg`, `--fg`, `--accent`, `--line`, ...). Override one on `.shelf-sdk` (or via `className`), or set `theme` to force light or dark.
+Theming: tokens are CSS custom properties on `.shelf-sdk` (`--bg`, `--fg`, `--accent`, `--line`, ...). Override one on `.shelf-sdk` (or via `className`), or set `theme`. The default is `light` regardless of the visitor's OS setting, so a light-only host never shows a dark embed to dark-mode visitors (0.3.x defaulted to `auto`; pass `theme="auto"` to keep that). The embed does not read an ancestor's `data-theme` or `color-scheme`: a host with its own dark mode passes `theme` itself, for example `theme={isDark ? 'dark' : 'light'}`.
 
 ### Fonts
 
@@ -255,7 +255,7 @@ With a `read_write` key, Rename, Move to, Delete and uploads work offline. Each 
 
 First paint runs from `performance.mark('sdk-mount')`, just before React renders, to the double `requestAnimationFrame` after the first document card appears (found with a `MutationObserver`). The warm case can only be served from IndexedDB because the API answers 300 ms late; the cold case shows the network-free cost of the same path. The scroll is continuous, 40 px per frame (about 2400 px/s), through all 25 pages (about 270 000 px).
 
-The List layout is measured the same way: 28 rows at most in the DOM, 0 long tasks, p95 frame 16.7 ms, but a CLS of **0.053**, over the 0.01 target. The cause is the table's automatic column layout: columns shift a few pixels as rows with different content widths scroll in and out. It is not fixed in 0.3.0 and `perf.mjs` prints it as `list MISSED` (it gates the exit status only with `--strict`).
+The List layout is measured the same way: 28 rows at most in the DOM, 0 long tasks, p95 frame 16.7 ms and, since 0.4.0, a CLS of **0.0004** (it was 0.053 in 0.3.0, when the table's automatic column layout re-measured the columns as rows with different content widths scrolled in and out; the list table now uses `table-layout: fixed`). `perf.mjs --strict` gates the exit status on every target.
 
 Visual parity with 0.2.0: `harness/compare.mjs` compares the 21 evidence screenshots of the 0.2.0 build against this one pixel by pixel. All 21 are identical (0 differing pixels), and the isolation checks (component pixels with and without hostile host CSS, host elements unchanged by the SDK) still show 0 differing pixels.
 
@@ -292,7 +292,7 @@ npm ci
 npm run typecheck && npm test && npm run build && npm run check:dist && node scripts/size-budget.mjs && node scripts/check-treeshake.mjs
 ```
 
-The harness (`harness/`, dev only, not in the package) has its own dependencies: `cd harness && npm ci && npx playwright install chromium`. Then `node build.mjs` bundles the demo page, `node shoot.mjs <dir>` writes the evidence screenshots, `node compare.mjs <dirA> <dirB>` prints the differing pixels per PNG, and `node perf.mjs` runs the performance scenarios.
+The harness (`harness/`, dev only, not in the package) has its own dependencies: `cd harness && npm ci && npx playwright install chromium`. Then `node build.mjs` bundles the demo page, `node shoot.mjs <dir>` writes the evidence screenshots, `node compare.mjs <dirA> <dirB>` prints the differing pixels per PNG, and `node perf.mjs` runs the performance scenarios, `node theme.mjs` checks the theme defaults on a light host with a dark OS (the embed must stay light unless `theme` says otherwise).
 
 Refresh the design tokens and the folder view's CSS from Shelf web:
 
