@@ -90,7 +90,8 @@ export const entries = [
     ],
   }),
   react('offline-banner', { banned: LEAF, scenarios: [{ name: '*', imports: '*', initialKb: 1.3 }] }),
-  react('action-menu', { banned: LEAF, scenarios: [{ name: '*', imports: '*', initialKb: 1.1 }] }),
+  // 1.2 kB: root wrapper plus key handling measure 1105 B; ActionMenu is extracted unchanged.
+  react('action-menu', { banned: LEAF, scenarios: [{ name: '*', imports: '*', initialKb: 1.2 }] }),
   react('folder-tree', { scenarios: [{ name: '*', imports: '*', initialKb: 2.8 }] }),
 ];
 
