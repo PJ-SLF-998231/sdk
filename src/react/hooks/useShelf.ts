@@ -1,13 +1,12 @@
-import { useContext } from 'react';
-import { ShelfContext } from '../ShelfProvider';
+import { useMemo } from 'react';
 import type { UseShelfFn } from '../contracts';
+import { toShelfResult, useShelfSessionState } from '../useShelfSession';
 
 /**
- * STUB (0.4 U1): resolves a client from props or the nearest provider but opens no session, so the status is never
- * 'ready'. U2 replaces it. Reading the context here makes provider and hooks share one context chunk in every format.
+ * Where a hook or component gets its Shelf from: props.client > props.baseUrl > nearest ShelfProvider > none.
+ * Status is 'disconnected' with none, 'auth-lost' after a 401, 'ready' once /info has answered.
  */
 export const useShelf: UseShelfFn = (source) => {
-  const provided = useContext(ShelfContext);
-  const client = source?.client ?? provided?.client ?? null;
-  return { status: client ? 'connecting' : 'disconnected', client, access: null, rootFolderId: null, discarded: 0 };
+  const s = useShelfSessionState(source, true);
+  return useMemo(() => toShelfResult(s), [s.client, s.access, s.rootFolderId, s.discarded, s.infoLoaded, s.lost]); // eslint-disable-line react-hooks/exhaustive-deps
 };

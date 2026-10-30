@@ -1,4 +1,8 @@
 import type { UseDocumentFn } from '../contracts';
+import { useDocumentResource } from '../provider/useDocumentResource';
 
-/** STUB (0.4 U1): no document. U2 replaces it. */
-export const useDocument: UseDocumentFn = () => ({ loading: false, error: undefined, offline: false, stale: false, refresh: async () => undefined });
+/** One document (cache key `file:<id>`, shared with useDocumentText and the document page). */
+export const useDocument: UseDocumentFn = (id, source) => {
+  const { res, loading } = useDocumentResource(id, source);
+  return { document: res.data, loading, error: res.error, offline: res.offline, stale: res.stale, refresh: res.refresh };
+};

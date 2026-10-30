@@ -1,13 +1,27 @@
-import { createContext, createElement } from 'react';
-import type { ShelfProviderProps, ShelfSource, UseShelfResult } from './contracts';
-
-/** The nearest provider's source. The only createContext in the package: check-entries asserts one per output format. */
-export const ShelfContext = createContext<ShelfSource | null>(null);
+import { useMemo } from 'react';
+import type { ShelfProviderProps } from './contracts';
+import { ShelfContext } from './context';
+import { useShelfSessionState } from './useShelfSession';
 
 /**
- * STUB (0.4 U1): hands its source to descendants; no session, client creation or theme root yet. U2 replaces it
- * (props frozen in ./contracts.ts).
+ * Gives the hooks and data-bound components below it one Shelf: a client (or base URL), a cache scope, an
+ * auth-lost callback, offline options and a theme. Hooks and components still take their own `client` / `baseUrl`
+ * when they need another Shelf. The provider keeps the session open while it is mounted, so a consumer that
+ * remounts finds its data.
  */
-export function ShelfProvider({ children, client, baseUrl, cacheScope, onAuthLost }: ShelfProviderProps) {
-  return createElement(ShelfContext.Provider, { value: { client, baseUrl, cacheScope, onAuthLost } }, children);
+export function ShelfProvider({ children, client, baseUrl, cacheScope, onAuthLost, offline, theme }: ShelfProviderProps) {
+  const outbox = offline?.outbox;
+  const concurrency = offline?.uploadConcurrency;
+  const attempts = offline?.maxAttempts;
+  const value = useMemo(
+    () => ({
+      source: { client, baseUrl, cacheScope, onAuthLost },
+      offline: outbox === undefined && concurrency === undefined && attempts === undefined ? undefined : { outbox, uploadConcurrency: concurrency, maxAttempts: attempts },
+      theme,
+    }),
+    [client, baseUrl, cacheScope, onAuthLost, outbox, concurrency, attempts, theme],
+  );
+  // Outside any provider this resolves from the provider's own props: it only keeps the session alive and watches for auth loss.
+  useShelfSessionState(value.source, false);
+  return <ShelfContext.Provider value={value}>{children}</ShelfContext.Provider>;
 }
