@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { IDBFactory } from 'fake-indexeddb';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createCacheStore } from '../../src/cache/store';
 import type { CacheStore } from '../../src/internal/contracts';
 import { namespaceFor, openKv } from '../../src/storage/db';
@@ -148,11 +148,9 @@ describe('purge and broadcast', () => {
     const seen: string[][] = [];
     a.onExternalChange((keys) => seen.push(keys));
     await b.setEntry('k2', 2);
-    await new Promise((r) => setTimeout(r, 30));
-    expect(seen).toContainEqual(['k2']);
+    await vi.waitFor(() => expect(seen).toContainEqual(['k2']));
     await b.purge();
-    await new Promise((r) => setTimeout(r, 30));
-    expect(seen.length).toBeGreaterThan(1);
+    await vi.waitFor(() => expect(seen.length).toBeGreaterThan(1));
     expect(await a.getEntry('k')).toBeUndefined();
   });
 });
