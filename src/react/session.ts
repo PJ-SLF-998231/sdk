@@ -6,7 +6,7 @@ import { createShelfClient, isAuthLost, ShelfError } from '../client';
 import type { ShelfClient } from '../client';
 import type { CacheStore, ThumbLoader } from '../internal/contracts';
 import type { OutboxHandle } from '../outbox';
-import type { ApplyFolderOutboxFn, ApplyOutboxFn } from '../internal/contracts';
+import type { ApplyFolderOutboxFn, ApplyOutboxFn, FolderOutboxEntry, OutboxEntry, OverlayFolder } from '../internal/contracts';
 import type { ShelfOfflineOptions } from './contracts';
 import { namespaceFor, openKv } from '../storage/db';
 
@@ -35,7 +35,7 @@ export interface Session {
   /** The overlay function; set together with `outbox` (both come from the lazily loaded outbox chunk). */
   applyOutbox: ApplyOutboxFn | null;
   /** Folder overlay; set with `applyOutbox` once the outbox chunk exports it (0.4 U3), else null. */
-  applyFolderOutbox: ApplyFolderOutboxFn | null;
+  applyFolderOutbox: ((folders: Parameters<ApplyFolderOutboxFn>[0], entries: readonly OutboxEntry[]) => OverlayFolder[]) | null;
   /** Host callbacks already told about the lost session, so each hears it once however many hooks share the session. */
   readonly notified: Set<unknown>;
   /**
@@ -63,7 +63,7 @@ class SessionImpl implements Session {
   disposed = false;
   outbox: OutboxHandle | null = null;
   applyOutbox: ApplyOutboxFn | null = null;
-  applyFolderOutbox: ApplyFolderOutboxFn | null = null;
+  applyFolderOutbox: Session['applyFolderOutbox'] = null;
   readonly notified = new Set<unknown>();
   private outboxMod: typeof import('../outbox') | null = null;
   private outboxLoading = false;
@@ -125,7 +125,8 @@ class SessionImpl implements Session {
           (m) => {
             this.outboxMod = m;
             this.applyOutbox = m.applyOutbox;
-            this.applyFolderOutbox = (m as { applyFolderOutbox?: ApplyFolderOutboxFn }).applyFolderOutbox ?? null;
+            // Takes the whole queue: the folder operations in it (isFolderOp) are what the overlay applies.
+            this.applyFolderOutbox = (folders, entries) => m.applyFolderOutbox(folders, entries.filter((e): e is FolderOutboxEntry => m.isFolderOp(e.op)));
             if (!this.disposed) for (const l of [...this.readyListeners]) l();
           },
           () => {

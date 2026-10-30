@@ -9,7 +9,7 @@ import { useShelfSessionState } from './useShelfSession';
  * when they need another Shelf. The provider keeps the session open while it is mounted, so a consumer that
  * remounts finds its data.
  */
-export function ShelfProvider({ children, client, baseUrl, cacheScope, onAuthLost, offline, theme }: ShelfProviderProps) {
+export function ShelfProvider({ children, client, baseUrl, cacheScope, onAuthLost, offline, theme, showPreviewSizes, documentTabs }: ShelfProviderProps) {
   const outbox = offline?.outbox;
   const concurrency = offline?.uploadConcurrency;
   const attempts = offline?.maxAttempts;
@@ -18,8 +18,10 @@ export function ShelfProvider({ children, client, baseUrl, cacheScope, onAuthLos
       source: { client, baseUrl, cacheScope, onAuthLost },
       offline: outbox === undefined && concurrency === undefined && attempts === undefined ? undefined : { outbox, uploadConcurrency: concurrency, maxAttempts: attempts },
       theme,
+      showPreviewSizes,
+      documentTabs,
     }),
-    [client, baseUrl, cacheScope, onAuthLost, outbox, concurrency, attempts, theme],
+    [client, baseUrl, cacheScope, onAuthLost, outbox, concurrency, attempts, theme, showPreviewSizes, documentTabs],
   );
   // Outside any provider this resolves from the provider's own props: it only keeps the session alive and watches for auth loss.
   useShelfSessionState(value.source, false);

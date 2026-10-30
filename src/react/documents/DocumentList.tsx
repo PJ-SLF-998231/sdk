@@ -1,87 +1,12 @@
-import { lazy, Suspense, useRef } from 'react';
-import type { ReactNode } from 'react';
+import { lazy, Suspense } from 'react';
 import type { ThumbLoader } from '../../internal/contracts';
-import type { ShelfFolder } from '../../types';
-import { useVirtualRows } from '../../virtual';
-import { ActionMenu } from '../ActionMenu';
-import type { DocumentListProps, MenuAction, OverlayFolder } from '../contracts';
-import { cx } from '../cx';
-import { DocumentRow } from '../DocumentRow';
-import { FolderIcon } from '../icons';
+import type { DocumentListProps, OverlayFolder } from '../contracts';
 import { NotConnectedRoot, ShelfRoot } from '../ShelfRoot';
 import { useCollectionLoader, useNearEnd } from './useCollection';
-import type { VirtualGalleryProps } from './DocumentGallery';
-
-/** List view: a 40px thumbnail plus the 8px cell padding either side and the 1px rule. */
-const TABLE_ROW_HEIGHT = 57;
-const TABLE_HEAD_HEIGHT = 40;
-
-export type VirtualTableProps = VirtualGalleryProps & { folderRows: ReactNode; folderCount: number };
-
-/** The virtualised table: draws only the rows near the viewport; `folderRows` come first, outside the virtual range. Markup is the 0.3 ShelfFolder list's. */
-export function VirtualTable({ items, folderRows, folderCount, loader, selectedId, canWrite, onOpen, onRetry, onDiscard, onAction, onNearEnd }: VirtualTableProps) {
-  // The scroll sentinel sits just above the table (not inside its overflow wrapper, which would be mistaken
-  // for the scroller) and is nudged down past the header and folder rows, so row offsets count from the first document.
-  const anchor = useRef<HTMLDivElement>(null);
-  const { rows, totalSize } = useVirtualRows({ count: items.length, rowHeight: TABLE_ROW_HEIGHT, scrollRef: anchor, onNearEnd, overscan: 6 });
-  const top = rows.length ? rows[0]!.start : 0;
-  const bottom = rows.length ? Math.max(0, totalSize - (rows[rows.length - 1]!.start + rows[rows.length - 1]!.size)) : totalSize;
-  const spacer = (h: number, key: string) =>
-    h > 0 ? (
-      <tr key={key} aria-hidden="true" style={{ height: h }}>
-        <td colSpan={5} style={{ padding: 0, border: 0 }} />
-      </tr>
-    ) : null;
-  return (
-    <>
-      <div ref={anchor} aria-hidden="true" style={{ height: 0, position: 'relative', top: TABLE_HEAD_HEIGHT + folderCount * TABLE_ROW_HEIGHT }} />
-      <div className={cx('item-list-scroll')}>
-        <table className={cx('item-list', 'item-list-fixed')} aria-label="Folder contents">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Status</th>
-              <th className={cx('item-list-num')}>Size</th>
-              <th>Added</th>
-              <th>
-                <span className={cx('visually-hidden')}>Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {folderRows}
-            {spacer(top, 'top')}
-            {rows.map((r) => {
-              const f = items[r.index];
-              return f ? <DocumentRow key={f.id} item={f} loader={loader} selected={f.id === selectedId} canWrite={canWrite} onOpen={onOpen} onRetry={onRetry} onDiscard={onDiscard} onAction={onAction} /> : null;
-            })}
-            {spacer(bottom, 'bottom')}
-          </tbody>
-        </table>
-      </div>
-    </>
-  );
-}
-
-/** A subfolder as a table row (no menu unless `actions` are given, which is the 0.3 markup). */
-export function FolderRow({ folder, caption, onOpen, actions }: { folder: ShelfFolder; caption?: string | null; onOpen?: (id: string) => void; actions?: MenuAction[] }) {
-  return (
-    <tr className={cx('item-row', 'item-row--folder')}>
-      <td>
-        <button type="button" className={cx('link-btn', 'item-name')} onClick={() => onOpen?.(folder.id)}>
-          <span className={cx('item-thumb', 'item-thumb--folder')}>
-            <FolderIcon />
-          </span>
-          <span className={cx('item-name-text')}>{folder.name}</span>
-        </button>
-      </td>
-      <td className={cx('item-list-muted')}>{caption ?? ''}</td>
-      <td className={cx('item-list-num', 'item-list-muted')}>—</td>
-      <td className={cx('item-list-muted')}></td>
-      <td className={cx('item-list-actions')}>{actions && actions.length > 0 ? <ActionMenu label={folder.name} actions={actions} /> : null}</td>
-    </tr>
-  );
-}
+import type { VirtualGalleryProps } from './VirtualGallery';
+import { FolderRow, VirtualTable } from './VirtualTable';
+export { FolderRow, VirtualTable };
+export type { VirtualTableProps } from './VirtualTable';
 
 export type InnerListProps = DocumentListProps & { loader: ThumbLoader };
 

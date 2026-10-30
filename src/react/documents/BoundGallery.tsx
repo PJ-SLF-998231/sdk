@@ -1,7 +1,7 @@
 import type { ThumbLoader } from '../../internal/contracts';
 import type { DocumentGalleryProps } from '../contracts';
 import { useFolder } from '../hooks/useFolder';
-import { VirtualGallery } from './DocumentGallery';
+import { VirtualGallery } from './VirtualGallery';
 import { useNearEnd } from './useCollection';
 
 /** DocumentGallery for a `folderId`: loads the folder's documents and fetches the next page as the end comes into view. */

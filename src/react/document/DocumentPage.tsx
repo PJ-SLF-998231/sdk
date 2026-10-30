@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useContext, useMemo } from 'react';
+import { ShelfContext } from '../context';
 import type { DocumentPageProps } from '../contracts';
 import { cx } from '../cx';
 import { useDocument } from '../hooks/useDocument';
@@ -14,6 +15,7 @@ import { useShelfSessionState } from '../useShelfSession';
  */
 export function DocumentPage({ documentId, initial, location, folderName, onClose, actions, showPreviewSizes, documentTabs, theme, className, ...source }: DocumentPageProps) {
   const s = useShelfSessionState(source, false);
+  const defaults = useContext(ShelfContext); // the provider's page options apply when the props leave them out
   const { document: full, error } = useDocument(documentId, source);
   const doc = useMemo<Detail | undefined>(() => full ?? initial, [full, initial]);
   const { view } = useDocumentSite(documentId, { ...source, enabled: doc ? doc.has_site === true : false });
@@ -45,8 +47,8 @@ export function DocumentPage({ documentId, initial, location, folderName, onClos
         onDelete={actions?.delete}
         onClose={onClose}
         siteView={view}
-        showPreviewSizes={showPreviewSizes}
-        documentTabs={documentTabs}
+        showPreviewSizes={showPreviewSizes ?? defaults?.showPreviewSizes}
+        documentTabs={documentTabs ?? defaults?.documentTabs}
       />
     </ShelfRoot>
   );

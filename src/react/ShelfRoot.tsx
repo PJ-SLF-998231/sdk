@@ -15,7 +15,7 @@ export function rootClassName(className?: string): string {
  */
 export function ShelfRoot({ theme, className, children }: { theme?: ShelfTheme; className?: string; children?: ReactNode }) {
   const ctx = useContext(ShelfContext);
-  const inner = useMemo(() => ({ source: ctx?.source ?? {}, offline: ctx?.offline, theme: ctx?.theme, inRoot: true }), [ctx]);
+  const inner = useMemo(() => ({ ...ctx, source: ctx?.source ?? {}, inRoot: true }), [ctx]);
   if (ctx?.inRoot) return <>{children}</>;
   const t: string = theme ?? ctx?.theme ?? 'light';
   return (

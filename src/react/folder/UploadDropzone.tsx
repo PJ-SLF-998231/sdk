@@ -1,37 +1,8 @@
-import { useState } from 'react';
-import type { DragEvent, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import type { ShelfSource, UploadDropzoneProps } from '../contracts';
 import { useUpload } from '../hooks/useUpload';
-import { cx } from '../cx';
 import { ShelfRoot } from '../ShelfRoot';
-
-const hasFiles = (e: DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes('Files');
-
-function Zone({ accept, children }: { accept: ((files: File[]) => void) | null; children: ReactNode }) {
-  const [over, setOver] = useState(false);
-  const dropProps = accept
-    ? {
-        onDragOver: (e: DragEvent) => {
-          if (!hasFiles(e)) return;
-          e.preventDefault();
-          setOver(true);
-        },
-        onDragLeave: (e: DragEvent) => {
-          if (!(e.currentTarget as Node).contains(e.relatedTarget as Node | null)) setOver(false);
-        },
-        onDrop: (e: DragEvent) => {
-          e.preventDefault();
-          setOver(false);
-          if (e.dataTransfer?.files?.length) accept(Array.from(e.dataTransfer.files));
-        },
-      }
-    : {};
-  return (
-    <div className={cx('shelf-dropzone')} data-drop={over ? 'valid' : undefined} data-testid="shelf-dropzone" {...dropProps}>
-      {children}
-    </div>
-  );
-}
+import { Zone } from './Zone';
 
 /** Uploads through the session's outbox (a read_write key). */
 function SessionZone({

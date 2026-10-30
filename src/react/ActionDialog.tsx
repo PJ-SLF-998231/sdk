@@ -4,7 +4,7 @@ import { cx } from './cx';
 
 export type Pending = { kind: 'rename' | 'move' | 'delete'; item: ShelfItem };
 
-interface Props {
+export interface ActionDialogProps {
   pending: Pending;
   folders: FolderRecord[];
   busy: boolean;
@@ -15,7 +15,7 @@ interface Props {
 }
 
 /** Inline form for the three document actions the integration API supports: rename, move, delete (to the Shelf trash). */
-export function ActionDialog({ pending, folders, busy, onRename, onMove, onDelete, onCancel }: Props) {
+export function ActionDialog({ pending, folders, busy, onRename, onMove, onDelete, onCancel }: ActionDialogProps) {
   const { item } = pending;
   const [name, setName] = useState(item.filename);
   const targets = folders.filter((f) => f.id !== item.folder_id);

@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { useResource } from '../../hooks/useResource';
-import type { ApplyFolderOutboxFn, FolderOutboxEntry } from '../../internal/contracts';
-import type { ShelfFolder } from '../../types';
 import type { OverlayFolder } from '../../internal/contracts';
+import type { ShelfFolder } from '../../types';
 import type { UseFoldersFn, UseFoldersResult } from '../contracts';
 import { buildFolderModel, totalsFromFolders } from '../folderModel';
 import type { Census } from '../folderModel';
@@ -12,7 +11,6 @@ import { useShelfSessionState } from '../useShelfSession';
 import type { ShelfSessionState } from '../useShelfSession';
 
 const NONE: ShelfFolder[] = [];
-const SYNCED: ApplyFolderOutboxFn = (folders) => folders.map((f) => ({ ...f, sync: 'synced' as const }));
 
 /**
  * Every folder the key can see, with queued folder operations applied, plus the tree helpers (children, path,
@@ -43,12 +41,10 @@ export function useFoldersOf(s: ShelfSessionState) {
   const server = res.data ?? NONE;
   const { outbox, entries } = useSessionOutbox(s);
 
-  // TODO(0.4 U3): the session picks up `applyFolderOutbox` from the outbox chunk once it exports one; until then this is a pass-through.
-  const apply: ApplyFolderOutboxFn = (outbox && session?.applyFolderOutbox) || SYNCED;
-  const folders = useMemo<OverlayFolder[]>(
-    () => apply(server, (entries as unknown as FolderOutboxEntry[]).filter((e) => String(e.op.kind).endsWith('Folder'))),
-    [apply, server, entries],
-  );
+  // Queued folder operations (a folder created offline, renamed, moved or deleted) show at once. Until the lazy outbox chunk
+  // has arrived (it brings applyFolderOutbox and isFolderOp) the server's folders show as they are.
+  const apply = outbox ? session?.applyFolderOutbox : null;
+  const folders = useMemo<OverlayFolder[]>(() => (apply ? apply(server, entries) : server.map((f) => ({ ...f, sync: 'synced' as const }))), [apply, server, entries]);
 
   // Document counts. /folders sends them when the API is new enough; else count by listing everything (capped).
   const needCensus = res.data !== undefined && totalsFromFolders(res.data) === null;
@@ -91,5 +87,5 @@ export function useFoldersOf(s: ShelfSessionState) {
     stale: res.stale,
     refresh,
   };
-  return { folders: result, outbox, entries, session };
+  return { folders: result, outbox, entries, session, loaded: res.data !== undefined };
 }

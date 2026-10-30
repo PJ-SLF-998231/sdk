@@ -50,6 +50,10 @@ export interface ShelfProviderProps extends ShelfSource {
   offline?: ShelfOfflineOptions;
   /** Default 'light'. 'auto' follows the OS colour scheme and is opt-in. */
   theme?: ShelfTheme;
+  /** Default for every document page below (ShelfFolder and DocumentPage) that is not given `showPreviewSizes`. Default true. (additive, 0.4 U7) */
+  showPreviewSizes?: boolean;
+  /** Default for every document page below that is not given `documentTabs`. Default ['text', 'preview', 'content']. (additive, 0.4 U7) */
+  documentTabs?: readonly DocumentTabId[];
   children?: ReactNode;
 }
 
