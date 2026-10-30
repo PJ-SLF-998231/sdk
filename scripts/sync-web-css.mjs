@@ -121,7 +121,7 @@ function rewrite(sel) {
   if (classes.length === 0 || !classes.every(wanted)) return null;
   let s = sel;
   let theme = '';
-  s = s.replace(/^:root:not\(\[data-theme\]\)\s*/, () => ((theme = ':not([data-theme])'), ''));
+  s = s.replace(/^:root:not\(\[data-theme\]\)\s*/, () => ((theme = '[data-theme="auto"]'), ''));
   s = s.replace(/^\[data-theme=["']?(\w+)["']?\]\s*/, (_, t) => ((theme = `[data-theme="${t}"]`), ''));
   if (/(^|[\s>+~(])(html|body|:root|\*)([\s>+~.:#[]|$)/.test(s.replace(/\.[\w-]+/g, '.x'))) return null;
   s = s.replace(/\.(-?[_a-zA-Z][\w-]*)/g, (_, c) => `.${PREFIX}${c}`);

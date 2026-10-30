@@ -52,3 +52,41 @@
   gap: 6px;
   margin-top: 8px;
 }
+
+/* 0.4: stable list columns. Auto table layout re-measured every column as virtualised rows entered and left
+   (CLS 0.053 on a 5000-document scroll); fixed layout takes the widths from the header row only. Name takes the rest. */
+.shelf-sdk .shelf-sdk__item-list-fixed {
+  table-layout: fixed;
+}
+.shelf-sdk .shelf-sdk__item-list-fixed th:nth-child(1) {
+  width: 42%;
+}
+.shelf-sdk .shelf-sdk__item-list-fixed th:nth-child(2) {
+  width: 18%;
+}
+.shelf-sdk .shelf-sdk__item-list-fixed th:nth-child(3) {
+  width: 14%;
+}
+.shelf-sdk .shelf-sdk__item-list-fixed th:nth-child(4) {
+  width: 20%;
+}
+.shelf-sdk .shelf-sdk__item-list-fixed th:nth-child(5) {
+  width: 56px;
+}
+.shelf-sdk .shelf-sdk__item-list-fixed td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.shelf-sdk .shelf-sdk__item-list-fixed .shelf-sdk__item-name-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 0.4: the item/folder count sat on the very top edge of the header row (the aside is a flex-start item of a
+   30px row), so an embed whose container has no padding clipped it by 1-2px. Centre it on the row, as the
+   breadcrumb text is. Web has the same row but its page padding hides the difference. */
+.shelf-sdk .shelf-sdk__shelf-crumbs-aside {
+  align-self: center;
+  line-height: 1.4;
+}

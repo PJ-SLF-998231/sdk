@@ -3,7 +3,7 @@
  * Source: web/src/styles/tokens.css in the Shelf repo, last changed in
  * commit ec33badf7111add2d3e3d2ba756063eeee6d9ca7.
  * Selectors are scoped to .shelf-sdk so the host page is never restyled.
- * Theme: data-theme="light" | "dark" on .shelf-sdk; absent means follow the OS.
+ * Theme: data-theme="light" | "dark" | "auto" on .shelf-sdk; absent means light, "auto" follows the OS.
  */
 
 .shelf-sdk,
@@ -72,7 +72,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .shelf-sdk:not([data-theme]) {
+  .shelf-sdk[data-theme="auto"] {
     --accent: #facc15;
     --accent-ink: #171300;
     --accent-text: var(--accent);
