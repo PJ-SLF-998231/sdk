@@ -220,7 +220,10 @@
     "check:entries": "node scripts/check-entries.mjs",
     "check:imports": "node scripts/check-imports.mjs",
     "check:types": "tsc -p test/types/bundler && tsc -p test/types/node16",
-    "check:package": "attw --pack . && publint"
+    "check:package": "attw --pack . && publint",
+    "check:css": "node scripts/check-css.mjs",
+    "build:css": "node scripts/build-css.mjs",
+    "parts": "node harness/parts.mjs --shots docs/screenshots/parts"
   },
   "peerDependencies": {
     "react": ">=18",
