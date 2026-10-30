@@ -32,6 +32,14 @@ describe.each(modes)('hooks, %s', (_name, setup) => {
     expect(result.current.client).not.toBeNull();
   });
 
+  it('useShelf: rootFolderId comes from info.folder.id (real GET /integration shape)', async () => {
+    const info = { id: 'i1', name: 'Site', access: 'read', expires_at: null, folder: { id: 'fold-9', name: 'Docs' } };
+    const { source, wrapper } = setup(mock({ info: vi.fn(async () => info) }));
+    const { result } = renderHook(() => useShelf(source), { wrapper });
+    await waitFor(() => expect(result.current.status).toBe('ready'));
+    expect(result.current.rootFolderId).toBe('fold-9');
+  });
+
   it('useFolders: folders, tree helpers and totals', async () => {
     const { source, wrapper } = setup(mock());
     const { result } = renderHook(() => useFolders(source), { wrapper });

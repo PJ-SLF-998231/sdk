@@ -62,11 +62,13 @@ export const entries = [
   },
   react('folder-view', { banned: NO_DOCUMENT_PAGE, scenarios: [{ name: '{ShelfFolder}', imports: ['ShelfFolder'], initialKb: 31.7 }] }),
   react('provider', { scenarios: [{ name: '*', imports: '*', initialKb: 8.8 }] }),
+  // Hooks budgets (raised by the manager in 0.4 U2): useShelf alone is ~7.7 kB gzip because the session core it needs
+  // (client, db, store, swr, session) is not optional; the plan's 10.5 / 8.5 assumed a lighter core.
   react('hooks', {
     banned: NO_DOCUMENT_PAGE.concat('src/virtual/'),
     scenarios: [
-      { name: '*', imports: '*', initialKb: 10.5 },
-      { name: '{useFolders}', imports: ['useFolders'], initialKb: 8.5 },
+      { name: '*', imports: '*', initialKb: 11.1 },
+      { name: '{useFolders}', imports: ['useFolders'], initialKb: 8.7 },
     ],
   }),
   react('folder-card', { banned: LEAF, scenarios: [{ name: '*', imports: '*', initialKb: 2.5 }] }),
@@ -109,7 +111,8 @@ export const combos = [
  * minus entry's initial load, summed, once.
  * 0.3 baseline: 10.29 kB measured without the nested chunk; 16.72 kB with it (budget = measured + 5%, plan ceiling 19.0).
  */
-export const lazy = { entry: './react', totalKb: 17.6 };
+// 17.7 (plan: 17.6, hard cap 19.0): raised with the hooks budgets above, same heavier session core.
+export const lazy = { entry: './react', totalKb: 17.7 };
 
 /** Extra files in the package, outside the entries: reserved/produced by the build. */
 export const staticExports = {

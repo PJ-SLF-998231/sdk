@@ -98,7 +98,8 @@ export function useShelfSessionState(source: ShelfSource | undefined, needInfo: 
   );
   const info = useResource<ShelfInfo>(swr, infoOptions).data;
   const access = info?.access === 'read_write' ? 'read_write' : info?.access === 'read' ? 'read' : null;
-  const rootRaw = info?.root_folder_id ?? info?.folder_id;
+  // GET /integration answers {id, name, access, expires_at, folder: {id, name}}; the older flat fields are kept as fallbacks.
+  const rootRaw = (info as { folder?: { id?: unknown } } | undefined)?.folder?.id ?? info?.root_folder_id ?? info?.folder_id;
   return {
     client,
     session: live,
