@@ -1,18 +1,34 @@
+import { useContext, useEffect, useMemo } from 'react';
+import type { DragEvent } from 'react';
+import type { ThumbLoader } from '../internal/contracts';
 import { ActionMenu } from './ActionMenu';
 import type { MenuAction } from './ActionMenu';
+import { ShelfContext } from './context';
+import type { DocumentCardProps } from './contracts';
 import { cx } from './cx';
-import type { DocumentCardProps } from '../internal/contracts';
+import { createDirectThumbLoader, noThumbs } from './directThumbs';
 
 export type ItemAction = 'rename' | 'move' | 'delete';
 
 /** Props shared by DocumentCard and DocumentRow: the contract's, plus how write actions are offered. */
-export interface DocumentItemProps extends Omit<DocumentCardProps, 'view'> {
-  /** Accepted for the contract's sake; the component itself decides the markup (card vs row). */
-  view?: DocumentCardProps['view'];
-  /** Offer Rename / Move / Delete in the menu. */
-  canWrite?: boolean;
-  /** A menu action was picked. Must be referentially stable. */
-  onAction?: (action: ItemAction, id: string) => void;
+export interface DocumentItemProps extends DocumentCardProps {
+  /** Accepted for the 0.3 contract's sake; the component itself decides the markup (card vs row). */
+  view?: 'gallery' | 'list';
+  /** Drag support for ShelfFolder's move-by-drop. */
+  onDragStart?: (id: string, e: DragEvent) => void;
+}
+
+/**
+ * The loader a card or row draws its thumbnail with: the one it was given (ShelfFolder and the collections pass the
+ * session's cached loader), else a direct uncached one over `client` (or the nearest provider's client). Nothing to load
+ * with means no thumbnail, only the placeholder. Knows nothing of sessions, so the display-only entries stay light.
+ */
+export function useThumbLoader(loader: ThumbLoader | undefined, client: DocumentCardProps['client']): ThumbLoader {
+  const ctxClient = useContext(ShelfContext)?.source.client;
+  const c = loader ? undefined : (client ?? ctxClient);
+  const direct = useMemo(() => (c ? createDirectThumbLoader(c) : null), [c]);
+  useEffect(() => () => direct?.dispose(), [direct]);
+  return loader ?? direct ?? noThumbs;
 }
 
 type Sync = DocumentItemProps['item']['sync'];

@@ -284,7 +284,8 @@ export interface DocumentCardProps extends ShelfComponentProps {
 export interface DocumentCollectionProps extends ShelfSource, ShelfComponentProps {
   /** Folder whose documents to show (data-bound), or pass `items` directly. */
   folderId?: string | null;
-  items?: readonly OverlayItem[];
+  /** Server items; items from the outbox overlay (`sync`, `outboxId`, ...) are drawn with their sync state. */
+  items?: readonly DocumentCardProps['item'][];
   selectedId?: string | null;
   canWrite?: boolean;
   onOpen(id: string): void;
