@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createShelfClient, isAuthLost, isOfflineError, ShelfError } from '../src';
+import type { ShelfInfo } from '../src';
 
 const item = { id: 'f1', filename: 'a.pdf', content_type: 'application/pdf', size_bytes: 3, folder_id: 'd1', parse_status: 'done', created_at: 't', edited_at: null, parsed_at: null, preview_sizes: ['small'] };
 
@@ -60,8 +61,10 @@ describe('folder writes', () => {
 
 describe('routes', () => {
   it('info GET /', async () => {
-    const { client, call } = setup(() => json({ name: 'shelf' }));
-    expect(await client.info()).toEqual({ name: 'shelf' });
+    // GET /api/v1/integration as the api sends it (IntegrationInfo in docs/openapi.yaml).
+    const body: ShelfInfo = { id: 'i1', name: 'Acme CRM', access: 'read_write', expires_at: null, folder: { id: 'r0', name: 'Aisle CMS' } };
+    const { client, call } = setup(() => json(body));
+    expect(await client.info()).toEqual(body);
     expect(call().url).toBe('https://x.test/api/v1/integration/');
   });
   it('folders GET /folders', async () => {

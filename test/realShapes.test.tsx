@@ -185,6 +185,15 @@ describe('real API shapes', () => {
     expect(screen.getByText('Quotes')).toBeTruthy();
   });
 
+  it('a null parse_status (openapi: string | null) shows no status pill and no progress', async () => {
+    const { container } = mount(fakeApi({ files: [fileRow({ parse_status: null })], next_cursor: null }));
+    await screen.findByText('plan.pdf');
+    const card = container.querySelector('article.shelf-sdk__file-card')!;
+    expect(card.querySelector('.shelf-sdk__pill')).toBeNull();
+    expect(card.querySelector('.shelf-sdk__upload-bar')).toBeNull();
+    expect(card.getAttribute('aria-busy')).not.toBe('true');
+  });
+
   it('tolerates null preview_sizes on a file', async () => {
     const { container } = mount(fakeApi({ files: [fileRow({ preview_sizes: null })], next_cursor: null }));
     await screen.findByText('plan.pdf');
