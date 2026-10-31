@@ -2,6 +2,7 @@
 import * as m0 from '@pj-slf-998231/sdk';
 import type { ShelfClient as ShelfClient_m0 } from '@pj-slf-998231/sdk';
 import type { ShelfItem as ShelfItem_m0 } from '@pj-slf-998231/sdk';
+import type { ShelfInfo as ShelfInfo_m0 } from '@pj-slf-998231/sdk';
 import * as m1 from '@pj-slf-998231/sdk/react';
 import type { ShelfFolderProps as ShelfFolderProps_m1 } from '@pj-slf-998231/sdk/react';
 import * as m2 from '@pj-slf-998231/sdk/react/folder-view';
@@ -71,3 +72,9 @@ export const source: ShelfSource_m3 = { baseUrl: '/api/shelf', cacheScope: 'user
 export const card: FolderCardProps_m5 = { folder: { id: 'f1', name: 'Contracts' }, itemCount: 3, onOpen: (id: string) => void id };
 // @ts-expect-error an unknown prop is rejected
 export const bad: FolderCardProps_m5 = { folder: { id: 'f1', name: 'Contracts' }, nope: 1 };
+
+// The wire types follow the api's openapi.yaml: GET / (IntegrationInfo) and a document's nullable parse_status.
+export const info: ShelfInfo_m0 = { id: 'i1', name: 'Acme CRM', access: 'read', expires_at: null, folder: { id: 'f1', name: 'Contracts' } };
+export const noStatus: ShelfItem_m0['parse_status'] = null;
+// @ts-expect-error id, name and expires_at are always sent
+export const partialInfo: ShelfInfo_m0 = { access: 'read' };

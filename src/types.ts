@@ -14,7 +14,8 @@ export interface ShelfItem {
   content_type: string;
   size_bytes: number;
   folder_id: string | null;
-  parse_status: string;
+  /** pending, parsing, parsed, needs_review or failed; null when the document has no parse status. */
+  parse_status: string | null;
   created_at: string;
   edited_at: string | null;
   parsed_at: string | null;
@@ -63,6 +64,12 @@ export interface ShelfFolder {
 export type ShelfFolderRecord = ShelfFolder;
 
 export interface ShelfInfo {
+  /** The integration's id. */
+  id: string;
+  /** The integration's name: the platform it was made for (Shelf web's "Platform" field). */
+  name: string;
+  /** When the key stops working (ISO 8601), or null when it works until revoked. */
+  expires_at: string | null;
   /** What the key may do: `read_write` can create, rename, move and delete folders and documents. Absent on older APIs. */
   access?: 'read' | 'read_write';
   /** The key's own folder: the top of what it reaches (never renamed, moved or deleted by the key). */
