@@ -671,4 +671,4 @@ npm run sync-web-css -- path/to/shelf/web/src/styles/global.css
 
 ## Release
 
-Releases are by tag. Set `version` in `package.json`, merge, then push a matching semver tag `vX.Y.Z`. `.github/workflows/release.yaml` runs typecheck, tests, build and `check:dist`, verifies the tag equals the package version, and runs `npm publish` to GitHub Packages with the workflow's `GITHUB_TOKEN`.
+Releases are by tag. Set `version` in `package.json`, merge, then push a matching semver tag `vX.Y.Z`. `.github/workflows/release.yaml` first verifies the tag equals the package version (and stops at once if not), then runs typecheck, tests, build and `check:dist`, and runs `npm publish` to GitHub Packages with the workflow's `GITHUB_TOKEN`.
