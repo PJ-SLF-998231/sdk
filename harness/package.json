@@ -5,7 +5,7 @@
   "description": "Dev-only visual harness; not published.",
   "devDependencies": {
     "playwright": "^1.50.0",
-    "esbuild": "^0.25.0"
+    "esbuild": "^0.28.2"
   },
   "scripts": {
     "build": "node build.mjs",
