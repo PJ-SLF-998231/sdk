@@ -29,7 +29,7 @@ npm install @pj-slf-998231/sdk
 
 ## Security model
 
-A folder key (`shelf_ik_...`) is a bearer credential for one Shelf folder, read-only or read_write.
+A folder key (`shelf_ik_...`) is a bearer credential for one Shelf folder and the folders below it, **Read only** (`read`) or **Read and manage** (`read_write`).
 
 - The key must never reach a browser: not in a bundle, not in a request, not in a cookie. Keep it in server-side configuration (for example a Fly secret).
 - Browser-direct use is unsupported. Browsers talk to your own server, which authenticates the user and adds the key.
@@ -37,7 +37,15 @@ A folder key (`shelf_ik_...`) is a bearer credential for one Shelf folder, read-
 
 ## Create a key
 
-In Shelf web, open the folder, open its integrations dialog and create a key. Choose `read` or `read_write`. The key is shown once; copy it into your server's secret store (for example `SHELF_INTEGRATION_KEY`). Set `SHELF_API_URL` to your Shelf API origin.
+Keys are made in Shelf web, by the folder's owner. The folder integrations feature (the `folder_integrations` flag) must be on for the account; without it the menu item is not there and the API answers `404` to a new key.
+
+1. Open the shelf, open the folder's menu and choose **Integrations…**.
+2. **Platform**: name what the key is for, for example `Acme CRM` (required, at most 60 characters). It names the key in the list and in Shelf's activity log.
+3. **Access**: **Read only** (`read`: list and read documents) or **Read and manage** (`read_write`: also upload, rename, move and delete documents, and create, rename, move and delete folders, all inside the folder). The key reaches the folder and the folders below it, including what is added later, and nothing else in the account.
+4. **The key works**: **Until you revoke it**, **30 days**, **90 days** or **1 year**.
+5. **Create key**. The key (`shelf_ik_...`) is shown once; **Copy key** and put it in your server's secret store (for example `SHELF_INTEGRATION_KEY`). Shelf cannot show it again. The dialog also shows the address to call; set `SHELF_API_URL` to that address's origin (without `/api/v1/integration`).
+
+The same dialog lists the folder's keys with their last four characters, access, expiry and last use, and **Revoke** stops a key at once. A folder can have at most 10 working keys.
 
 ## Client modes
 
@@ -67,9 +75,16 @@ Requests are same-origin (`credentials: 'same-origin'`), so your session cookie 
 
 ## Server-side proxy recipe
 
-Mount a proxy at `/api/shelf/*` behind your own session check. It forwards to `${SHELF_API_URL}/api/v1/integration/<path>` and adds `Authorization: Bearer ${SHELF_INTEGRATION_KEY}`.
+Browsers reach Shelf only through a proxy on your server, mounted at `/api/shelf/*`. A proxy written for 0.3 lacks the site route and the three folder-write routes; add them before you hand a `read_write` key to a 0.4 `ShelfFolder`, or its folder controls and document site will fail.
 
-Route table (anything else: 404, do not forward). A proxy written for 0.3 lacks the last four rows; add them before you hand a `read_write` key to a 0.4 `ShelfFolder`, or its folder controls and document site will fail:
+The proxy forwards `/api/shelf/<path>` to `${SHELF_API_URL}/api/v1/integration/<path>` and adds
+`Authorization: Bearer ${SHELF_INTEGRATION_KEY}`. It runs behind your own session check, allows only the integration
+routes, and **streams** both directions so uploads and originals are never buffered in memory. Mount it **before**
+`express.json()` so request bodies are still unread streams. The recipe is the same in `@pj-slf-998231/sdk` and
+`@pj-slf-998231/sdk-react-native`.
+
+Route table (anything else: 404, do not forward). The folder-write routes (the last three) need a `read_write` key;
+drop them if your integration never writes folders.
 
 | Method | Path | Notes |
 | --- | --- | --- |
@@ -78,69 +93,134 @@ Route table (anything else: 404, do not forward). A proxy written for 0.3 lacks 
 | GET | `/files?folder_id&limit&cursor&recursive` | list |
 | GET | `/files/{id}` | details and text |
 | GET | `/files/{id}/thumbnail?size` | image preview |
+| GET | `/files/{id}/site` | the document's generated site (404 when it has none) |
 | GET | `/files/{id}/original/{name}` | download; stream the body |
 | POST | `/files` | multipart: `file`, `folder_id`, `client_ref`, `on_duplicate`; stream the body |
 | PATCH | `/files/{id}` | rename or move (JSON) |
-| DELETE | `/files/{id}` | delete |
-| GET | `/files/{id}/site` | the document's generated site (404 when it has none) |
-| POST | `/folders` | create a folder (JSON `{ name, parent_id }`; `read_write` keys) |
-| PATCH | `/folders/{id}` | rename or move a folder (JSON; `read_write` keys) |
-| DELETE | `/folders/{id}` | delete a folder and everything in it to the Shelf trash (`read_write` keys) |
+| DELETE | `/files/{id}` | move to the Shelf trash |
+| POST | `/folders` | create a folder (JSON `{ name, parent_id }`) |
+| PATCH | `/folders/{id}` | rename or move a folder (JSON) |
+| DELETE | `/folders/{id}` | move a folder and everything in it to the Shelf trash |
 
-Header allowlist. Forward only these and drop everything else, in particular the browser's `Authorization`, `Cookie` and `Host`.
+Header allowlist. Forward only these and drop everything else, in particular the caller's `Authorization`, `Cookie`
+and `Host`, and any `X-Forwarded-*`, `X-Real-IP` or `Fly-Client-IP` they send.
 
-- Request to Shelf: `Content-Type` (keeps the multipart boundary), `Accept`, `If-None-Match`, `Range`.
-- Response to the browser: `Content-Type`, `Content-Length`, `Content-Disposition`, `Cache-Control`, `ETag`, `Last-Modified`.
+- Request to Shelf: `Accept`, `Content-Type` (keeps the multipart boundary), `Content-Length`, `If-None-Match`, `Range`,
+  `If-Range`.
+- Response to the caller: `Content-Type`, `Content-Length`, `Content-Disposition`, `Content-Range`, `Accept-Ranges`,
+  `ETag`, `Last-Modified`, `Cache-Control`, `Vary`, `X-Content-Type-Options`, `Retry-After`.
+
+Why these: Shelf sends an `ETag` with thumbnails, originals and document sites (and, as it adds them, with listings and
+details) and answers a matching `If-None-Match` with `304` and no body, so pass the `304` through as it is.
+`Cache-Control` is `private` (or `no-store`) on everything; keep it, so no shared cache between your users stores one
+user's answer. Originals and thumbnails carry `X-Content-Type-Options: nosniff`. `Range` and `If-Range` are forwarded
+for originals; Shelf answers them with the whole file (`200`) today, and with `206` and `Content-Range` if it starts to
+honour them. A `429` carries `Retry-After` in seconds. Drop `Content-Length` when Shelf's answer had a
+`Content-Encoding`: `fetch` hands you the decoded body, so the length no longer matches.
 
 Errors the proxy produces itself:
 
 | Condition | Response |
 | --- | --- |
 | No valid user session | 401 (your own auth) |
-| `SHELF_INTEGRATION_KEY` unset, or Shelf answers 401 (key revoked or invalid) | `503 {"code":"not_configured"}` (fail closed) |
+| `SHELF_API_URL` or `SHELF_INTEGRATION_KEY` unset, or Shelf answers 401 (key revoked, expired or invalid) | `503 {"code":"not_configured"}` (fail closed) |
 | Shelf unreachable or times out | 502 |
 | Method or path not in the route table | 404 |
-| Other Shelf errors (400, 403, 404, 409, 413, 415, 429) | pass through status and JSON body |
+| Any other Shelf answer (304, 400, 403, 404, 409, 413, 415, 429, 5xx) | pass through the status, the allowed headers and the body |
 
-Minimal Express sketch:
+Rate limits. Shelf allows 600 `/integration` requests a minute per client address, and behind the proxy that address is
+the proxy's, so all your users share one budget. Rate-limit the route per user on your side and pass Shelf's `429` with
+its `Retry-After` through.
 
-```ts
-const ROUTES: [string, RegExp][] = [
-  ['GET', /^\/?$/], ['GET', /^\/folders$/], ['GET', /^\/files$/],
-  ['GET', /^\/files\/[^/]+$/], ['GET', /^\/files\/[^/]+\/thumbnail$/],
-  ['GET', /^\/files\/[^/]+\/original\/[^/]+$/], ['POST', /^\/files$/],
-  ['PATCH', /^\/files\/[^/]+$/], ['DELETE', /^\/files\/[^/]+$/],
-  ['GET', /^\/files\/[^/]+\/site$/],
-  ['POST', /^\/folders$/], ['PATCH', /^\/folders\/[^/]+$/], ['DELETE', /^\/folders\/[^/]+$/],
+```js
+// shelf-proxy.mjs  (Node 18+, Express 4/5)
+import { Readable } from 'node:stream';
+
+const UUID = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
+const ALLOWED = [
+  ['GET', /^\/?$/],
+  ['GET', /^\/folders\/?$/],
+  ['GET', /^\/files\/?$/],
+  ['GET', new RegExp(`^/files/${UUID}/?$`)],
+  ['GET', new RegExp(`^/files/${UUID}/thumbnail/?$`)],
+  ['GET', new RegExp(`^/files/${UUID}/site/?$`)],
+  ['GET', new RegExp(`^/files/${UUID}/original/[^/]+$`)],
+  ['POST', /^\/files\/?$/], // multipart upload
+  ['PATCH', new RegExp(`^/files/${UUID}/?$`)],
+  ['DELETE', new RegExp(`^/files/${UUID}/?$`)],
+  ['POST', /^\/folders\/?$/], // folder writes, read_write keys only
+  ['PATCH', new RegExp(`^/folders/${UUID}/?$`)],
+  ['DELETE', new RegExp(`^/folders/${UUID}/?$`)],
 ];
+const FORWARD_REQUEST = ['accept', 'content-type', 'content-length', 'if-none-match', 'range', 'if-range'];
+const FORWARD_RESPONSE = ['content-type', 'content-length', 'content-disposition', 'content-range', 'accept-ranges',
+  'etag', 'last-modified', 'cache-control', 'vary', 'x-content-type-options', 'retry-after'];
 
-app.use('/api/shelf', requireSession, async (req, res) => {
-  if (!ROUTES.some(([m, re]) => m === req.method && re.test(req.path))) return res.sendStatus(404);
-  const key = process.env.SHELF_INTEGRATION_KEY;
-  if (!key) return res.status(503).json({ code: 'not_configured' });
-  const headers: Record<string, string> = { Authorization: `Bearer ${key}` };
-  for (const h of ['content-type', 'accept', 'if-none-match', 'range']) {
-    if (req.headers[h]) headers[h] = String(req.headers[h]);
-  }
-  let up: Response;
+const fail = (res, status, code, message) => res.status(status).set('Cache-Control', 'no-store').json({ error: code, code, message });
+
+function allowed(method, path) {
+  if (!ALLOWED.some(([m, re]) => m === method && re.test(path))) return false;
+  // No dot segments or encoded separators in the file name segment.
+  return !path.split('/').some((s) => {
+    try { const d = decodeURIComponent(s); return d === '.' || d === '..' || d.includes('/') || d.includes('\\'); } catch { return true; }
+  });
+}
+
+export async function shelfProxy(req, res) {
+  if (!allowed(req.method, req.path)) return fail(res, 404, 'not_found', 'No such Shelf route');
+
+  const base = (process.env.SHELF_API_URL ?? '').replace(/\/+$/, '');
+  const key = process.env.SHELF_INTEGRATION_KEY ?? ''; // server-side secret; never sent to the browser or the app
+  if (!base || !key) return fail(res, 503, 'not_configured', "Shelf isn't connected");
+
+  const q = req.url.indexOf('?');
+  const target = `${base}/api/v1/integration${req.path.replace(/\/+$/, '')}${q === -1 ? '' : req.url.slice(q)}`;
+  const headers = { Authorization: `Bearer ${key}` };
+  for (const h of FORWARD_REQUEST) if (req.headers[h] !== undefined) headers[h] = req.headers[h];
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), req.method === 'POST' ? 120_000 : 30_000);
+  res.on('close', () => { clearTimeout(timer); if (!res.writableFinished) ctrl.abort(); }); // caller went away: stop upstream too
+
+  let up;
   try {
-    up = await fetch(`${process.env.SHELF_API_URL}/api/v1/integration${req.url}`, {
-      method: req.method, headers,
-      body: req.method === 'POST' || req.method === 'PATCH' ? (req as any) : undefined,
-      duplex: 'half',
-    } as RequestInit);
+    up = await fetch(target, {
+      method: req.method, headers, redirect: 'manual', signal: ctrl.signal,
+      ...(req.method === 'POST' || req.method === 'PATCH' ? { body: req, duplex: 'half' } : {}), // stream the upload up
+    });
   } catch {
-    return res.status(502).json({ code: 'bad_gateway' });
+    clearTimeout(timer);
+    return fail(res, 502, 'unavailable', 'Shelf is unreachable');
   }
-  if (up.status === 401) return res.status(503).json({ code: 'not_configured' });
-  res.status(up.status);
-  for (const h of ['content-type', 'content-length', 'content-disposition', 'cache-control', 'etag', 'last-modified']) {
+  // Shelf refused the key: a configuration problem, never the user's login problem. Tell the SDK so it stops.
+  if (up.status === 401) { clearTimeout(timer); up.body?.cancel().catch(() => {}); return fail(res, 503, 'not_configured', "Shelf isn't connected"); }
+
+  res.status(up.status); // 304 included: it has no body
+  const decoded = up.headers.has('content-encoding'); // fetch decoded the body, so Shelf's length no longer applies
+  for (const h of FORWARD_RESPONSE) {
     const v = up.headers.get(h);
-    if (v) res.setHeader(h, v);
+    if (v !== null && !(decoded && h === 'content-length')) res.setHeader(h, v);
   }
-  up.body ? Readable.fromWeb(up.body as any).pipe(res) : res.end();
-});
+  if (!up.body) return res.end();
+  const body = Readable.fromWeb(up.body);
+  body.on('error', () => res.destroy());
+  body.pipe(res); // stream the response (thumbnails, originals) down
+}
 ```
+
+```js
+// app.js
+import express from 'express';
+import { shelfProxy } from './shelf-proxy.mjs';
+
+const app = express();
+// requireUser: verify YOUR session first (the cookie session of a web page, or the bearer token an app sends).
+app.use('/api/shelf', requireUser, shelfProxy); // before express.json()
+app.use(express.json());
+```
+
+Also: keep the key in your secret manager, give it the narrowest access that works (`Read only` unless the integration
+writes), set a body size limit on your edge, and never log the `Authorization` header you add.
 
 ## Use only what you need
 
