@@ -1,0 +1,25 @@
+# Dependabot: weekly version updates. Minor and patch bumps come grouped,
+# one PR per ecosystem, to keep the noise down; majors come one by one.
+# Security updates are separate and not limited by this file.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      github-actions-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+  - package-ecosystem: "npm"
+    directories:
+      - "/"
+      - "/harness"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      npm-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
