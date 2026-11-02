@@ -6,6 +6,7 @@ import { ShelfFolder } from '../../src/react';
 import { ShelfProvider } from '../../src/react/ShelfProvider';
 import { disposeAllSessions } from '../../src/react/session';
 import receipt from '../fixtures/site-receipt.json';
+import { LAZY_TIMEOUT, POLL_TIMEOUT } from '../asyncTimeouts';
 import { freshDb, item, mock } from '../react/helpers';
 
 beforeEach(() => {
@@ -192,8 +193,8 @@ describe('DocumentPage (connected)', () => {
     render(<DocumentPage documentId="d1" client={client} documentTabs={['content', 'text']} />);
     await screen.findByText(/Building this page/);
     expect(client.getSite).toHaveBeenCalledTimes(1);
-    await waitFor(() => expect(client.getSite).toHaveBeenCalledTimes(3), { timeout: 7000 });
-    await screen.findByText('Corner Cafe receipt', undefined, { timeout: 4000 });
+    await waitFor(() => expect(client.getSite).toHaveBeenCalledTimes(3), { timeout: POLL_TIMEOUT });
+    await screen.findByText('Corner Cafe receipt', undefined, { timeout: LAZY_TIMEOUT });
     expect(client.getSite).toHaveBeenCalledTimes(4);
   }, 20000);
 });
@@ -209,8 +210,8 @@ describe('ShelfFolder document page (the presentational view)', () => {
     await screen.findByText('hello');
     fireEvent.click(await screen.findByRole('tab', { name: 'Content' }));
     await screen.findByText(/Building this page/);
-    await waitFor(() => expect(client.getSite).toHaveBeenCalledTimes(3), { timeout: 7000 });
-    await screen.findByText('Corner Cafe receipt', undefined, { timeout: 4000 });
+    await waitFor(() => expect(client.getSite).toHaveBeenCalledTimes(3), { timeout: POLL_TIMEOUT });
+    await screen.findByText('Corner Cafe receipt', undefined, { timeout: LAZY_TIMEOUT });
   }, 20000);
 });
 

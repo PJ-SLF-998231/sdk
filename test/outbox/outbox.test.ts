@@ -6,6 +6,7 @@ import type { OutboxEntry } from '../../src/internal/contracts';
 import { bytes, err, fakeClient, fakeLocks, freshDb, item, openTestKv, tick, UUID_V4, upOp } from './helpers';
 import type { FakeClient } from './helpers';
 import type { KvStore } from '../../src/storage/db';
+import { LAZY_TIMEOUT } from '../asyncTimeouts';
 
 const live: OutboxHandle[] = [];
 function make(kv: KvStore, client: FakeClient, o: Partial<OutboxOptions> = {}): OutboxHandle {
@@ -40,7 +41,7 @@ describe('drain once', () => {
       online();
       await tick(2);
     }
-    await vi.waitFor(async () => expect(await stored(kv)).toHaveLength(0), { timeout: 3000 });
+    await vi.waitFor(async () => expect(await stored(kv)).toHaveLength(0), { timeout: LAZY_TIMEOUT });
     await a.idle();
     await b.idle();
     online();

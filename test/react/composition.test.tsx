@@ -10,7 +10,8 @@ import { useFolders } from '../../src/react/hooks/useFolders';
 import { ShelfProvider } from '../../src/react/ShelfProvider';
 import { disposeAllSessions, getSession } from '../../src/react/session';
 import receipt from '../fixtures/site-receipt.json';
-import { freshDb, item, mock } from './helpers';
+import { BASE, freshDb, item, mock } from './helpers';
+import { namespaceFor, openKv } from '../../src/storage/db';
 
 beforeEach(() => {
   freshDb();
@@ -118,7 +119,10 @@ describe('ShelfFolder inside a ShelfProvider', () => {
       return view;
     };
     const warm = await wait(mock());
-    await new Promise((r) => setTimeout(r, 300)); // let the entries reach IndexedDB
+    await waitFor(async () => { // let the entries reach IndexedDB
+      const kv = await openKv(await namespaceFor({ baseUrl: BASE, cacheScope: 'user-1' }));
+      expect((await kv.list('entries')).length).toBeGreaterThanOrEqual(3); // info, folders, listing
+    });
     warm.unmount();
     disposeAllSessions(); // a page reload: only the stored copy is left
     const down = () => Promise.reject(new TypeError('Failed to fetch'));
