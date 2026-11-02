@@ -1,5 +1,8 @@
-# Dependabot: weekly version updates. Minor and patch bumps come grouped,
-# one PR per ecosystem, to keep the noise down; majors come one by one.
+# Dependabot: weekly version updates, tuned to keep CI demand low on the
+# shared self-hosted runner pool (3 concurrent runners across api, web, sdk).
+# Minor and patch bumps come grouped, one PR per ecosystem (npm: production
+# and development separate); majors come one by one, capped by
+# open-pull-requests-limit. Cooldown holds back brand-new releases.
 # Security updates are separate and not limited by this file.
 version: 2
 updates:
@@ -7,7 +10,17 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+      day: "monday"
+      time: "06:00"
+      timezone: "Africa/Johannesburg"
+    open-pull-requests-limit: 3
+    cooldown:
+      default-days: 3
+      semver-major-days: 7
+    labels: ["dependencies"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
     groups:
       github-actions-minor-patch:
         patterns: ["*"]
@@ -18,8 +31,21 @@ updates:
       - "/harness"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+      day: "monday"
+      time: "06:00"
+      timezone: "Africa/Johannesburg"
+    open-pull-requests-limit: 3
+    cooldown:
+      default-days: 3
+      semver-major-days: 7
+    labels: ["dependencies"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
     groups:
       npm-minor-patch:
-        patterns: ["*"]
+        dependency-type: "production"
+        update-types: ["minor", "patch"]
+      npm-dev-minor-patch:
+        dependency-type: "development"
         update-types: ["minor", "patch"]
