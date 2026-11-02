@@ -12,6 +12,7 @@ import { useOutbox } from '../../src/react/hooks/useOutbox';
 import { useShelf } from '../../src/react/hooks/useShelf';
 import { useUpload } from '../../src/react/hooks/useUpload';
 import { disposeAllSessions } from '../../src/react/session';
+import { POLL_TIMEOUT } from '../asyncTimeouts';
 import { FOLDERS, file, freshDb, item, mock, modes } from './helpers';
 
 beforeEach(() => freshDb());
@@ -129,16 +130,17 @@ describe.each(modes)('hooks, %s', (_name, setup) => {
 
   it('useDocumentSite polls every 2.5 s while building', async () => {
     let n = 0;
-    const client = mock({ getSite: vi.fn(async (id: string) => ({ file_id: id, status: ++n < 3 ? 'building' : 'ready', spec: n < 3 ? undefined : { blocks: [] } })) });
+    const askedAt: number[] = [];
+    const client = mock({ getSite: vi.fn(async (id: string) => (askedAt.push(performance.now()), { file_id: id, status: ++n < 3 ? 'building' : 'ready', spec: n < 3 ? undefined : { blocks: [] } })) });
     const { source, wrapper } = setup(client);
     const { result } = renderHook(() => useDocumentSite('f1', { ...source, enabled: true }), { wrapper });
     await waitFor(() => expect(result.current.view.kind).toBe('building'));
     expect(client.getSite).toHaveBeenCalledTimes(1);
     // The poll is a 2.5 s timeout armed after each answer: not before it, and again after the next answer.
-    await new Promise((r) => setTimeout(r, 2000));
-    expect(client.getSite).toHaveBeenCalledTimes(1);
-    await waitFor(() => expect(client.getSite).toHaveBeenCalledTimes(2), { timeout: 1500 });
-    await waitFor(() => expect(client.getSite).toHaveBeenCalledTimes(3), { timeout: 4000 });
+    // Compared on the calls' own timestamps, not a fixed sleep, so a slow runner cannot make "not before it" flaky.
+    await waitFor(() => expect(client.getSite).toHaveBeenCalledTimes(2), { timeout: POLL_TIMEOUT });
+    expect(askedAt[1]! - askedAt[0]!).toBeGreaterThanOrEqual(2400); // not before the 2.5 s poll
+    await waitFor(() => expect(client.getSite).toHaveBeenCalledTimes(3), { timeout: POLL_TIMEOUT });
     await waitFor(() => expect(result.current.view.kind).toBe('site'));
   }, 12000);
 

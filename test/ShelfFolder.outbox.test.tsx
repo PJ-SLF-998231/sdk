@@ -4,6 +4,7 @@ import { IDBFactory } from 'fake-indexeddb';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { ShelfFolder } from '../src/react';
+import { LAZY_TIMEOUT } from './asyncTimeouts';
 import { ShelfError } from '../src';
 import type { ShelfClient, ShelfItem } from '../src';
 import { disposeAllSessions } from '../src/react/session';
@@ -116,9 +117,9 @@ describe('ShelfFolder write path through the outbox', () => {
     expect(inFlight).toBe(3); // the fourth waits for a free slot
     await act(async () => releases.shift()!());
     // the 4th starts once a slot is free (it may still be in its backoff from the offline attempt)
-    await waitFor(() => expect(releases.length).toBeGreaterThan(2), { timeout: 4000 });
+    await waitFor(() => expect(releases.length).toBeGreaterThan(2), { timeout: LAZY_TIMEOUT });
     while (releases.length) await act(async () => releases.shift()!());
-    await waitFor(() => expect(screen.queryByText('Pending')).toBeNull(), { timeout: 4000 });
+    await waitFor(() => expect(screen.queryByText('Pending')).toBeNull(), { timeout: LAZY_TIMEOUT });
     expect(maxInFlight).toBe(3);
     for (const n of ['a.pdf', 'b.pdf', 'c.pdf', 'd.pdf']) expect(screen.getByText(n)).toBeTruthy();
   });
