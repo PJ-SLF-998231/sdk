@@ -19,7 +19,7 @@ jobs:
   gitleaks:
     # The upstream MIT-licensed gitleaks CLI; the gitleaks-action wrapper
     # needs a paid licence for org repos.
-    runs-on: nebula-k3s-slf
+    runs-on: ubuntu-latest
     steps:
       # The bare ARC runner image may lack git; without it checkout falls
       # back to a REST download with no history for gitleaks to scan.

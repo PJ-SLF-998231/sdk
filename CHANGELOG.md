@@ -7,6 +7,7 @@ README, "Release"). Entries before 0.4.0 were written after the fact from the gi
 
 ### Changed
 
+- Published publicly on npm (MIT, with provenance) instead of GitHub Packages; install is a plain `npm install`.
 - README: the server-side proxy recipe forwards `Content-Length` and `If-Range` and passes `Content-Range`,
   `Accept-Ranges`, `Vary`, `X-Content-Type-Options` and `Retry-After` back, explains `ETag` / `304`, and is the same
   recipe as `@pj-slf-998231/sdk-react-native`'s.

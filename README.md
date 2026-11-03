@@ -7,21 +7,11 @@ Client and React UI for the Shelf folder integration API (`/api/v1/integration`)
 - Standalone React components, each with its own subpath and stylesheet: `FolderCard`, `FolderGrid`, `FolderHeader`, `FolderToolbar`, `DocumentCard`, `DocumentGallery`, `DocumentList`, `DocumentPage`, `UploadDropzone`, `FolderTree` and more. See [Use only what you need](#use-only-what-you-need).
 - The whole folder view, `<ShelfFolder>`, which renders Shelf web's own folder view, ported from its source: header with folder-tree toggle, breadcrumb and counts, Gallery/List toggle, folder cards, document cards or rows, drag-and-drop upload and the document page. It browses, opens, uploads, renames, moves and deletes documents and, with a `read_write` key, creates, renames, moves and deletes folders.
 
-The package is private, published to GitHub Packages under the `@pj-slf-998231` scope.
+The package is public on npm under the `@pj-slf-998231` scope.
 
 ## Install
 
-Add an `.npmrc` next to your `package.json`. The token comes from the environment; never commit it.
-
-```ini
-@pj-slf-998231:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
-```
-
-Export a GitHub token with `read:packages` (a personal access token locally, `GITHUB_TOKEN` or a PAT in CI), then install:
-
 ```sh
-export NODE_AUTH_TOKEN=<token with read:packages>
 npm install @pj-slf-998231/sdk
 ```
 
@@ -671,4 +661,4 @@ npm run sync-web-css -- path/to/shelf/web/src/styles/global.css
 
 ## Release
 
-Releases are by tag. Set `version` in `package.json`, merge, then push a matching semver tag `vX.Y.Z`. `.github/workflows/release.yaml` first verifies the tag equals the package version (and stops at once if not), then runs typecheck, tests, build and `check:dist`, and runs `npm publish` to GitHub Packages with the workflow's `GITHUB_TOKEN`.
+Releases are by tag. Set `version` in `package.json`, merge, then push a matching semver tag `vX.Y.Z`. `.github/workflows/release.yaml` first verifies the tag equals the package version (and stops at once if not), then runs typecheck, tests, build and `check:dist`, and runs `npm publish --provenance --access public` to npmjs.org with the repository's `NPM_TOKEN` secret.
