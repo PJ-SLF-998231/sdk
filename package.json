@@ -3,13 +3,15 @@
   "version": "0.4.0",
   "description": "Client and UI for the Shelf integration API",
   "type": "module",
-  "license": "UNLICENSED",
+  "license": "MIT",
+  "homepage": "https://github.com/PJ-SLF-998231/sdk#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/PJ-SLF-998231/sdk.git"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "access": "public",
+    "provenance": true
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -201,7 +203,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "sideEffects": [
     "./dist/styles.css",
