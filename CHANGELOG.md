@@ -3,7 +3,7 @@
 Notable changes to `@pj-slf-998231/sdk`. Versions follow semver; each one is released by its `vX.Y.Z` tag (see the
 README, "Release"). Entries before 0.4.0 were written after the fact from the git history and the README of each tag.
 
-## Unreleased
+## 0.4.1 - 2026-11-03
 
 ### Changed
 
