@@ -661,4 +661,16 @@ npm run sync-web-css -- path/to/shelf/web/src/styles/global.css
 
 ## Release
 
-Releases are by tag. Set `version` in `package.json`, merge, then push a matching semver tag `vX.Y.Z`. `.github/workflows/release.yaml` first verifies the tag equals the package version (and stops at once if not), then runs typecheck, tests, build and `check:dist`, and runs `npm publish --provenance --access public` to npmjs.org with the repository's `NPM_TOKEN` secret.
+Releases are automatic. Every merge to `main` that changes a publishable file (`src/**`, `package.json`, `package-lock.json`, `tsup.config.ts`, `tsconfig.json`, `scripts/entries.mjs`, `scripts/split-css.mjs`, `README.md`, `LICENSE`) runs `.github/workflows/release.yaml`: it runs the whole CI workflow as a gate, then works out the next version, publishes it to npmjs.org with `npm publish --provenance --access public`, pushes the tag `vX.Y.Z` at the merge commit and creates a GitHub release with generated notes. Nothing is committed back to `main`; the version is set only in the runner.
+
+The version comes from `scripts/next-version.mjs`, from the commits since the latest `v*` tag. Any line of a commit message (a merge commit carries the PR title in its body) counts:
+
+- `BREAKING CHANGE` or a `type!:` prefix (`feat!:`, `fix(react)!:`) gives a major release.
+- `feat:` or `feat(scope):` gives a minor release.
+- Anything else gives a patch release.
+
+To force a particular version, raise `version` in `package.json` above the latest tag: that exact version is released. So `package.json` is a floor, not the source of the published version; between releases it can lag behind the tags. Run `node scripts/next-version.mjs --dry-run` to see the latest tag, the commits considered and the decision.
+
+To skip a release: changes only to docs, tests, examples or CI do not match the paths above and never trigger one. A commit with `[skip release]` in its message is not counted, and when no counted commits remain since the tag nothing is released. The workflow can also be run by hand (`workflow_dispatch`); it releases only if there is something to release. A rerun after a partial failure is safe: a version already on npm is not published again, and an existing tag or release is reused.
+
+One-time setup: the repository secret `NPM_TOKEN` (an npm automation token that can publish the package), and Settings, Actions, General, Workflow permissions must allow the workflow to write (the job asks for `contents: write` to push the tag and create the release). If tag or branch rulesets are added, allow `github-actions` to create `v*` tags.

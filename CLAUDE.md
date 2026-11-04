@@ -2,7 +2,7 @@
 
 - Work happens on a branch and lands through a pull request. Never push to `main`.
 - Every PR must pass CI (`ci.yml`: typecheck, test, build and the checks below; `gitleaks.yml`) before merge.
-- Releases: bump `version` in `package.json`, merge, then push a tag `vX.Y.Z` equal to it; `release.yaml` publishes to GitHub Packages. Do not publish from a laptop. Add the version's entry to `CHANGELOG.md` in the same PR as the bump.
+- Releases are automatic: a merge to `main` that touches publishable files runs `release.yaml` (CI gate, then publish to npmjs.org, then tag `vX.Y.Z` and a GitHub release with generated notes). The version is computed by `scripts/next-version.mjs` from the commits since the latest tag (`BREAKING CHANGE` or `type!:` major, `feat:` minor, otherwise patch); `package.json` `version` is a floor, not the source of the published version: raise it above the latest tag to force a version. Do not tag by hand and do not publish from a laptop. A `CHANGELOG.md` entry is optional, for notable changes (GitHub release notes are generated); `[skip release]` in a commit message opts it out.
 - Never commit secrets or tokens (a folder key is `shelf_ik_...`; README examples read it from the environment).
 - Never raise a size budget in `scripts/entries.mjs` without a comment giving the reason, and never weaken a check to get a PR green.
 - The proxy recipe in `README.md` ("Server-side proxy recipe") is the same as `sdk-react-native`'s; change both together.
