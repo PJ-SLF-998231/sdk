@@ -1,41 +1,103 @@
 name: Release
 
+# Every merge to main that changes publishable files is released: the version is computed from the commits since the
+# latest v* tag (scripts/next-version.mjs), published to npmjs.org with provenance, then tagged and released on GitHub.
+# package.json in the repo is never modified or committed back; it is a floor (see README, "Release").
 on:
   push:
-    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsup.config.ts'
+      - 'tsconfig.json'
+      - 'scripts/entries.mjs'
+      - 'scripts/split-css.mjs'
+      - 'README.md'
+      - 'LICENSE'
+  workflow_dispatch:
 
 permissions:
   contents: read
-  id-token: write
 
+# Not "release-<ref>": the called ci.yml gets "<this workflow name>-<ref>" as its own group, and group names are
+# case-insensitive, so the same name here would deadlock the two.
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-publish
   cancel-in-progress: false
 
 jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
   publish:
+    needs: ci
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # First, before any install or build: a tag that doesn't match the
-      # version fails in seconds instead of after the whole test run.
-      - name: Tag must equal package.json version
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Decide the version
+        id: version
         run: |
-          pkg="v$(node -p "require('./package.json').version")"
-          if [ "$pkg" != "$GITHUB_REF_NAME" ]; then
-            echo "tag $GITHUB_REF_NAME does not match package.json version $pkg" >&2
-            exit 1
+          if [ -n "$(git tag --points-at HEAD --list 'v*')" ]; then
+            echo "HEAD already has a release tag: $(git tag --points-at HEAD --list 'v*' | tr '\n' ' ')"
+            echo "release=" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          node scripts/next-version.mjs --dry-run
+          version="$(node scripts/next-version.mjs)"
+          if [ -z "$version" ]; then
+            echo "Nothing to release."
+          fi
+          echo "release=$version" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v7
+        if: steps.version.outputs.release != ''
         with:
           node-version: 22
           cache: npm
           registry-url: https://registry.npmjs.org
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run build
-      - run: npm run check:dist
-      - run: npm publish --provenance --access public
+      - name: Set the version in this runner only
+        if: steps.version.outputs.release != ''
         env:
+          VERSION: ${{ steps.version.outputs.release }}
+        run: npm version "$VERSION" --no-git-tag-version --allow-same-version
+      - if: steps.version.outputs.release != ''
+        run: npm ci
+      - if: steps.version.outputs.release != ''
+        run: npm run build
+      - if: steps.version.outputs.release != ''
+        run: npm run check:dist
+      - name: Publish to npm
+        if: steps.version.outputs.release != ''
+        env:
+          VERSION: ${{ steps.version.outputs.release }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          # A rerun after a failed tag step finds the version already published; skip so it can finish.
+          if npm view "@pj-slf-998231/sdk@$VERSION" version >/dev/null 2>&1; then
+            echo "@pj-slf-998231/sdk@$VERSION is already on npm; not publishing again."
+          else
+            npm publish --provenance --access public
+          fi
+      - name: Tag and create the GitHub release
+        if: steps.version.outputs.release != ''
+        env:
+          VERSION: ${{ steps.version.outputs.release }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="v$VERSION"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+            git tag -a "$tag" -m "$tag" "$GITHUB_SHA"
+          fi
+          git push origin "refs/tags/$tag"
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" --generate-notes --verify-tag --title "$tag"
+          fi

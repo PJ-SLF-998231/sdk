@@ -1,7 +1,9 @@
 # Changelog
 
-Notable changes to `@pj-slf-998231/sdk`. Versions follow semver; each one is released by its `vX.Y.Z` tag (see the
-README, "Release"). Entries before 0.4.0 were written after the fact from the git history and the README of each tag.
+Notable changes to `@pj-slf-998231/sdk`. Versions follow semver. Since the automatic release flow (see the README,
+"Release") every merge that changes the package is released by the workflow and gets generated GitHub release notes,
+so an entry here is optional and for notable changes only; the `version` in `package.json` is a floor and may lag
+the latest tag. Entries before 0.4.0 were written after the fact from the git history and the README of each tag.
 
 ## 0.5.0 - 2026-11-04
 
