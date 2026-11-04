@@ -461,7 +461,7 @@ The markup, class structure, CSS, tokens and icons are ported from Shelf web (`s
 - Click a document for the document page: type and size, filename, Text and Preview tabs, a Details panel, Download, and a Rename / Move to / Delete menu (read_write only). Delete moves the file to the Shelf trash; it can be restored in Shelf.
 - A `503 not_configured` shows a "Shelf isn't connected" state.
 
-The Gallery/List choice is remembered in `localStorage` (`shelf-sdk.layout`), and so is whether the folder tree is open (`shelf-sdk.folderTree`). If storage is unavailable (private windows, locked-down hosts) both still toggle, they are just not remembered.
+The Gallery/List choice is remembered in `localStorage` (`shelf-sdk.layout`), and so is whether the folder tree is open (`shelf-sdk.folderTree`) and whether a document's Details panel is shown (`shelf-sdk.docDetails`, open by default). If storage is unavailable (private windows, locked-down hosts) both still toggle, they are just not remembered.
 
 ### The document page on its own
 
@@ -633,7 +633,7 @@ If the host registers a service worker, it should leave `/api/*` alone (or which
 Only when the host passes `cacheScope`:
 
 - **What**: the cached key info, folder list, document listings and details (names, types, sizes, extracted text of opened documents), thumbnails, and the queued offline changes (including the bytes of files waiting to upload). Never the folder key or the raw `cacheScope`.
-- **Where**: one IndexedDB database named `shelf-sdk` in the host's origin, with the stores `entries`, `blobs` and `outbox`, keyed by the hashed namespace. Cross-tab updates travel over a `BroadcastChannel`. The Gallery/List and folder-tree choices are in `localStorage` (`shelf-sdk.layout`, `shelf-sdk.folderTree`), with or without a scope.
+- **Where**: one IndexedDB database named `shelf-sdk` in the host's origin, with the stores `entries`, `blobs` and `outbox`, keyed by the hashed namespace. Cross-tab updates travel over a `BroadcastChannel`. The Gallery/List and folder-tree choices are in `localStorage` (`shelf-sdk.layout`, `shelf-sdk.folderTree`, `shelf-sdk.docDetails`), with or without a scope.
 - **How to clear it**: `await clearCache()` (all) or `await clearCache({ baseUrl, cacheScope })` (one scope), on sign-out; the user can also clear the site's data in the browser. It is cleared automatically when the key is revoked (`onAuthLost`) and entries older than 30 days are dropped. `clearCache()` with no argument also deletes queued offline changes; the scoped form keeps them.
 
 ## Development

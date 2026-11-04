@@ -93,6 +93,27 @@ describe('document page', () => {
     expect(siteCalls(api.api)).toEqual([]);
   });
 
+  it('the Details panel collapses and the choice is remembered', async () => {
+    mount_(fakeApi());
+    await screen.findByText(/This pet application forms part/);
+    expect(screen.getByRole('complementary', { name: 'Details' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Hide details' }));
+    expect(screen.queryByRole('complementary', { name: 'Details' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Show details' }).getAttribute('aria-expanded')).toBe('false');
+    expect(window.localStorage.getItem('shelf-sdk.docDetails')).toBe('closed');
+    fireEvent.click(screen.getByRole('button', { name: 'Show details' }));
+    expect(screen.getByRole('complementary', { name: 'Details' })).toBeTruthy();
+    expect(window.localStorage.getItem('shelf-sdk.docDetails')).toBe('open');
+  });
+
+  it('opens with Details hidden when the reader collapsed it before', async () => {
+    window.localStorage.setItem('shelf-sdk.docDetails', 'closed');
+    mount_(fakeApi());
+    await screen.findByText(/This pet application forms part/);
+    expect(screen.queryByRole('complementary', { name: 'Details' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Show details' })).toBeTruthy();
+  });
+
   it('Copy puts the text on the clipboard', async () => {
     const write = vi.fn(async () => undefined);
     Object.defineProperty(navigator, 'clipboard', { value: { writeText: write }, configurable: true });
