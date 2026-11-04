@@ -15,7 +15,7 @@ import { useSiteView } from './document/useSiteView';
 import { formatDateTime, formatSize, statusPill, typeLabel } from './format';
 import type { ParsedMeta } from './format';
 import { PanelIcon, PencilIcon } from './icons';
-import { DETAILS_KEY, readStore, writeStore } from './folder/store';
+import { readStore, writeStore } from './folder/store';
 import type { SiteView } from './siteView';
 
 export type { Detail };
@@ -48,6 +48,8 @@ export type DocumentPageProps = DocumentPageViewProps;
 
 const TAB_LABEL: Record<DocumentTabId, string> = { text: 'Text', preview: 'Preview', content: 'Content' };
 const DEFAULT_TABS: readonly DocumentTabId[] = ['text', 'preview', 'content'];
+/** Whether the Details panel is shown, per browser. Unlike the folder tree it starts open; the collapse is for reading at full width. */
+const DETAILS_KEY = 'shelf-sdk.docDetails';
 const PENDING: SiteView = { kind: 'pending' };
 const HIDDEN: SiteView = { kind: 'hidden' };
 

@@ -57,7 +57,8 @@ export const entries = [
     // Measured at 0.4.0: * 33.997 kB, {ShelfFolder} 33.838 kB (30.0 at the 0.3 baseline). Both stay at 34.0 rather than measured + 5%.
     scenarios: [
       // 34.0 (plan 33.0), both scenarios below: the folder write UI (menus, form wiring, validation, outbox ops, row/card props, useFolderActions real implementation, FolderDialog lazy) adds ~1.3 kB initial; the user asked for these controls.
-      { name: '*', imports: '*', initialKb: 34.0 },
+      // 34.05 (was 34.0; measured 34.004 kB at 0.5.0), `*` only: it includes the standalone DocumentPage, which gained the collapsible Details toggle (a button, the open/closed state and its remembered choice). {ShelfFolder} is unchanged at 33.84 kB because the document page stays a lazy chunk there.
+      { name: '*', imports: '*', initialKb: 34.05 },
       { name: '{ShelfFolder}', imports: ['ShelfFolder'], initialKb: 34.0 },
     ],
   },
@@ -129,7 +130,8 @@ export const combos = [
 // started with ~0 headroom.
 // 19.5 (was 18.8): the lazy chunks load on demand and separately, never all at once; the plan's caps were set before the outbox (U3), document page (U6) and P3 row measuring were merged.
 // 19.7 (was 19.5; measured 19.618 kB at 0.4.0, kept because measured + 3% is above it): the folder write UI (menus, form wiring, validation, outbox ops, row/card props, useFolderActions real implementation, FolderDialog lazy) adds ~1.3 kB initial; the user asked for these controls.
-export const lazy = { entry: './react', totalKb: 19.7 };
+// 19.9 (was 19.7; measured 19.814 kB at 0.5.0): the document page chunk gained the collapsible Details toggle (button, state, remembered choice), ~0.2 kB gzip.
+export const lazy = { entry: './react', totalKb: 19.9 };
 
 /** Extra files in the package, outside the entries: reserved/produced by the build. */
 export const staticExports = {
