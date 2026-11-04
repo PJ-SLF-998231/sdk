@@ -3,6 +3,15 @@
 Notable changes to `@pj-slf-998231/sdk`. Versions follow semver; each one is released by its `vX.Y.Z` tag (see the
 README, "Release"). Entries before 0.4.0 were written after the fact from the git history and the README of each tag.
 
+## 0.5.0 - 2026-11-04
+
+### Added
+
+- The document page's Details panel collapses, like Shelf web's: a "Hide details" / "Show details" button in the
+  header (icon only on narrow screens) gives the contents the full width. It starts open and the choice is
+  remembered in `localStorage` (`shelf-sdk.docDetails`); without storage it still toggles. Applies to `DocumentPage`
+  and to the document view inside `ShelfFolder`.
+
 ## 0.4.1 - 2026-11-03
 
 ### Changed

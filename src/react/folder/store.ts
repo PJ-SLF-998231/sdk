@@ -1,6 +1,8 @@
 /** Remembered per browser, like Shelf web's `shelf.layout`: a convenience, not something to sync. */
 export const LAYOUT_KEY = 'shelf-sdk.layout';
 export const TREE_KEY = 'shelf-sdk.folderTree';
+/** Whether a document's Details panel is shown. Unlike the folder tree it starts open; the collapse is for reading at full width. */
+export const DETAILS_KEY = 'shelf-sdk.docDetails';
 
 export function readStore(key: string): string | null {
   try {

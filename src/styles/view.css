@@ -1249,6 +1249,25 @@
 .shelf-sdk .shelf-sdk__doc-layout--rail {
   grid-template-columns: minmax(0, 1fr);
 }
+.shelf-sdk .shelf-sdk__doc-details-toggle {
+  gap: 8px;
+}
+.shelf-sdk .shelf-sdk__doc-details-toggle .shelf-sdk__panel-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+@media (max-width: 520px) {
+  .shelf-sdk .shelf-sdk__doc-details-toggle-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
 .shelf-sdk .shelf-sdk__doc-tabs {
   margin: 0;
 }

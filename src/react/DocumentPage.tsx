@@ -14,7 +14,8 @@ import { CopyFeedback, TextPanel, useCopyNotice } from './document/TextPanel';
 import { useSiteView } from './document/useSiteView';
 import { formatDateTime, formatSize, statusPill, typeLabel } from './format';
 import type { ParsedMeta } from './format';
-import { PencilIcon } from './icons';
+import { PanelIcon, PencilIcon } from './icons';
+import { DETAILS_KEY, readStore, writeStore } from './folder/store';
 import type { SiteView } from './siteView';
 
 export type { Detail };
@@ -77,6 +78,12 @@ export function DocumentPageView({ client, swr, loader, doc, location, folderNam
   const sheets = Array.isArray(meta?.sheet_names) ? meta!.sheet_names!.join(', ') : '';
 
   const { notice, copyError, copy } = useCopyNotice();
+  const [detailsOpen, setDetailsOpen] = useState<boolean>(() => readStore(DETAILS_KEY) !== 'closed');
+  const toggleDetails = () => {
+    setDetailsOpen(!detailsOpen);
+    writeStore(DETAILS_KEY, detailsOpen ? 'closed' : 'open');
+  };
+  const detailsLabel = detailsOpen ? 'Hide details' : 'Show details';
 
   const menu: MenuAction[] = [
     ...(onMove ? [{ label: 'Move to…', onSelect: onMove }] : []),
@@ -115,6 +122,17 @@ export function DocumentPageView({ client, swr, loader, doc, location, folderNam
               <PencilIcon />
             </button>
           )}
+          <button
+            type="button"
+            className={cx('btn', 'btn--ghost', 'btn--sm', 'doc-details-toggle')}
+            aria-expanded={detailsOpen}
+            aria-controls="shelf-sdk-doc-details"
+            title={detailsLabel}
+            onClick={toggleDetails}
+          >
+            <PanelIcon open={detailsOpen} />
+            <span className={cx('doc-details-toggle-label')}>{detailsLabel}</span>
+          </button>
           <ActionMenu label={doc.filename} actions={menu} />
           {onClose && (
             <button type="button" className={cx('btn', 'btn--ghost', 'btn--sm')} onClick={onClose}>
@@ -126,7 +144,7 @@ export function DocumentPageView({ client, swr, loader, doc, location, folderNam
 
       <CopyFeedback notice={notice} copyError={copyError} />
 
-      <div className={cx('doc-layout')}>
+      <div className={cx('doc-layout', !detailsOpen && 'doc-layout--rail')}>
         <section className={cx('doc-main')} aria-label="Contents">
           <div className={cx('shelf-tabs', 'doc-tabs')} role="tablist" aria-label="View" onKeyDown={onTabKeys}>
             {tabs.map(tabButton)}
@@ -140,8 +158,8 @@ export function DocumentPageView({ client, swr, loader, doc, location, folderNam
           )}
         </section>
 
-        <aside className={cx('doc-aside', 'is-open')} aria-label="Details">
-          <div className={cx('doc-aside-body')}>
+        <aside className={cx('doc-aside', detailsOpen && 'is-open')} aria-label="Details" hidden={!detailsOpen}>
+          <div id="shelf-sdk-doc-details" className={cx('doc-aside-body')} hidden={!detailsOpen}>
             <section className={cx('doc-panel')}>
               <h2 className={cx('kicker')}>Details</h2>
               <dl className={cx('preview-facts')}>
