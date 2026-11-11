@@ -111,6 +111,27 @@ export function DocumentPageView({ client, swr, loader, doc, location, folderNam
 
   return (
     <section className={cx('doc-body')} aria-label="Document details">
+      {/* As on web: one row above the title, the way back at the left and the Details toggle at the right. */}
+      <div className={cx('doc-nav-row', 'doc-nav-row--doc')}>
+        {onClose && (
+          <button type="button" className={cx('link-btn', 'doc-back-link')} onClick={onClose}>
+            <span aria-hidden="true">← </span>
+            Back to {folderName}
+          </button>
+        )}
+        <button
+          type="button"
+          className={cx('btn', 'btn--ghost', 'btn--sm', 'shelf-sidebar-toggle', 'doc-details-toggle')}
+          aria-expanded={detailsOpen}
+          aria-controls="shelf-sdk-doc-details"
+          title={detailsLabel}
+          onClick={toggleDetails}
+        >
+          <PanelIcon open={detailsOpen} />
+          <span className={cx('doc-details-toggle-label')}>{detailsLabel}</span>
+        </button>
+      </div>
+
       <header className={cx('page-header', 'doc-header')}>
         <div className={cx('doc-title')}>
           <p className={cx('section-eyebrow')}>
@@ -124,23 +145,7 @@ export function DocumentPageView({ client, swr, loader, doc, location, folderNam
               <PencilIcon />
             </button>
           )}
-          <button
-            type="button"
-            className={cx('btn', 'btn--ghost', 'btn--sm', 'doc-details-toggle')}
-            aria-expanded={detailsOpen}
-            aria-controls="shelf-sdk-doc-details"
-            title={detailsLabel}
-            onClick={toggleDetails}
-          >
-            <PanelIcon open={detailsOpen} />
-            <span className={cx('doc-details-toggle-label')}>{detailsLabel}</span>
-          </button>
           <ActionMenu label={doc.filename} actions={menu} />
-          {onClose && (
-            <button type="button" className={cx('btn', 'btn--ghost', 'btn--sm')} onClick={onClose}>
-              Back to {folderName}
-            </button>
-          )}
         </div>
       </header>
 

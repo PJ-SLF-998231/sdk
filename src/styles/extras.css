@@ -127,17 +127,44 @@
 .shelf-sdk .shelf-sdk__preview-facts {
   grid-template-columns: auto minmax(0, 1fr);
 }
-/* Document header: "Back to <folder>" quotes a folder name. As web's crumbs do, it ends in an ellipsis instead of
-   taking the title's column (an unbroken name left the title ~0px wide). Narrow embeds drop the actions under the title. */
-.shelf-sdk .shelf-sdk__doc-actions {
-  min-width: 0;
-  max-width: 18rem;
+/* Document nav row: "← Back to <folder>" quotes a folder name. It ends in an ellipsis instead of pushing the Details
+   toggle out of the row (an unbroken name would otherwise overflow). Like web's back link: small, soft, accent on hover. */
+.shelf-sdk .shelf-sdk__doc-nav-row--doc {
+  margin-bottom: 20px;
 }
-.shelf-sdk .shelf-sdk__doc-actions > .shelf-sdk__btn--sm {
+.shelf-sdk .shelf-sdk__doc-back-link {
+  flex: 0 1 auto;
   min-width: 0;
-  justify-content: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 14px;
+  color: var(--fg-soft);
+  text-align: left;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.shelf-sdk .shelf-sdk__doc-back-link:hover {
+  color: var(--accent-text);
+}
+.shelf-sdk .shelf-sdk__doc-nav-row > .shelf-sdk__doc-details-toggle {
+  flex: none;
+  margin-left: auto;
+}
+/* Collapsed, the toggle is just the icon (its name stays as a tooltip and for screen readers), as on web. */
+.shelf-sdk .shelf-sdk__doc-nav-row .shelf-sdk__shelf-sidebar-toggle[aria-expanded="false"] {
+  width: 30px;
+  padding: 0;
+}
+.shelf-sdk .shelf-sdk__doc-nav-row .shelf-sdk__shelf-sidebar-toggle[aria-expanded="false"] .shelf-sdk__doc-details-toggle-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
   white-space: nowrap;
 }
 @media (max-width: 640px) {
