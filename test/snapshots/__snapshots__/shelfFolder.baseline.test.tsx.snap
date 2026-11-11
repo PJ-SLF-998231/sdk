@@ -149,13 +149,10 @@ exports[`ShelfFolder 0.3 baseline markup > read key: document, Text tab 1`] = `
 </div>
 </div>
 <section class="shelf-sdk__doc-body" aria-label="Document details">
-<header class="shelf-sdk__page-header shelf-sdk__doc-header">
-<div class="shelf-sdk__doc-title">
-<p class="shelf-sdk__section-eyebrow">PDF · 2.0 KB</p>
-<h1 class="shelf-sdk__section-title">plan.pdf</h1>
-</div>
-<div class="shelf-sdk__page-header-aside shelf-sdk__doc-actions">
-<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm shelf-sdk__doc-details-toggle" aria-expanded="true" aria-controls="shelf-sdk-doc-details" title="Hide details">
+<div class="shelf-sdk__doc-nav-row shelf-sdk__doc-nav-row--doc">
+<button type="button" class="shelf-sdk__link-btn shelf-sdk__doc-back-link">
+<span aria-hidden="true">← </span>Back to Aisle CMS</button>
+<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm shelf-sdk__shelf-sidebar-toggle shelf-sdk__doc-details-toggle" aria-expanded="true" aria-controls="shelf-sdk-doc-details" title="Hide details">
 <svg class="shelf-sdk__panel-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
 <rect x="3" y="4.5" width="18" height="15" rx="1.5">
 </rect>
@@ -164,6 +161,13 @@ exports[`ShelfFolder 0.3 baseline markup > read key: document, Text tab 1`] = `
 </svg>
 <span class="shelf-sdk__doc-details-toggle-label">Hide details</span>
 </button>
+</div>
+<header class="shelf-sdk__page-header shelf-sdk__doc-header">
+<div class="shelf-sdk__doc-title">
+<p class="shelf-sdk__section-eyebrow">PDF · 2.0 KB</p>
+<h1 class="shelf-sdk__section-title">plan.pdf</h1>
+</div>
+<div class="shelf-sdk__page-header-aside shelf-sdk__doc-actions">
 <div class="shelf-sdk__action-menu">
 <button type="button" class="shelf-sdk__action-menu-button" aria-label="Actions for plan.pdf" aria-haspopup="menu" aria-expanded="false">
 <svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
@@ -176,7 +180,6 @@ exports[`ShelfFolder 0.3 baseline markup > read key: document, Text tab 1`] = `
 </svg>
 </button>
 </div>
-<button type="button" class="shelf-sdk__btn shelf-sdk__btn--ghost shelf-sdk__btn--sm">Back to Aisle CMS</button>
 </div>
 </header>
 <div aria-live="polite">
